@@ -20,7 +20,7 @@ class Appointments extends Model
         'client_email',
         'status',       
     ];
-
+    
     protected $casts = [
         'start_time' => 'datetime',
         'finish_time' => 'datetime',
