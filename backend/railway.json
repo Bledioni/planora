@@ -6,7 +6,7 @@
   },
   "deploy": {
     "root": "backend",
-    "healthcheckPath": "/api/businesses",
+    "healthcheckPath": "/",
     "restartPolicyType": "ON_FAILURE"
   }
 }
