@@ -11,9 +11,11 @@ class WishList extends Model
 
     protected $fillable = [
 
-        'business_name',
-        'phone_number',
+        'name',
+        'surname',
         'email_address',
+        'password',
+        'phone_number',
 
     ];
 }

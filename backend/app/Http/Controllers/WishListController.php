@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Support\Facades\Hash;
+
 
 class WishListController extends Controller
 {
@@ -15,19 +17,23 @@ class WishListController extends Controller
         try {
             // ✅ Validate request data
             $validated = $request->validate([
-                'business_name' => 'required|string|max:255',
-                'phone_number'  => 'required|string|max:20',
+                'name' => 'required|string|max:255',
+                'surname'  => 'required|string|max:20',
                 'email_address' => 'required|email|max:255|unique:wish_lists,email_address',
+                'password' => 'required|min:8|max:255|',
+                'phone_number' => 'required|unique:wish_lists,phone_number',
             ]);
 
-            // ✅ Create wishlist record
+
             $wishlist = WishList::create([
-                'business_name' => $validated['business_name'],
-                'phone_number'  => $validated['phone_number'],
+                'name' => $validated['name'],
+                'surname'  => $validated['surname'],
                 'email_address' => $validated['email_address'],
+                'password' => Hash::make($validated['password']),
+                'phone_number' => $validated['phone_number'],
+
             ]);
 
-            // ✅ Success response
             return response()->json([
                 'status'  => 'success',
                 'message' => 'Wishlist registered successfully.',
@@ -35,7 +41,6 @@ class WishListController extends Controller
             ], Response::HTTP_CREATED); // 201
 
         } catch (ValidationException $e) {
-            // ❌ Validation error
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Validation failed.',
@@ -43,7 +48,6 @@ class WishListController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY); // 422
 
         } catch (Exception $e) {
-            // ❌ Server error
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Something went wrong.',
