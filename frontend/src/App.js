@@ -1,10 +1,9 @@
-import logo from './logo.svg';
 import './App.css';
-import Header, { Routes } from './common/Header';
+import Wishlist from '../src/components/wishlist/script/Wishlist';
 
 function App() {
   return (
-      <Header/>
+      <Wishlist/>
   );
 }
 
