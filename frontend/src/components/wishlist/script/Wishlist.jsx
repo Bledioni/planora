@@ -26,7 +26,7 @@ function WishlistRegister() {
     setIsLoading(true);
 
     try {
-      const { data } = await api.post("/wishlistRegister", formData);
+      await api.post("/wishlistRegister", formData);
       alert("Welcome to Planora Salon Management!");
     } catch (err) {
       if (err.response?.status === 422) {
