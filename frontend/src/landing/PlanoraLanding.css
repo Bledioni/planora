@@ -1,50 +1,70 @@
+/* --- VARIABLET DHE RESET --- */
 :root {
   --primary: #376fb6;
+  --primary-dark: #2c5a94;
   --black: #1a1a1a;
   --white: #ffffff;
   --bg-gray: #f8fafd;
-  --text-gray: #666;
+  --text-gray: #555e68;
+  --error: #ff4d4d;
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
 }
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--white);
+  color: var(--black);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- LAYOUT KRYESOR --- */
 .landing-container {
   display: flex;
   min-height: 100vh;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  width: 100%;
 }
 
-/* LEFT SIDE */
+/* --- PJESA E MAJTË (PRESENTATION) --- */
 .presentation-side {
   flex: 1.2;
-  background-color: var(--white);
-  padding: 60px;
+  padding: 80px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  background-color: var(--white);
 }
 
 .brand-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 15px;
 }
 
 .app-logo {
-  height: 40px;
+  height: 48px;
   width: auto;
 }
 
 .brand-name {
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 800;
   color: var(--black);
   letter-spacing: -1px;
 }
 
 .hero-content h1 {
-  font-size: 3.5rem;
+  font-size: 4rem;
+  font-weight: 800;
   color: var(--black);
   line-height: 1.1;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .hero-content h1 span {
@@ -52,16 +72,15 @@
 }
 
 .hero-text {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   color: var(--text-gray);
-  max-width: 500px;
-  margin-bottom: 40px;
+  max-width: 520px;
+  margin-bottom: 48px;
 }
 
 .feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
+  display: flex;
+  gap: 30px;
 }
 
 .feature-item {
@@ -72,9 +91,16 @@
   color: var(--black);
 }
 
-.icon { font-size: 1.5rem; }
+.icon {
+  font-size: 1.5rem;
+}
 
-/* RIGHT SIDE */
+.presentation-footer {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+/* --- PJESA E DJATHTË (FORM SECTION) --- */
 .form-side {
   flex: 1;
   background-color: var(--bg-gray);
@@ -86,104 +112,205 @@
 
 .wishlist-card {
   background: var(--white);
-  padding: 45px;
-  border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+  padding: 50px;
+  border-radius: 28px;
+  box-shadow: var(--shadow);
   width: 100%;
   max-width: 480px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 .wishlist-card h2 {
-  font-size: 1.8rem;
-  margin-bottom: 8px;
-  color: var(--black);
+  font-size: 2rem;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
 }
 
 .card-subtitle {
   color: var(--text-gray);
-  font-size: 0.95rem;
-  margin-bottom: 30px;
+  font-size: 1rem;
+  margin-bottom: 35px;
+  line-height: 1.4;
+}
+
+/* --- FORM ELEMENTET --- */
+.planora-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .form-row {
   display: flex;
-  gap: 15px;
+  gap: 16px;
 }
 
 .form-group {
-  margin-bottom: 18px;
   width: 100%;
+  position: relative;
 }
 
 input {
   width: 100%;
-  padding: 14px 16px;
-  border: 1.5px solid #e1e8f0;
-  border-radius: 12px;
+  padding: 16px 20px;
+  border: 2px solid #edf2f7;
+  border-radius: 14px;
   font-size: 1rem;
-  transition: all 0.2s;
-  box-sizing: border-box;
+  background-color: #fcfdfe;
+  transition: all 0.25s ease;
+  color: var(--black);
 }
 
 input:focus {
   outline: none;
   border-color: var(--primary);
-  background-color: #fff;
+  background-color: var(--white);
   box-shadow: 0 0 0 4px rgba(55, 111, 182, 0.1);
 }
 
+input::placeholder {
+  color: #a0aec0;
+}
+
+.error-input {
+  border-color: var(--error);
+  background-color: #fffafa;
+}
+
+.error-msg {
+  color: var(--error);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 5px;
+  margin-left: 5px;
+  display: block;
+}
+
+/* --- BUTONAT --- */
 .primary-btn {
   width: 100%;
-  padding: 16px;
+  padding: 18px;
   background-color: var(--primary);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 14px;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: all 0.3s ease;
   margin-top: 10px;
 }
 
 .primary-btn:hover {
-  background-color: #2c5a94;
+  background-color: var(--primary-dark);
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(55, 111, 182, 0.2);
 }
 
 .primary-btn:disabled {
-  background-color: #ccc;
+  background-color: #cbd5e0;
   cursor: not-allowed;
+  transform: none;
 }
 
-.error-input { border-color: #ff4d4d; }
-.error-msg { color: #ff4d4d; font-size: 0.75rem; margin-top: 4px; display: block; }
-
-/* SUCCESS STATE */
+/* --- SUCCESS STATE --- */
 .success-state {
   text-align: center;
-  padding: 20px 0;
+  padding: 30px 0;
 }
 
 .check-icon {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   background: #4bb543;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  margin: 0 auto 20px;
+  font-size: 2.5rem;
+  margin: 0 auto 25px;
+  box-shadow: 0 10px 20px rgba(75, 181, 67, 0.2);
 }
 
-/* RESPONSIVE */
+/* --- MOBILE RESPONSIVE (DHËMBËT E DINOSAURIT) --- */
+
 @media (max-width: 1024px) {
-  .landing-container { flex-direction: column; }
-  .presentation-side { padding: 40px; text-align: center; }
-  .brand-header { justify-content: center; }
-  .hero-content h1 { font-size: 2.5rem; }
-  .hero-text { margin: 0 auto 30px; }
-  .feature-grid { justify-content: center; }
+  .landing-container {
+    flex-direction: column;
+  }
+
+  .presentation-side {
+    padding: 60px 24px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .brand-header {
+    justify-content: center;
+  }
+
+  .hero-content h1 {
+    font-size: 2.8rem;
+    margin-bottom: 20px;
+  }
+
+  .hero-text {
+    font-size: 1.1rem;
+    margin: 0 auto 35px;
+  }
+
+  .feature-grid {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .feature-item {
+    background: #f0f4f8;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 0.9rem;
+  }
+
+  .form-side {
+    padding: 24px;
+    background-color: var(--white);
+  }
+
+  .wishlist-card {
+    padding: 40px 24px;
+    box-shadow: none;
+    border: none;
+    max-width: 100%;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Rritim fontin për mobile që iOS të mos bëjë zoom */
+  input {
+    font-size: 16px;
+    padding: 15px;
+  }
+
+  .primary-btn {
+    padding: 20px;
+  }
+
+  .presentation-footer {
+    display: none; /* Fshihet në mobile për të kursyer hapësirë */
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 {
+    font-size: 2.2rem;
+  }
+  
+  .wishlist-card h2 {
+    font-size: 1.6rem;
+  }
 }
