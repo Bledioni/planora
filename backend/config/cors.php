@@ -22,7 +22,7 @@ return [
     'https://planora-git-main-bledionis-projects.vercel.app', 
     // Recommended: Add the base Vercel domain if you use it
     'https://planora.vercel.app',
-    'http://www.planorabook.com',
+    'https://www.planorabook.com',
 ],
 
     'allowed_origins_patterns' => [],
