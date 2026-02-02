@@ -1,9 +1,9 @@
 import './App.css';
-import Wishlist from '../src/components/wishlist/script/Wishlist';
+import Header from './common/Header';
 
 function App() {
   return (
-      <Wishlist/>
+      <Header/>
   );
 }
 
