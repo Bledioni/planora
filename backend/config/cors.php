@@ -18,7 +18,7 @@ return [
         'http://localhost:3000',
         'https://courageous-gecko-076716.netlify.app',
         'https://splendid-bienenstitch-fb7ca4.netlify.app',
-        'https://planora-snowy.vercel.app/'
+        'https://planora-git-main-bledionis-projects.vercel.app/'
     ],
 
     'allowed_origins_patterns' => [],
