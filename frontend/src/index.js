@@ -8,9 +8,28 @@ import axios from 'axios';
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+
+// ----------------------
+// development apis
+// -----------------------
+
+// export const api = axios.create({
+//   baseURL: "http://127.0.0.1:8000/api/",
+//   withCredentials: true
+// });
+
+// export const backend = axios.create({
+//   baseURL: "http://127.0.0.1:8000/",
+//   withCredentials: true
+// });
+
+
+// -----------------------------
+// production apis
+// -----------------------------
 // 2. Create and export instances
 export const api = axios.create({
-  baseURL: "https://planora-production-bd59.up.railway.app/api/", 
+  baseURL: "https://planora-production-bd59.up.railway.app/api/",
   withCredentials: true
 });
 

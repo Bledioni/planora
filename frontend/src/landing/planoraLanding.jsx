@@ -8,16 +8,14 @@ function PlanoraLanding() {
     name: "",
     surname: "",
     email_address: "",
-    password: "",
     phone_number: "",
   });
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
-  // State për FAQ (0 do të thotë që pyetja e parë është e hapur automatikisht)
   const [openFaq, setOpenFaq] = useState(0);
+
 
   const faqs = [
     {
@@ -38,7 +36,7 @@ function PlanoraLanding() {
     },
     {
       q: "Sa kushton pas periudhës së provës?",
-      a: "Përdoruesit që regjistrohen tani në Wishlist do të kenë qasje të hershme dhe do të përfitojnë oferta ekskluzive me çmime preferenciale 'Founder's Edition' që nuk do të ndryshojnë kurrë."
+      a: "Përdoruesit që regjistrohen tani në Waitlist do të kenë qasje të hershme dhe do të përfitojnë oferta ekskluzive me çmime preferenciale 'Founder's Edition' që nuk do të ndryshojnë kurrë."
     }
   ];
 
@@ -139,10 +137,7 @@ function PlanoraLanding() {
                   {errors.phone_number && <span className="error-msg">{errors.phone_number[0]}</span>}
                 </div>
                 
-                <div className="form-group">
-                  <input className={errors.password ? "error-input" : ""} type="password" name="password" placeholder="Krijoni një Fjalëkalim" onChange={handleChange} value={formData.password} />
-                  {errors.password && <span className="error-msg">{errors.password[0]}</span>}
-                </div>
+  
 
                 <button type="submit" className="primary-btn" disabled={isLoading}>
                   {isLoading ? "Duke u procesuar..." : "Regjistro Sallonin"}

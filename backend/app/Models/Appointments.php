@@ -18,7 +18,8 @@ class Appointments extends Model
         'client_name',
         'client_phone',
         'client_email',
-        'status',       
+        'status',  
+        'is_notified',     
     ];
     
     protected $casts = [
