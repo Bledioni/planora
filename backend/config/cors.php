@@ -18,9 +18,7 @@ return [
     'http://localhost:3000',
     'https://courageous-gecko-076716.netlify.app',
     'https://splendid-bienenstitch-fb7ca4.netlify.app',
-    // REMOVED THE TRAILING SLASH BELOW
     'https://planora-git-main-bledionis-projects.vercel.app', 
-    // Recommended: Add the base Vercel domain if you use it
     'https://planora.vercel.app',
     'https://www.planorabook.com',
 ],

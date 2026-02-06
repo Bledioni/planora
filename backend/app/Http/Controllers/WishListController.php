@@ -20,7 +20,6 @@ class WishListController extends Controller
                 'name' => 'required|string|max:255',
                 'surname'  => 'required|string|max:20',
                 'email_address' => 'required|email|max:255|unique:wish_lists,email_address',
-                'password' => 'required|min:8|max:255|',
                 'phone_number' => 'required|unique:wish_lists,phone_number',
             ]);
 
@@ -29,7 +28,6 @@ class WishListController extends Controller
                 'name' => $validated['name'],
                 'surname'  => $validated['surname'],
                 'email_address' => $validated['email_address'],
-                'password' => Hash::make($validated['password']),
                 'phone_number' => $validated['phone_number'],
 
             ]);

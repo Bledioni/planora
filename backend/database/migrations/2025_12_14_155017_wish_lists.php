@@ -13,11 +13,9 @@ return new class extends Migration
     {
         Schema::create('wish_lists', function (Blueprint $table) {
             $table->id();
-            //ka mi jep te gjitha te dhenat si emer mbiemer email password etj
             $table->string('name');
             $table->string('surname');
             $table->string('email_address');
-            $table->string('password');
             $table->string('phone_number');
             $table->timestamps();
         });

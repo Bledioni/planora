@@ -17,7 +17,7 @@ class BusinessesController extends Controller
     {
         // Public access for browsing; Owner access for management
         $this->middleware(['auth:sanctum', 'role:business_owner'])
-             ->only(['StoreBusiness', 'InsertServices']);
+             ->only(['InsertServices']);
     }
 
     /**
@@ -102,51 +102,6 @@ class BusinessesController extends Controller
                 ];
             }),
         ];
-    }
-
-    /**
-     * Create a new Business (Owner Only)
-     */
-    public function StoreBusiness(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'category_id' => 'required|exists:categories,id',
-            'shop_name' => 'required|string|max:255|unique:businesses,shop_name',
-            'address' => 'required|string|max:255',
-            'business_type' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['status' => 'validation_error', 'errors' => $validator->errors()], 422);
-        }
-
-        try {
-            $data = $request->all();
-            // Automatically generate the slug (e.g. "Te Visi" becomes "te-visi")
-            $data['slug'] = Str::slug($request->shop_name);
-
-            $shop = Business::create($data);
-
-            // Automatically make the owner an employee of their own shop
-            Employees::create([
-                'user_id' => $request->user_id,
-                'business_id' => $shop->id,
-            ]);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Biznesi u krijua me sukses',
-                'data' => $shop
-            ], 201);
-
-        } catch (QueryException $e) {
-            if ($e->errorInfo[1] === 1062) {
-                return response()->json(['message' => 'Ky emër i biznesit ose slug ekziston.'], 409);
-            }
-            return response()->json(['message' => 'Gabim në databazë.'], 500);
-        }
     }
 
     /**
