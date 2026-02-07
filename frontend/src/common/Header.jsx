@@ -15,8 +15,7 @@ function Header() {
         <Route path="/bookingApp" element={<BookingApp />} />
         <Route path="/:shopSlug" element={<BookingApp />} />
         <Route path="/barberdiscovery" element={<BarberDiscovery />} />
-        <Route path="/planoralanding" element={<PlanoraLanding />} />
-        
+        <Route path="/planoralanding" element={<PlanoraLanding />} />  
       </Routes>
     </Router>
   );
