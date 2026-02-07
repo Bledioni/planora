@@ -1,0 +1,186 @@
+/* BarberDiscovery.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --p-blue: #1d7af2;       /* Ngjyra e kalendarit */
+  --p-dark: #1a202c;       /* Ngjyra e "check"-ut */
+  --p-bg: #f8fafc;
+  --p-card-bg: #ffffff;
+  --p-text-muted: #64748b;
+  --p-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.discovery-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 80px 24px;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+.discovery-header {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.discovery-header h1 {
+  font-size: clamp(2.5rem, 5vw, 3.5rem); /* Madhësi dinamike */
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--p-blue) 0%, var(--p-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.05em;
+  margin-bottom: 16px;
+}
+
+.discovery-header p {
+  color: var(--p-text-muted);
+  font-size: 1.125rem;
+  max-width: 600px;
+  margin: 0 auto;
+  font-weight: 500;
+}
+
+.discovery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.shop-card {
+  background: var(--p-card-bg);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: var(--p-transition);
+  position: relative;
+}
+
+.shop-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(29, 122, 242, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: var(--p-blue);
+}
+
+.image-wrapper {
+  height: 200px;
+  background: linear-gradient(135deg, var(--p-blue) 10%, var(--p-dark) 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  font-weight: 800;
+  position: relative;
+  transition: var(--p-transition);
+}
+
+.image-wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: var(--p-transition);
+}
+
+.shop-card:hover .image-wrapper::before {
+  opacity: 1;
+}
+
+.image-wrapper::after {
+  content: 'SHIKO PROFILIN';
+  position: absolute;
+  padding: 10px 24px;
+  background: #fff;
+  color: var(--p-blue);
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: var(--p-transition);
+}
+
+.shop-card:hover .image-wrapper::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shop-info {
+  padding: 24px;
+}
+
+.shop-name {
+  margin: 0 0 6px 0;
+  font-size: 1.5rem;
+  color: var(--p-dark);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.shop-address {
+  color: var(--p-text-muted);
+  font-size: 0.9375rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.badge-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.category-badge {
+  background: rgba(29, 122, 242, 0.08);
+  color: var(--p-blue);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.rating-mock {
+  color: #f59e0b;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Loading State Style */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(29, 122, 242, 0.1);
+  border-left-color: var(--p-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .discovery-container { padding: 40px 16px; }
+  .discovery-grid { grid-template-columns: 1fr; }
+}

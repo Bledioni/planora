@@ -71,7 +71,7 @@ function PlanoraLanding() {
       <div className="presentation-side">
         <div className="brand-header">
           <img src={logo} alt="Planora Logo" className="app-logo" />
-          <span className="brand-name">Planora</span>
+          <span className="brand-name">PlanoraBook</span>
         </div>
 
         <div className="hero-content">
@@ -92,10 +92,10 @@ function PlanoraLanding() {
         <div className="faq-container">
           <h2 className="faq-title">Pyetjet e shpeshta</h2>
           {faqs.map((faq, index) => (
-            <div className={`faq-item ${openFaq === index ? "active" : ""}`} key={index}>
+            <div className={`faq-item ${openFaq === index ? "" : "active"}`} key={index}>
               <button className="faq-question" onClick={() => setOpenFaq(openFaq === index ? null : index)}>
                 {faq.q}
-                <span className="faq-icon">{openFaq === index ? "−" : "+"}</span>
+                <span className="faq-icon">{openFaq === index ? "-" : "+"}</span>
               </button>
               <div className={`faq-answer ${openFaq === index ? "show" : ""}`}>
                 <p>{faq.a}</p>
