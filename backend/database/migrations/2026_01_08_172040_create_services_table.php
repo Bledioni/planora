@@ -17,8 +17,8 @@ return new class extends Migration
                 ->constrained('businesses')
                 ->onDelete('cascade');              
             $table->string('service_name');
-            $table->string('service_description');
-            $table->string('service_price');
+            $table->text('service_description')->nullable(); 
+            $table->decimal('service_price', 8, 2);
             $table->string('service_duration');
             $table->timestamps();
         });

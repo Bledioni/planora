@@ -1,0 +1,169 @@
+:root {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --error-bg: #fef2f2;
+  --error-text: #dc2626;
+  --white: #ffffff;
+}
+
+/* Faqja kryesore (Full Screen) */
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-gradient);
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Kur komponenti eshte brenda Dashboard-it (Embedded) */
+.register-embedded {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.register-card {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 450px;
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.register-header h2 {
+  color: var(--text-main);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.register-header p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Gabimet */
+.error-alert {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--error-text);
+}
+
+/* Grupet e Input-eve */
+.input-field {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.input-field input, 
+.input-field select {
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.input-field input:focus, 
+.input-field select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Rreshti per Emrin & Mbiemrin */
+.input-row {
+  display: flex;
+  gap: 15px;
+}
+
+.input-row .input-field {
+  flex: 1;
+}
+
+/* Butoni */
+.btn-register {
+  width: 100%;
+  padding: 14px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-register:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-register:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-register:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Footer */
+.register-footer {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.register-footer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .input-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .register-card {
+    padding: 30px 20px;
+  }
+}

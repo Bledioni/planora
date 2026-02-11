@@ -4,135 +4,244 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Business;
-use App\Models\Employees;
+use App\Models\Employees; 
 use App\Models\Services;
-use Illuminate\Database\QueryException;
+use App\Models\Categories;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str; // Added for slug generation
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BusinessesController extends Controller
 {
     public function __construct()
     {
-        // Public access for browsing; Owner access for management
-        $this->middleware(['auth:sanctum', 'role:business_owner'])
-             ->only(['InsertServices']);
+        $this->middleware('auth:sanctum')->except(['index', 'getDetailsBySlug', 'getCategories']);
     }
 
-    /**
-     * Step 1: List all businesses (Barber Discovery Page)
-     */
-    public function index()
+    /** 1. AKTIVIZIMI I BIZNESIT (Kill-Switch ON) */
+    /** 1. AKTIVIZIMI I BIZNESIT (Kill-Switch ON) */
+public function StoreBusiness(Request $request)
+{
+    \Log::info("Të dhënat nga React:", $request->all());
+
+    if (!$request->user_id) {
+        return response()->json(['message' => 'USER_ID nuk erdhi nga React!'], 400);
+    }
+
+    try {
+        // A) Krijojmë Biznesin
+        $business = Business::create([
+            'user_id'       => $request->user_id,
+            'category_id'   => $request->category_id,
+            'shop_name'     => $request->shop_name,
+            'address'       => $request->address,
+            'business_type' => $request->business_type,
+            'description'   => $request->description,
+            'slug'          => \Illuminate\Support\Str::slug($request->shop_name) . '-' . rand(100, 999),
+        ]);
+
+        // B) Përditësimi me Query Builder
+        // KËTU: Përdorim (int) për t'u siguruar që ID është numër
+        $affected = \Illuminate\Support\Facades\DB::table('users')
+            ->where('id', (int)$request->user_id) 
+            ->update([
+                'status' => 'active',
+                'business_id' => $business->id
+            ]);
+
+        \Log::info("Rreshta të ndryshuar në Users: " . $affected);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => $affected > 0 ? 'Biznesi u krijua dhe statusi u bë ACTIVE!' : 'Biznesi u krijua por User-i nuk u gjet.',
+            'affected_rows' => $affected
+        ], 201);
+
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Gabim: ' . $e->getMessage()], 500);
+    }
+}
+    /** 2. BLLOKIMI I BIZNESIT (Kill-Switch OFF) */
+    public function deactivateBusiness($id)
+{
+    if (auth()->user()->role !== 'admin') {
+        return response()->json(['message' => 'Pa autorizim.'], 403);
+    }
+
+    try {
+        $business = Business::findOrFail($id);
+
+        // Kjo bllokon Pronarin DHE të gjithë punonjësit (1 ose 100 qofshin)
+        $affected = \Illuminate\Support\Facades\DB::table('users')
+            ->where('business_id', $id)
+            ->orWhere('id', $business->user_id) // Sigurohemi edhe për pronarin
+            ->update(['status' => 'pending']);
+
+        return response()->json([
+            'status' => 'success', 
+            'message' => "Aksesi u pezullua për $affected përdorues."
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Gabim: ' . $e->getMessage()], 500);
+    }
+}
+
+    /** 3. ADMIN: Regjistron pronarin si punonjës */
+    public function adminRegisterOwnerAsEmployee(Request $request)
     {
-        try {
-            // CRITICAL FIX: Included 'slug' in the selection
-            $businesses = Business::select('id', 'slug', 'shop_name', 'address', 'business_type', 'description')->get();
-            
-            return response()->json([
-                'status' => 'success',
-                'data' => $businesses
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Gabim gjatë marrjes së bizneseve.'], 500);
+        if (auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Pa autorizim.'], 403);
         }
+
+        $request->validate(['business_id' => 'required|exists:businesses,id']);
+        $business = Business::find($request->business_id);
+        $ownerId = $business->user_id;
+
+        $exists = Employees::where('user_id', $ownerId)
+            ->where('business_id', $business->id)
+            ->exists();
+
+        if ($exists) return response()->json(['message' => 'Pronari është regjistruar tashmë si punonjës.'], 400);
+
+        Employees::create([
+            'user_id' => $ownerId,
+            'business_id' => $business->id,
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Pronari u shtua si punonjës me sukses!'], 201);
     }
 
-    /**
-     * Step 2: Get Details by Slug (planora.com/tevisi)
-     * This transforms the data into the exact format your React App expects.
-     */
-    public function getDetailsBySlug($slug)
+    /** 4. GET MY BUSINESS (Për React Dashboard) */
+    public function getMyBusiness()
     {
-        $business = Business::with(['employees.user:id,name', 'services'])
-            ->where('slug', $slug)
+        $business = Business::with(['employees.user:id,name,surname'])
+            ->where('user_id', auth()->id())
             ->first();
 
-        if (!$business) {
-            return response()->json(['message' => 'Biznesi nuk u gjet.'], 404);
-        }
+        if (!$business) return response()->json(['message' => 'Biznesi nuk u gjet'], 404);
+
+        $formattedEmployees = $business->employees->map(function($emp) {
+            return [
+                'id' => $emp->id,
+                'name' => ($emp->user->name ?? 'N/A') . ' ' . ($emp->user->surname ?? '')
+            ];
+        });
 
         return response()->json([
-            'status' => 'success',
-            'data' => $this->formatBusinessData($business)
-        ], 200);
+            'id' => $business->id,
+            'shop_name' => $business->shop_name,
+            'employees' => $formattedEmployees
+        ]);
     }
 
-    /**
-     * Step 3: Get Details by ID (Fallback/Internal)
-     */
-    public function getDetails($id)
+    /** 5. GET BUSINESS STAFF (Kill-Switch Protected) */
+    public function getBusinessStaff(Request $request)
     {
-        $business = Business::with(['employees.user:id,name', 'services'])->find($id);
+        $business = Business::where('user_id', $request->user()->id)->first();
+        
+        if (!$business) return response()->json(['message' => 'Biznesi nuk u gjet'], 404);
 
-        if (!$business) {
-            return response()->json(['message' => 'Biznesi nuk u gjet.'], 404);
-        }
+        $staff = User::where('business_id', $business->id)
+                    ->select('id', 'name', 'email', 'status')
+                    ->get();
+
+        return response()->json($staff);
+    }
+
+    /** 6. DASHBOARD STATS */
+    public function getOwnerDashboard()
+    {
+        $user = auth()->user();
+        $business = Business::where('user_id', $user->id)->first();
+
+        if (!$business) return response()->json(['message' => 'Nuk keni biznes.'], 404);
 
         return response()->json([
             'status' => 'success',
-            'data' => $this->formatBusinessData($business)
-        ], 200);
+            'data' => [
+                'id' => $business->id,
+                'shop_name' => $business->shop_name,
+                'stats' => [
+                    'total_employees' => $business->employees()->count(),
+                    'total_services' => $business->services()->count(),
+                ]
+            ]
+        ]);
     }
 
-    /**
-     * Helper: Keep data structure consistent for React
-     */
+    /** 7. PUBLIC ACTIONS */
+    public function index() { return response()->json(Business::latest()->get()); }
+
+    public function getDetailsBySlug($slug)
+    {
+        $business = Business::with(['employees.user:id,name,surname', 'services'])->where('slug', $slug)->first();
+        if (!$business) return response()->json(['message' => 'Jo gjetur'], 404);
+        return response()->json(['status' => 'success', 'data' => $this->formatBusinessData($business)], 200);
+    }
+
+    public function getCategories() { return response()->json(['status' => 'success', 'data' => Categories::all()]); }
+
+    /** 8. INSERT SERVICES */
+    public function InsertServices(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'business_id' => 'required|exists:businesses,id',
+            'service_name' => 'required|string',
+            'service_price' => 'required|numeric',
+            'service_duration' => 'required|integer',
+        ]);
+
+        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+
+        $service = Services::create([
+            'business_id' => $request->business_id,
+            'service_name' => $request->service_name,
+            'description' => $request->service_description,
+            'service_price' => $request->service_price,
+            'service_duration' => $request->service_duration,
+        ]);
+
+        return response()->json(['status' => 'success', 'service' => $service], 201);
+    }
+
+    /** HELPER FORMAT */
     private function formatBusinessData($business)
     {
         return [
             'id' => $business->id,
-            'slug' => $business->slug,
             'shop_name' => $business->shop_name,
             'address' => $business->address,
-            'description' => $business->description,
-            'barbers' => $business->employees->map(function ($emp) {
-                return [
-                    'id' => $emp->id,
-                    'name' => $emp->user->name ?? 'Barber i paemërtuar',
-                ];
-            }),
-            'services' => $business->services->map(function ($service) {
-                return [
-                    'id' => $service->id,
-                    'name' => $service->service_name,
-                    'price' => $service->service_price,
-                    'duration' => $service->service_duration,
-                    'description' => $service->service_description,
-                ];
-            }),
+            'barbers' => $business->employees->map(fn($emp) => [
+                'id' => $emp->id,
+                'name' => ($emp->user->name ?? '') . ' ' . ($emp->user->surname ?? ''),
+            ]),
+            'services' => $business->services->map(fn($s) => [
+                'id' => $s->id,
+                'name' => $s->service_name,
+                'price' => $s->service_price,
+            ]),
         ];
     }
 
-    /**
-     * Add Services to a Business (Owner Only)
-     */
-    public function InsertServices(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'business_id'         => 'required|integer|exists:businesses,id',
-            'service_name'        => 'required|string|max:255',
-            'service_description' => 'nullable|string|max:1000',
-            'service_price'       => 'required|numeric|min:0',
-            'service_duration'    => 'required|integer|min:1|max:480', 
+    /** AKTIVIZIMI MASIV (Back to work!) */
+public function activateBusiness($id)
+{
+    try {
+        $business = Business::findOrFail($id);
+
+        // Aktivizojmë pronarin dhe gjithë stafin me një goditje
+        $affected = \Illuminate\Support\Facades\DB::table('users')
+            ->where('business_id', $id)
+            ->orWhere('id', $business->user_id)
+            ->update(['status' => 'active']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Biznesi u ri-aktivizua! $affected përdorues janë tani ACTIVE."
         ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        try {
-            $service = Services::create($request->all());
-
-            return response()->json([
-                'status'  => 201,
-                'message' => 'Shërbimi u shtua me sukses.',
-                'data'    => $service
-            ], 201);
-
-        } catch (\Exception $e) {
-            Log::error("Service Error: " . $e->getMessage());
-            return response()->json(['message' => 'Gabim në server.'], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Gabim: ' . $e->getMessage()], 500);
     }
+}
 }
