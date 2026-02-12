@@ -48,8 +48,6 @@ public function GetBusinessOwners()
             ->latest()
             ->get();
 
-        // Nëse kjo kthen përsëri vetëm një, shto këtë për debug:
-        // return response()->json(\App\Models\User::all()); 
 
         return response()->json($owners);
     } catch (\Exception $e) {

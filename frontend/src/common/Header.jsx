@@ -17,8 +17,10 @@ import OwnerLayout from "../components/business/OwnerLayout";
 import ManageSchedules from "../components/business/ManageSchedules";
 import AppointmentsView from "../components/business/AppointmentsView";
 import ProtectedRoute from "./ProtectedRoute";
-import BusinessRegister from "../components/BusinessRegister";
+import Register from "../components/Register";
 import AdminBusinessList from "../components/admin/script/AdminBusinessList";
+import NotFound from "../components/script/NotFound";
+
 
 
 function Header() {
@@ -31,7 +33,7 @@ function Header() {
         <Route path="/barberdiscovery" element={<BarberDiscovery />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/:shopSlug" element={<BookingApp />} />
-        <Route path="/businessRegister" element={<BusinessRegister />} />
+        <Route path="/Register" element={<Register />} />
 
         {/* --- RRUGËT E MBROJTURA: PËRDORUESIT (Klientët) --- */}
         {/* Këtu shtohen të gjitha rolet që lejohen të kenë një wishlist */}
@@ -62,7 +64,7 @@ function Header() {
         </Route>
 
         {/* --- 404 --- */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<NotFound/>} />
       </Routes>
     </Router>
   );

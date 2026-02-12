@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { User, Mail, Lock, Phone, ArrowRight, ShieldCheck } from 'lucide-react';
-import '../components/BusinessRegister.css';
+import '../components/Register.css';
 
 const BusinessRegister = ({ isAdminCreator = false }) => {
     const navigate = useNavigate();

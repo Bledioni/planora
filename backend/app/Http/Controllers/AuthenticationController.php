@@ -24,7 +24,6 @@ class AuthenticationController extends Controller
         'business_id'  => 'nullable|integer' 
     ]);
 
-    // 1. Përcaktojmë STATUSIN në bazë të ROLIT dhe AUTORITETIT
     $status = 'pending'; // Default për çdo regjistrim publik
 
     if (auth('sanctum')->check()) {

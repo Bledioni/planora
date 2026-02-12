@@ -76,3 +76,4 @@ Route::middleware('auth:sanctum')->get('/user-profile', function (Request $reque
         'email'  => $request->user()->email,
     ]);
 });
+
