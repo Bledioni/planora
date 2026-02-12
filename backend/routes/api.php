@@ -10,6 +10,8 @@ use App\Http\Controllers\Admin\StoreBusinessController;
 use App\Http\Controllers\AppointmentsController;
 use App\Http\Controllers\Admin\AdminBusinessController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\WishListController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +27,7 @@ Route::get('/businesses/slug/{slug}', [BusinessesController::class, 'getDetailsB
 Route::get('/categories', [BusinessesController::class, 'getCategories']);
 Route::get('/available-slots', [AppointmentsController::class, 'getAvailableSlots']);
 Route::post('/makeAppointment', [AppointmentsController::class, 'MakeAppointment']);
+Route::post('/wishlistRegister', [WishListController::class, 'WishListRegister']);
 
 /*
 |--------------------------------------------------------------------------
