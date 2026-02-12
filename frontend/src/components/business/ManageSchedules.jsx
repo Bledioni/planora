@@ -9,7 +9,7 @@ const ManageSchedules = () => {
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [schedule, setSchedule] = useState({});
-    const [loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
 
     const days = ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"];
 

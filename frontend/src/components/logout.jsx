@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../index'; // Sigurohu që path-i i api.js është i saktë
-import Swal from 'sweetalert2'; // Ose përdor një alert të thjeshtë
 
 const Logout = () => {
     const navigate = useNavigate();
