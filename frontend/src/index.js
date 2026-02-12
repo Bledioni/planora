@@ -9,7 +9,7 @@ axios.defaults.withCredentials = true;
 
 // 1. Krijimi i instancës API
 export const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: "https://planora-production-bd59.up.railway.app/api/",
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
@@ -30,7 +30,7 @@ api.interceptors.request.use(config => {
 
 // 3. Instanca për Backend (pa /api)
 export const backend = axios.create({
-  baseURL: "http://127.0.0.1:8000/",
+  baseURL: "https://planora-production-bd59.up.railway.app/",
   withCredentials: true
 });
 
