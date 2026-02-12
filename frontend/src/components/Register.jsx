@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import { User, Mail, Lock, Phone, ArrowRight, ShieldCheck } from 'lucide-react';
 import '../components/Register.css';
+import { api } from '..';
 
 const BusinessRegister = ({ isAdminCreator = false }) => {
     const navigate = useNavigate();
@@ -34,7 +34,7 @@ const BusinessRegister = ({ isAdminCreator = false }) => {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
         try {
-            const response = await axios.post('http://localhost:8000/api/register', formData, config);
+            const response = await api.post('/register', formData, config);
             
             if (response.data.status === 'success') {
                 setSuccessMsg(response.data.message);
