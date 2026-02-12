@@ -24,6 +24,8 @@ class User extends Authenticatable
         'phone_number',
         'password',
         'role',
+        'status',
+        'business_id',
     ];
 
     /**
@@ -45,4 +47,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function business()
+{
+    // Një përdorues (Owner) ka vetëm një biznes
+    return $this->hasOne(Business::class, 'user_id');
+}
 }

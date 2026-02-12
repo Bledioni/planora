@@ -5,97 +5,105 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class AuthenticationController extends Controller
 {
     /* ======================
-        REGISTER
+        REGISTER LOGIC
     ====================== */
-    public function register(Request $request)
-    {
-        $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'surname'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'phone_number'    => 'required|unique:users,phone_number',
-            'password' => 'required|min:8|confirmed',
-            'role'     => 'required|string'
-        ]);
+   public function register(Request $request)
+{
+    $validated = $request->validate([
+        'name'         => 'required|string',
+        'surname'      => 'required|string',
+        'email'        => 'required|email|unique:users,email',
+        'phone_number'        => 'required|string|unique:users,phone_number',
+        'password'     => 'required|min:8|confirmed',
+        'role'         => 'required|string', // admin, business_owner, employee
+        'business_id'  => 'nullable|integer' 
+    ]);
 
-        try {
-            $user = User::create([
-                'name'     => $validated['name'],
-                'surname'     => $validated['surname'],
-                'email'    => $validated['email'],
-                'phone_number'    => $validated['phone_number'],
-                'password' => Hash::make($validated['password']),
-                'role'     => $validated['role'],
-            ]);
+    $status = 'pending'; // Default për çdo regjistrim publik
 
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'User registered successfully',
-                'user'    => $user
-            ], 201); // CREATED
+    if (auth('sanctum')->check()) {
+        $currentUser = auth('sanctum')->user();
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Registration failed',
-                'error'   => $e->getMessage()
-            ], 500); // SERVER ERROR
+        // Nëse Admini regjistron dikë (çfarëdo roli), bëhet direkt ACTIVE
+        if ($currentUser->role === 'admin') {
+            $status = 'active';
+        }
+
+        // Nëse Owner regjistron një Employee, bëhet direkt ACTIVE
+        if ($currentUser->role === 'business_owner' && $validated['role'] === 'employee') {
+            $status = 'active';
+            $validated['business_id'] = $currentUser->business_id; // Ia lidhim automatikisht biznesin
         }
     }
 
+    // 2. KRIJIMI I PËRDORUESIT (Për të gjithë)
+    $user = User::create([
+    'name'         => $validated['name'],
+    'surname'      => $validated['surname'],
+    'email'        => $validated['email'],
+    'phone_number' => $request->phone_number, // KJO MUNGONTE!
+    'password'     => Hash::make($validated['password']),
+    'role'         => $validated['role'],
+    'status'       => $status,
+    'business_id'  => $validated['business_id'] ?? null,
+]);
+
+    return response()->json(['status' => 'success', 'user' => $user], 201);
+}
+
     /* ======================
-        LOGIN
+        LOGIN LOGIC
     ====================== */
     public function login(Request $request)
     {
         $validated = $request->validate([
             'email'    => 'required|email',
-            'password' => 'required'
+            'password' => 'required|string|min:6'
         ]);
 
         $user = User::where('email', $validated['email'])->first();
 
-        // User not found
-        if (!$user) {
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'User not found'
-            ], 404); // NOT FOUND
+                'message' => 'Email ose fjalëkalim i pasaktë'
+            ], 401); 
         }
 
-        // Wrong password
-        if (!Hash::check($validated['password'], $user->password)) {
+        // Bllokimi i llogarive pending ose suspended
+        if ($user->status === 'pending') {
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Invalid credentials'
-            ], 401); // UNAUTHORIZED
+                'status'  => 'awaiting_approval',
+                'message' => 'Llogaria juaj është në proces verifikimi nga Admini.'
+            ], 403);
         }
 
-        // Create token
-        $token = $user->createToken('auth_token')->plainTextToken;
+        if ($user->status === 'suspended') {
+            return response()->json(['message' => 'Llogaria juaj është pezulluar.'], 403);
+        }
+
+        $token = $user->createToken('auth_token', [$user->role])->plainTextToken;
 
         return response()->json([
             'status'  => 'success',
-            'message' => 'Login successful',
             'token'   => $token,
-            'user'    => $user
-        ], 200); // OK
+            'user'    => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'role'  => $user->role,
+                'status' => $user->status
+            ]
+        ], 200);
     }
 
-    /* ======================
-        LOGOUT
-    ====================== */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Logged out successfully'
-        ], 200); // OK
+        return response()->json(['status' => 'success', 'message' => 'Logged out']);
     }
 }

@@ -1,0 +1,115 @@
+.schedule-container {
+    margin-left: 260px;
+    padding: 40px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+    .schedule-container { margin-left: 0; padding: 20px; padding-top: 80px; }
+}
+
+/* Butoni Kthehu te lista */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-bottom: 20px;
+}
+
+.btn-back:hover {
+    color: #2563eb;
+    border-color: #2563eb;
+    background: #eff6ff;
+    transform: translateX(-3px);
+}
+
+.active-user-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.icon-box-blue {
+    background: #2563eb;
+    padding: 12px;
+    border-radius: 12px;
+}
+
+/* Kartat e punonjesve */
+.employee-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.employee-card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.employee-card:hover { transform: translateY(-5px); }
+
+.badge-blue {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+/* Rreshtat e orarit */
+.schedule-item {
+    background: white;
+    padding: 18px 25px;
+    border-radius: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #f1f5f9;
+}
+
+.status-toggle.is-on { background: #dcfce7; color: #15803d; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; }
+.status-toggle.is-off { background: #f1f5f9; color: #64748b; border: none; padding: 5px 15px; border-radius: 20px; cursor: pointer; }
+
+/* Butoni Ruaj Blu */
+.btn-save-blue {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-save-blue:hover { background: #1d4ed8; }
+.btn-save-blue.success { background: #10b981; }
+
+.input-group label { display: block; font-size: 10px; color: #64748b; font-weight: 800; text-transform: uppercase; margin-bottom: 3px; }
+.input-group input { padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; }
+
+@media (max-width: 900px) {
+    .schedule-item { flex-direction: column; align-items: stretch; gap: 15px; }
+    .btn-back { width: 100%; justify-content: center; }
+}

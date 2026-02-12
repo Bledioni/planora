@@ -46,4 +46,9 @@ class Business extends Model
         {
             return 'slug'; // Tells Laravel to look up by slug instead of ID
         }
+
+        public function business()
+{
+    return $this->hasOne(Business::class, 'user_id');
+}
 }
