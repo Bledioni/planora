@@ -9,7 +9,7 @@ const Logout = () => {
         const performLogout = async () => {
             try {
                 // 1. Lajmërojmë Backend-in (Opsionale por e rekomanduar për siguri)
-                await api.post('/logout');
+                await api.post('/auth/logout');
             } catch (err) {
                 console.error("Gabim gjatë fshirjes së tokenit në server", err);
             } finally {

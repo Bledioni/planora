@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 class Business extends Model
 {
@@ -19,6 +20,16 @@ class Business extends Model
     ];
 
     /**
+     * Scope to get only active businesses (with active owners)
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereHas('user', function($q) {
+            $q->where('status', 'active');
+        });
+    }
+
+    /**
      * The Owner of the business
      */
     public function user(): BelongsTo
@@ -27,7 +38,15 @@ class Business extends Model
     }
 
     /**
-     * Relationship: Get all Barbers for this shop
+     * The Category of the business
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Categories::class, 'category_id');
+    }
+
+    /**
+     * Get all employees for this business
      */
     public function employees(): HasMany
     {
@@ -35,7 +54,17 @@ class Business extends Model
     }
 
     /**
-     * Relationship: Get all Services (Haircut, Beard, etc.)
+     * Get only ACTIVE employees for this business
+     */
+    public function activeEmployees(): HasMany
+    {
+        return $this->employees()->whereHas('user', function($query) {
+            $query->where('status', 'active');
+        });
+    }
+
+    /**
+     * Get all Services
      */
     public function services(): HasMany
     {
@@ -43,12 +72,7 @@ class Business extends Model
     }
 
     public function getRouteKeyName()
-        {
-            return 'slug'; // Tells Laravel to look up by slug instead of ID
-        }
-
-        public function business()
-{
-    return $this->hasOne(Business::class, 'user_id');
-}
+    {
+        return 'slug';
+    }
 }

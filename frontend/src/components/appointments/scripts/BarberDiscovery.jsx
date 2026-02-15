@@ -4,25 +4,30 @@ import { api } from '../../../index';
 import '../../appointments/style/BarberDiscovery.css'; 
 
 const BarberDiscovery = () => {
-  const [businesses, setBusinesses] = useState([]); // Default është array boshe []
+  const [businesses, setBusinesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    api.get('/businesses')
+    api.get('/public/businesses/all')
       .then(res => {
-        // Laraveli yt kthen array direkt te res.data
-        // Ky kontroll i mbulon të gjitha rastet (nëse vijnë si array ose si objekt me .data)
-        const dataFromApi = Array.isArray(res.data) ? res.data : (res.data.data || []);
+        console.log("API Response:", res.data); // DEBUG - remove later
+
+        // FIX: Your Laravel returns res.data.businesses
+        const dataFromApi = Array.isArray(res.data) 
+          ? res.data 
+          : (res.data.businesses || res.data.data || []);
+        
+        console.log("Businesses found:", dataFromApi.length); // DEBUG - remove later
         
         setBusinesses(dataFromApi);
         setLoading(false);
       })
       .catch(err => {
         console.error("Planora API Error:", err);
-        setBusinesses([]); // Sigurohemi që mbetet array boshe edhe në gabim
+        setBusinesses([]);
         setLoading(false);
       });
   }, []);
@@ -43,7 +48,6 @@ const BarberDiscovery = () => {
       </header>
 
       <div className="discovery-grid">
-        {/* Përdorim ?.map për siguri maksimale */}
         {businesses?.length > 0 ? (
           businesses.map((shop) => (
             <article 

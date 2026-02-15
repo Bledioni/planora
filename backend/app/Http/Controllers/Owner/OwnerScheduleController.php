@@ -1,22 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Owner;
 
-use App\Models\Schedules; // Sigurohu që modeli në App\Models quhet Schedules.php
+use App\Http\Controllers\Controller;
+use App\Models\Schedules;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class ScheduleController extends Controller
+class OwnerScheduleController extends Controller
 {
-    public function __construct()
-    {
-        // Sigurohu që middleware 'role' është i regjistruar në Kernel.php (alias: role)
-        $this->middleware(['auth:sanctum', 'role:business_owner']);
-    }
-
-    /**
-     * Ruaj ose përditëso orarin.
-     */
     public function setSchedule(Request $request): JsonResponse
     {
         // 1. Validimi i rreptë
@@ -58,9 +50,6 @@ class ScheduleController extends Controller
         ], 200);
     }
 
-    /**
-     * Merr orarin e përgjithshëm të biznesit (kur employee_id është NULL).
-     */
     public function getBusinessSchedule($businessId): JsonResponse
     {
         $schedule = Schedules::where('business_id', $businessId)
@@ -71,9 +60,6 @@ class ScheduleController extends Controller
         return response()->json($schedule);
     }
 
-    /**
-     * Merr orarin specifik për një punonjës.
-     */
     public function getEmployeeSchedule($businessId, $employeeId): JsonResponse
     {
         $schedules = Schedules::where('business_id', $businessId)

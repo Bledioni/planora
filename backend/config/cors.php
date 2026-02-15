@@ -16,10 +16,6 @@ return [
     // Këtu shtohet linku i React-it (Netlify) dhe Localhost për testim
     'allowed_origins' => [
     'http://localhost:3000',
-    'https://courageous-gecko-076716.netlify.app',
-    'https://splendid-bienenstitch-fb7ca4.netlify.app',
-    'https://planora-git-main-bledionis-projects.vercel.app', 
-    'https://planora.vercel.app',
     'https://www.planorabook.com',
 ],
 

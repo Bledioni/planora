@@ -7,8 +7,7 @@ import BarberDiscovery from "../components/appointments/scripts/BarberDiscovery"
 import PlanoraLanding from "../landing/planoraLanding";
 import Login from "../components/login";
 import Logout from "../components/logout";
-import AdminUsers from "../components/admin/script/AdminUsers";
-import AdminDashboard from "../components/admin/adminDashboard";
+import AdminDashboard from "../components/admin/script/AdminDashboard";
 import BusinessList from "../components/admin/script/BusinessList";
 import BusinessDashboard from "../components/admin/script/BusinessDashboard";
 import CreateBusiness from "../components/admin/script/CreateBusiness";
@@ -20,6 +19,9 @@ import ProtectedRoute from "./ProtectedRoute";
 import Register from "../components/Register";
 import AdminBusinessList from "../components/admin/script/AdminBusinessList";
 import NotFound from "../components/script/NotFound";
+import AdminSidebar from "../components/admin/script/AdminSidebar";
+import BusinessEmployees from "../components/admin/script/BusinessEmployees";
+
 
 
 
@@ -43,13 +45,15 @@ function Header() {
 
         {/* --- RRUGËT E MBROJTURA: ADMIN --- */}
         <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path="/adminDashboard" element={<AdminDashboard />} />
-          <Route path="/adminUsers" element={<AdminUsers />} />
+          <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
           <Route path="/admin/businesses" element={<BusinessList />} />
           <Route path="/admin/business/:businessId" element={<BusinessDashboard />} />
           <Route path="/admin/business/:businessId/add-employee" element={<AddEmployee />} />
           <Route path="/admin/create-business/:userId" element={<CreateBusiness />} />
           <Route path="/admin/AdminBusinessList" element={<AdminBusinessList />} />
+          <Route path="/admin/AdminSideBar" element={<AdminSidebar />} />
+          <Route path="/admin/employees/:businessId/employees" element={<BusinessEmployees />} />
+
         </Route>
 
         {/* --- RRUGËT E MBROJTURA: BUSINESS OWNER --- */}

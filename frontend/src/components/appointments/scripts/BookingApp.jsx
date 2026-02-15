@@ -7,10 +7,9 @@ const BookingApp = () => {
   const { shopSlug } = useParams();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [details, setDetails] = useState({ barbers: [], services: [] });
+  const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
   
-  // Selections
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
@@ -23,9 +22,19 @@ const BookingApp = () => {
     if (!shopSlug) return;
     setLoading(true);
     try {
-      const res = await api.get(`/businesses/slug/${shopSlug}`);
-      setDetails(res.data.data);
-      setSelectedBusiness(res.data.data.id);
+      const res = await api.get(`/public/businesses/details/${shopSlug}`);
+      
+      console.log("API Response:", res.data); // DEBUG
+
+      // FIX: API returns res.data.business NOT res.data.data
+      const businessData = res.data.business || res.data.data || res.data;
+      
+      console.log("Business Data:", businessData); // DEBUG
+      console.log("Employees:", businessData.employees); // DEBUG
+      console.log("Services:", businessData.services); // DEBUG
+
+      setDetails(businessData);
+      setSelectedBusiness(businessData.id);
     } catch (err) {
       console.error("Error:", err);
       alert("Biznesi nuk u gjet.");
@@ -36,19 +45,17 @@ const BookingApp = () => {
 
   useEffect(() => { initApp(); }, [initApp]);
 
-  // 2. Fetch Slots Function
+  // 2. Fetch Slots
   const fetchSlots = useCallback(async () => {
     if (!selectedBarber || !selectedService || !selectedBusiness) return;
     
     setLoading(true);
     try {
-      const res = await api.get('/available-slots', {
-        params: {
-          business_id: selectedBusiness,
-          employee_id: selectedBarber,
-          service_id: selectedService,
-          date: selectedDate
-        }
+      const res = await api.post('/public/booking/available-slots', {
+        // FIX: Use POST not GET (matches your routes)
+        employee_id: selectedBarber,
+        service_id: selectedService,
+        date: selectedDate
       });
       setSlots(res.data);
     } catch (err) {
@@ -59,9 +66,8 @@ const BookingApp = () => {
     }
   }, [selectedBusiness, selectedBarber, selectedService, selectedDate]);
 
-  // 3. AUTO-REFRESH SLOTS: Kjo siguron që kur ndryshon data (psh Day 4), oraret vijnë menjëherë
   useEffect(() => {
-    if (step === 2) { // Vetëm nëse jemi te faqja e orareve
+    if (step === 2) {
       fetchSlots();
     }
   }, [selectedDate, fetchSlots, step]);
@@ -70,7 +76,7 @@ const BookingApp = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/makeAppointment', {
+      await api.post('/public/booking/create-appointment', {
         business_id: selectedBusiness,
         employee_id: selectedBarber,
         service_id: selectedService,
@@ -81,12 +87,14 @@ const BookingApp = () => {
       });
       setStep(4);
     } catch (err) {
-      alert("Gabim gjatë rezervimit.");
+      console.error("Booking error:", err);
+      alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
     } finally {
       setLoading(false);
     }
   };
 
+  // FIX: Use employees not barbers
   const currentService = details.services?.find(s => s.id === selectedService);
 
   return (
@@ -101,10 +109,11 @@ const BookingApp = () => {
           {currentService && (
             <div style={{ marginTop: '40px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
               <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--p-blue)', letterSpacing: '1px' }}>DETAJET</p>
-              <h3 style={{ margin: '10px 0 5px 0' }}>{currentService.name}</h3>
+              {/* FIX: service fields - use service_name not name */}
+              <h3 style={{ margin: '10px 0 5px 0' }}>{currentService.service_name || currentService.name}</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className="service-duration">🕒 {currentService.duration} min</span>
-                <span style={{fontWeight: '700'}}>{currentService.price}€</span>
+                <span className="service-duration">🕒 {currentService.service_duration || currentService.duration} min</span>
+                <span style={{fontWeight: '700'}}>{currentService.service_price || currentService.price}€</span>
               </div>
               {selectedTime && (
                 <div style={{ marginTop: '15px', padding: '10px', background: '#fff', borderRadius: '8px', border: '1px solid #ddd' }}>
@@ -127,25 +136,53 @@ const BookingApp = () => {
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimin</h2>
+              
+              {/* FIX: Use employees not barbers, use employee.user.name */}
               <div className="wide-grid">
-                {details.barbers?.map(b => (
-                  <div key={b.id} className={`service-row ${selectedBarber === b.id ? 'active' : ''}`} onClick={() => setSelectedBarber(b.id)}>
-                    <strong>{b.name}</strong>
-                  </div>
-                ))}
-              </div>
-              <div style={{ display: 'grid', gap: '12px', marginTop: '20px' }}>
-                {details.services?.map(s => (
-                  <div key={s.id} className={`service-row ${selectedService === s.id ? 'active' : ''}`} onClick={() => setSelectedService(s.id)}>
-                    <div className="service-info-main">
-                      <strong>{s.name}</strong>
-                      <span className="service-duration">🕒 {s.duration} min</span>
+                {details.employees?.length > 0 ? (
+                  details.employees.map(emp => (
+                    <div 
+                      key={emp.id} 
+                      className={`service-row ${selectedBarber === emp.id ? 'active' : ''}`} 
+                      onClick={() => setSelectedBarber(emp.id)}
+                    >
+                      <strong>{emp.user?.name} {emp.user?.surname}</strong>
                     </div>
-                    <strong>{s.price}€</strong>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p style={{color: 'gray'}}>Nuk ka barberë të disponueshëm.</p>
+                )}
               </div>
-              <button className="primary-button" style={{marginTop: '30px'}} disabled={!selectedBarber || !selectedService} onClick={() => setStep(2)}>
+
+              {/* Services */}
+              <div style={{ display: 'grid', gap: '12px', marginTop: '20px' }}>
+                {details.services?.length > 0 ? (
+                  details.services.map(s => (
+                    <div 
+                      key={s.id} 
+                      className={`service-row ${selectedService === s.id ? 'active' : ''}`} 
+                      onClick={() => setSelectedService(s.id)}
+                    >
+                      <div className="service-info-main">
+                        {/* FIX: Use service_name not name */}
+                        <strong>{s.service_name || s.name}</strong>
+                        <span className="service-duration">🕒 {s.service_duration || s.duration} min</span>
+                      </div>
+                      {/* FIX: Use service_price not price */}
+                      <strong>{s.service_price || s.price}€</strong>
+                    </div>
+                  ))
+                ) : (
+                  <p style={{color: 'gray'}}>Nuk ka shërbime të disponueshme.</p>
+                )}
+              </div>
+
+              <button 
+                className="primary-button" 
+                style={{marginTop: '30px'}} 
+                disabled={!selectedBarber || !selectedService} 
+                onClick={() => setStep(2)}
+              >
                 Vazhdo te Oraret
               </button>
             </div>
@@ -154,16 +191,35 @@ const BookingApp = () => {
           {step === 2 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Kohën</h2>
-              <input type="date" className="booking-input" value={selectedDate} min={new Date().toISOString().split('T')[0]} onChange={(e) => setSelectedDate(e.target.value)} />
+              <input 
+                type="date" 
+                className="booking-input" 
+                value={selectedDate} 
+                min={new Date().toISOString().split('T')[0]} 
+                onChange={(e) => setSelectedDate(e.target.value)} 
+              />
               
               {loading ? <p>Duke kërkuar oraret...</p> : (
                 <div className="slot-grid" style={{marginTop: '20px'}}>
                   {slots.length > 0 ? slots.map(t => (
-                    <button key={t} className="select-btn" onClick={() => { setSelectedTime(t); setStep(3); }}>{t}</button>
-                  )) : <p style={{color: 'red'}}>Nuk ka orare të lira për këtë datë (Day 4).</p>}
+                    <button 
+                      key={t} 
+                      className="select-btn" 
+                      onClick={() => { setSelectedTime(t); setStep(3); }}
+                    >
+                      {t}
+                    </button>
+                  )) : (
+                    <p style={{color: 'red'}}>Nuk ka orare të lira për këtë datë.</p>
+                  )}
                 </div>
               )}
-              <button className="back-link" onClick={() => setStep(1)} style={{marginTop: '20px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer'}}>← Mbrapa</button>
+              <button 
+                onClick={() => setStep(1)} 
+                style={{marginTop: '20px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer'}}
+              >
+                ← Mbrapa
+              </button>
             </div>
           )}
 
@@ -174,9 +230,16 @@ const BookingApp = () => {
                 <input className="booking-input" placeholder="Emri" required onChange={e => setUserInfo({...userInfo, name: e.target.value})} />
                 <input className="booking-input" type="email" placeholder="Email" required onChange={e => setUserInfo({...userInfo, email: e.target.value})} />
                 <input className="booking-input" placeholder="Telefoni" required onChange={e => setUserInfo({...userInfo, phone: e.target.value})} />
-                <button type="submit" className="primary-button" style={{marginTop: '20px'}}>Konfirmo Rezervimin</button>
+                <button type="submit" className="primary-button" style={{marginTop: '20px'}}>
+                  {loading ? 'Duke dërguar...' : 'Konfirmo Rezervimin'}
+                </button>
               </form>
-              <button className="back-link" onClick={() => setStep(2)} style={{marginTop: '15px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer'}}>← Mbrapa</button>
+              <button 
+                onClick={() => setStep(2)} 
+                style={{marginTop: '15px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer'}}
+              >
+                ← Mbrapa
+              </button>
             </div>
           )}
 
@@ -184,7 +247,7 @@ const BookingApp = () => {
             <div className="fade-in" style={{textAlign: 'center', padding: '40px'}}>
               <div style={{fontSize: '60px'}}>✅</div>
               <h2>U krye!</h2>
-              <p>Rezervimi u dërgua me sukses.</p>
+              <p>Rezervimi u dërgua me sukses. Kontrolloni email-in tuaj!</p>
               <button className="primary-button" onClick={() => window.location.reload()}>Kthehu</button>
             </div>
           )}
