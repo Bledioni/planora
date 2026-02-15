@@ -1,38 +1,41 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { api } from '../index'; // Axios instance jote
+import { api } from '../index';
 
 const ProtectedRoute = ({ allowedRoles }) => {
   const [isVerifying, setIsVerifying] = useState(true);
   const [actualRole, setActualRole] = useState(null);
-  const token = localStorage.getItem('auth_token');
   const location = useLocation();
+  const navigatedUser = location.state?.user;
 
   useEffect(() => {
+    // If we just logged in, use the role from navigation state
+    if (navigatedUser?.role) {
+      setActualRole(navigatedUser.role);
+      setIsVerifying(false);
+      return;
+    }
+
+    // Otherwise verify with server (e.g. page refresh)
     const verifyUser = async () => {
-      if (!token) {
-        setIsVerifying(false);
-        return;
-      }
       try {
-        // Pyesim backend-in per rolin e vertete
-        const res = await api.get('/user-profile');
-        setActualRole(res.data.role); 
+        const res = await api.get('/auth/profile');
+        setActualRole(res.data.role);
       } catch (err) {
         console.error("Verifikimi dështoi", err);
-        localStorage.removeItem('auth_token');
+        setActualRole(null);
       } finally {
         setIsVerifying(false);
       }
     };
     verifyUser();
-  }, [token]);
+  }, [navigatedUser]);
 
   if (isVerifying) {
-    return <div>Duke verifikuar autorizimin...</div>; // Ose një Spinner
+    return <div>Duke verifikuar autorizimin...</div>;
   }
 
-  if (!token || !actualRole) {
+  if (!actualRole) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

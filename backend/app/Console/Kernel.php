@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
     $schedule->command('app:send-reminders')->everyMinute();
 }
 
+
     /**
      * Register the commands for the application.
      */

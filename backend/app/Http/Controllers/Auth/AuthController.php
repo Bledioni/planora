@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class AuthenticationController extends Controller
+class AuthController extends Controller
 {
     /* ======================
         REGISTER LOGIC
@@ -20,38 +21,35 @@ class AuthenticationController extends Controller
         'email'        => 'required|email|unique:users,email',
         'phone_number'        => 'required|string|unique:users,phone_number',
         'password'     => 'required|min:8|confirmed',
-        'role'         => 'required|string', // admin, business_owner, employee
+        'role'         => 'required|string', 
         'business_id'  => 'nullable|integer' 
     ]);
 
-    $status = 'pending'; // Default për çdo regjistrim publik
+    $status = 'pending';
 
     if (auth('sanctum')->check()) {
         $currentUser = auth('sanctum')->user();
 
-        // Nëse Admini regjistron dikë (çfarëdo roli), bëhet direkt ACTIVE
         if ($currentUser->role === 'admin') {
             $status = 'active';
         }
 
-        // Nëse Owner regjistron një Employee, bëhet direkt ACTIVE
         if ($currentUser->role === 'business_owner' && $validated['role'] === 'employee') {
             $status = 'active';
-            $validated['business_id'] = $currentUser->business_id; // Ia lidhim automatikisht biznesin
+            $validated['business_id'] = $currentUser->business_id;
         }
     }
 
-    // 2. KRIJIMI I PËRDORUESIT (Për të gjithë)
     $user = User::create([
-    'name'         => $validated['name'],
-    'surname'      => $validated['surname'],
-    'email'        => $validated['email'],
-    'phone_number' => $request->phone_number, // KJO MUNGONTE!
-    'password'     => Hash::make($validated['password']),
-    'role'         => $validated['role'],
-    'status'       => $status,
-    'business_id'  => $validated['business_id'] ?? null,
-]);
+        'name'         => $validated['name'],
+        'surname'      => $validated['surname'],
+        'email'        => $validated['email'],
+        'phone_number' => $request->phone_number,
+        'password'     => Hash::make($validated['password']),
+        'role'         => $validated['role'],
+        'status'       => $status,
+        'business_id'  => $validated['business_id'] ?? null,
+    ]);
 
     return response()->json(['status' => 'success', 'user' => $user], 201);
 }
@@ -75,7 +73,6 @@ class AuthenticationController extends Controller
             ], 401); 
         }
 
-        // Bllokimi i llogarive pending ose suspended
         if ($user->status === 'pending') {
             return response()->json([
                 'status'  => 'awaiting_approval',
@@ -90,20 +87,49 @@ class AuthenticationController extends Controller
         $token = $user->createToken('auth_token', [$user->role])->plainTextToken;
 
         return response()->json([
-            'status'  => 'success',
-            'token'   => $token,
-            'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'role'  => $user->role,
+            'status' => 'success',
+            'user'   => [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'role'   => $user->role,
                 'status' => $user->status
             ]
-        ], 200);
+        ], 200)->withCookie(
+            cookie(
+                'auth_token',
+                $token,
+                1440,
+                '/',
+                null,
+                false,      // ← changed from app()->isProduction()
+                true,       // httpOnly ← JS cannot read this
+                false,
+                'Lax'
+            )
+        );
     }
 
+    /* ======================
+        LOGOUT LOGIC
+    ====================== */
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['status' => 'success', 'message' => 'Logged out']);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Logged out'
+        ])->withCookie(
+            cookie()->forget('auth_token')
+        );
+    }
+
+    public function getUserProfile(Request $request) {
+        return response()->json([
+            'status' => 'success',
+            'role'   => $request->user()->role,
+            'name'   => $request->user()->name,
+            'email'  => $request->user()->email,
+        ]);
     }
 }

@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api } from '..';
+import { api, backend } from '..';
 import '../components/Login.css';
 
 const Login = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [approvalMessage, setApprovalMessage] = useState(""); // State i ri për 403
+    const [approvalMessage, setApprovalMessage] = useState("");
     const [loginInput, setLogin] = useState({
         email: '',
         password: '',
     });
 
     useEffect(() => {
-        if (localStorage.getItem('auth_token')) {
+        if (localStorage.getItem('auth_role')) {
             navigate('/');
         }
     }, [navigate]);
@@ -28,30 +28,33 @@ const Login = () => {
         setLoading(true);
         setError("");
         setApprovalMessage("");
+            console.log('Login submitted!'); // ← add this
+
 
         try {
-            const res = await api.post('/login', loginInput);
+            // ← CSRF cookie using backend instance
+            await backend.get('/sanctum/csrf-cookie');
+
+            const res = await api.post('/auth/login', loginInput);
+
+            console.log('Login response:', res.data); // ← add this
+
 
             if (res.data.status === 'success') {
-                localStorage.setItem('auth_token', res.data.token);
-                localStorage.setItem('auth_role', res.data.user.role);
-                localStorage.setItem('auth_name', res.data.user.name);
-
-                const role = res.data.user.role;
-                if (role === 'admin') {
-                    navigate('/adminDashboard');
-                } else if (role === 'business_owner') {
-                    navigate('/owner');
-                } else {
-                    navigate('/');
-                }
-            }
+    const role = res.data.user.role;
+    if (role === 'admin') {
+        navigate('/admin/adminDashboard', { state: { user: res.data.user } });
+    } else if (role === 'business_owner') {
+        navigate('/owner', { state: { user: res.data.user } });
+    } else {
+        navigate('/', { state: { user: res.data.user } });
+    }
+}
         } catch (err) {
             const status = err.response?.status;
             const resData = err.response?.data;
 
             if (status === 403 && resData.status === 'awaiting_approval') {
-                // Trajtimi i statusit PENDING
                 setApprovalMessage(resData.message);
             } else if (status === 401) {
                 setError("Email ose Password i pasaktë.");
@@ -73,14 +76,12 @@ const Login = () => {
                     <p>Identifikohuni për të vazhduar në Planora</p>
                 </div>
 
-                {/* Box për Gabimet Standarde (401, 422, 500) */}
                 {error && (
                     <div className="error-box" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '8px', marginBottom: '15px' }}>
                         <p>{error}</p>
                     </div>
                 )}
 
-                {/* Box për Përdoruesit Pending (403) */}
                 {approvalMessage && (
                     <div className="info-box" style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #bfdbfe' }}>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>

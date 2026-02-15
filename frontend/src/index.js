@@ -4,12 +4,14 @@ import './index.css';
 import App from './App';
 import axios from 'axios';
 
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+
 // Konfigurimet Globale
 axios.defaults.withCredentials = true;
 
 // 1. Krijimi i instancës API
 export const api = axios.create({
-  baseURL: "https://planora-production-bd59.up.railway.app/api/",
+  baseURL: `${BASE_URL}/api/`,
   withCredentials: true,
   headers: {
     'Accept': 'application/json',
@@ -17,20 +19,9 @@ export const api = axios.create({
   }
 });
 
-// 2. SHTO KËTË: Interceptori që dërgon Token-in automatikisht
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-}, error => {
-  return Promise.reject(error);
-});
-
-// 3. Instanca për Backend (pa /api)
+// 2. Instanca për Backend (pa /api)
 export const backend = axios.create({
-  baseURL: "https://planora-production-bd59.up.railway.app/",
+  baseURL: `${BASE_URL}/`,
   withCredentials: true
 });
 

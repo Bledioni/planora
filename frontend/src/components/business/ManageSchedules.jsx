@@ -14,13 +14,13 @@ const ManageSchedules = () => {
     const days = ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"];
 
     useEffect(() => {
-        api.get('/owner/my-business').then(res => setEmployees(res.data.employees || []));
+        api.get('/owner/business/my-business').then(res => setEmployees(res.data.employees || []));
     }, [businessId]);
 
     const fetchSchedule = async (emp) => {
         setLoading(true);
         try {
-            const res = await api.get(`/owner/employee-schedule/${businessId}/${emp.id}`);
+            const res = await api.get(`/owner/schedules/employee/${businessId}/${emp.id}`);
             const map = {};
             if (Array.isArray(res.data)) res.data.forEach(d => map[d.day_of_week] = d);
             setSchedule(map);

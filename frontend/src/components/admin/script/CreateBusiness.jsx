@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../index'; 
 import Swal from 'sweetalert2';
+import AdminSidebar from './AdminSidebar';
+import { Building2, MapPin, Tag, Type, AlignLeft, Send } from 'lucide-react';
+import '../style/CreateBusiness.css';
 
 const CreateBusiness = () => {
-    const { userId } = useParams(); // Ky vjen nga URL: /admin/create-business/15
+    const { userId } = useParams();
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        user_id: userId || '', // Sigurohemi që merr vlerën nga URL
+        user_id: userId || '',
         category_id: '',
         shop_name: '',
         address: '',
@@ -18,8 +21,6 @@ const CreateBusiness = () => {
         description: ''
     });
 
-    // KJO ËSHTË E RËNDËSISHME: 
-    // Nëse userId vjen me vonesë nga URL, e përditësojmë formData-n automatikisht
     useEffect(() => {
         if (userId) {
             setFormData(prev => ({ ...prev, user_id: userId }));
@@ -29,7 +30,7 @@ const CreateBusiness = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await api.get('/categories');
+                const res = await api.get('/public/categories/all');
                 setCategories(res.data.data || res.data);
             } catch (err) { console.error("Gabim me kategoritë", err); }
         };
@@ -42,30 +43,20 @@ const CreateBusiness = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // DEBUG: Shiko në console nëse user_id është aty para se ta dërgosh
-        console.log("Të dhënat që po dërgohen:", formData);
-
-        if (!formData.user_id) {
-            Swal.fire('Gabim', 'ID e përdoruesit mungon!', 'error');
-            return;
-        }
-
         setLoading(true);
         try {
-            const response = await api.post('/admin/StoreBusiness', formData);
-
+            const response = await api.post('/admin/businesses/create', formData);
             if (response.status === 201) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Biznesi u Aktivizua!',
-                    text: 'Pronari dhe stafi tani janë ACTIVE.',
+                    text: 'Pronari dhe stafi tani janë AKTIVË.',
+                    confirmButtonColor: '#4f46e5'
                 });
                 navigate('/admin/users');
             }
         } catch (err) {
-            // Shiko nëse backend-i kthen ndonjë mesazh specifik
-            const errorMsg = err.response?.data?.message || 'Diçka shkoi gabim';
+            const errorMsg = err.response?.data?.message || 'Diçka shkoi gabim gjatë procesit.';
             Swal.fire('Gabim', errorMsg, 'error');
         } finally {
             setLoading(false);
@@ -73,26 +64,91 @@ const CreateBusiness = () => {
     };
 
     return (
-        <div className="form-container">
-            <h2>Konfiguro Biznesin për User ID: {userId}</h2>
-            <form onSubmit={handleSubmit}>
-                <input name="shop_name" placeholder="Emri i Dyqanit" onChange={handleChange} required />
-                
-                <select name="category_id" onChange={handleChange} required>
-                    <option value="">Zgjidh Kategorinë</option>
-                    {categories.map(c => (
-                        <option key={c.id} value={c.id}>{c.name || c.category_name}</option>
-                    ))}
-                </select>
+        <div className="admin-layout">
+            <AdminSidebar />
+            
+            <main className="admin-main">
+                <div className="content-wrapper">
+                    <div className="form-card-container">
+                        <div className="form-header-section">
+                            <h1>Konfiguro Biznesin e Ri</h1>
+                            <p>Plotësoni të dhënat për të aktivizuar profilin për User ID: <span>#{userId}</span></p>
+                        </div>
 
-                <input name="address" placeholder="Adresa" onChange={handleChange} required />
-                <input name="business_type" placeholder="Lloji (p.sh Barber)" onChange={handleChange} required />
-                <textarea name="description" placeholder="Përshkrimi" onChange={handleChange} />
-                
-                <button type="submit" disabled={loading}>
-                    {loading ? 'Duke Aktivizuar...' : 'Krijo & Aktivizo Biznesin'}
-                </button>
-            </form>
+                        <form className="modern-form" onSubmit={handleSubmit}>
+                            <div className="form-grid-layout">
+                                {/* Emri i Dyqanit */}
+                                <div className="input-field-wrapper">
+                                    <label><Building2 size={16} /> Emri i Biznesit</label>
+                                    <input 
+                                        name="shop_name" 
+                                        placeholder="Psh. Estetika 'Era'" 
+                                        onChange={handleChange} 
+                                        required 
+                                    />
+                                </div>
+
+                                {/* Kategoritë */}
+                                <div className="input-field-wrapper">
+                                    <label><Tag size={16} /> Kategoria</label>
+                                    <select name="category_id" onChange={handleChange} required>
+                                        <option value="">Zgjidhni një kategori</option>
+                                        {categories.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name || c.category_name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Adresa */}
+                                <div className="input-field-wrapper">
+                                    <label><MapPin size={16} /> Adresa</label>
+                                    <input 
+                                        name="address" 
+                                        placeholder="Rruga, Qyteti" 
+                                        onChange={handleChange} 
+                                        required 
+                                    />
+                                </div>
+
+                                {/* Lloji i Biznesit */}
+                                <div className="input-field-wrapper">
+                                    <label><Type size={16} /> Lloji i Shërbimit</label>
+                                    <input 
+                                        name="business_type" 
+                                        placeholder="Psh. Parukeri, Palestër" 
+                                        onChange={handleChange} 
+                                        required 
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Pershkrimi */}
+                            <div className="input-field-wrapper full-row">
+                                <label><AlignLeft size={16} /> Përshkrimi i Shkurtër</label>
+                                <textarea 
+                                    name="description" 
+                                    placeholder="Tregoni diçka rreth këtij biznesi..." 
+                                    rows="4" 
+                                    onChange={handleChange} 
+                                />
+                            </div>
+
+                            <div className="form-footer-actions">
+                                <button type="submit" className="primary-submit-btn" disabled={loading}>
+                                    {loading ? (
+                                        <div className="spinner"></div>
+                                    ) : (
+                                        <>
+                                            <Send size={18} />
+                                            <span>Krijo & Aktivizo Biznesin</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
         </div>
     );
 };

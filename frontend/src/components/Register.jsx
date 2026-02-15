@@ -34,7 +34,7 @@ const BusinessRegister = ({ isAdminCreator = false }) => {
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
         try {
-            const response = await api.post('/register', formData, config);
+            const response = await api.post('/auth/register', formData, config);
             
             if (response.data.status === 'success') {
                 setSuccessMsg(response.data.message);

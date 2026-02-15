@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Builder;
 
 class Employees extends Model
 {
@@ -13,13 +14,20 @@ class Employees extends Model
     protected $fillable = [
         'user_id',
         'business_id',
-        // Note: name, email, phone usually live in the 'users' table. 
-        // Only keep them here if you want them to be different from the login info.
     ];
 
     /**
-     * This is the "Bridge" to the Users table you showed me.
-     * It allows us to get the phone number of 'lindi' or 'rrem'.
+     * Scope to get only active employees
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereHas('user', function($q) {
+            $q->where('status', 'active');
+        });
+    }
+
+    /**
+     * Link to User table
      */
     public function user(): BelongsTo
     {
@@ -27,7 +35,7 @@ class Employees extends Model
     }
 
     /**
-     * Link to the Business
+     * Link to Business
      */
     public function business(): BelongsTo
     {

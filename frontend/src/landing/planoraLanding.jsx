@@ -52,7 +52,7 @@ function PlanoraLanding() {
     setIsLoading(true);
 
     try {
-      await api.post("/wishlistRegister", formData);
+      await api.post("/public/waitlist/add", formData);
       setIsSuccess(true);
     } catch (err) {
       if (err.response?.status === 422) {

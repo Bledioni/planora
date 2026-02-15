@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Public;
 
+use App\Http\Controllers\Controller;
 use App\Models\WishList;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -9,10 +10,10 @@ use Illuminate\Validation\ValidationException;
 use Exception;
 use Illuminate\Support\Facades\Hash;
 
-
-class WishListController extends Controller
+class WaitlistController extends Controller
 {
-    public function WishListRegister(Request $request)
+
+    public function addToWaitlist(Request $request)
     {
         try {
             // ✅ Validate request data
@@ -53,4 +54,5 @@ class WishListController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR); // 500
         }
     }
+
 }

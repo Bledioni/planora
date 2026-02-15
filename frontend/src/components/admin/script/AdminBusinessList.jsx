@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../../../index'; // Sigurohu që ky është path-i i axios-it tënd
+import { Calendar, Search, RefreshCw, Users, Mail, Phone, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { api } from '../../../index';
+import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
+import '../style/AdminBusinessList.css';
 
 const AdminOwnerList = () => {
     const [owners, setOwners] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(""); // State i ri për kërkimin
 
-    // 1. Merr listën e pronarëve nga Backend
     const fetchOwners = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/admin/business-owners');
-            setOwners(res.data);
+            const res = await api.get('/admin/users/business-owners');
+            setOwners(res.data.business_owners || res.data);
         } catch (err) {
             console.error("Gabim gjatë marrjes së pronarëve:", err);
             Swal.fire('Gabim', 'Nuk u ngarkua lista e pronarëve.', 'error');
@@ -24,13 +27,25 @@ const AdminOwnerList = () => {
         fetchOwners();
     }, []);
 
-    // 2. Funksioni Kill-Switch (Deaktivizo/Aktivizo)
+    // Logjika e filtrimit
+    const filteredOwners = owners.filter(owner => {
+        const fullName = `${owner.name} ${owner.surname}`.toLowerCase();
+        const businessName = (owner.business?.name || owner.business?.shop_name || "").toLowerCase();
+        const email = owner.email.toLowerCase();
+        const search = searchTerm.toLowerCase();
+
+        return fullName.includes(search) || businessName.includes(search) || email.includes(search);
+    });
+
     const handleToggleStatus = async (owner) => {
         const isActive = owner.status === 'active';
         const businessId = owner.business?.id;
 
-        // Nëse pronari nuk ka biznes, bllokojmë vetëm ID-në e tij si User
-        // Por meqë kemi businessId, përdorim funksionin masiv
+        if (!businessId) {
+            Swal.fire('Gabim', 'Pronari nuk ka biznes të lidhur.', 'error');
+            return;
+        }
+
         const result = await Swal.fire({
             title: isActive ? 'Blloko Pronarin?' : 'Aktivizo Pronarin?',
             text: isActive 
@@ -38,134 +53,152 @@ const AdminOwnerList = () => {
                 : `Kjo do t'i rikthejë aksesin ${owner.name} dhe biznesit të tij.`,
             icon: isActive ? 'warning' : 'info',
             showCancelButton: true,
-            confirmButtonColor: isActive ? '#d33' : '#28a745',
+            confirmButtonColor: isActive ? '#ef4444' : '#10b981',
             confirmButtonText: isActive ? 'Po, bllokoje!' : 'Po, aktivizoje!',
             cancelButtonText: 'Anulo'
         });
 
         if (result.isConfirmed) {
             try {
-                // Thërrasim endpoint-in masiv që ndryshon statusin në DB
                 const url = isActive 
-                    ? `/admin/deactivate-business/${businessId}` 
-                    : `/admin/activate-business/${businessId}`;
+                    ? `/admin/businesses/deactivate/${businessId}` 
+                    : `/admin/businesses/activate/${businessId}`;
                 
                 await api.post(url);
-                
-                Swal.fire('Sukses!', `Statusi u ndryshua në ${isActive ? 'Pending' : 'Active'}.`, 'success');
-                fetchOwners(); // Rifresko listën automatikisht
+                Swal.fire('Sukses!', `Statusi u ndryshua me sukses.`, 'success');
+                fetchOwners();
             } catch (err) {
-                Swal.fire('Gabim', 'Serveri nuk u përgjigj ose rruga nuk ekziston.', 'error');
+                Swal.fire('Gabim', err.response?.data?.message || 'Serveri nuk u përgjigj.', 'error');
             }
         }
     };
 
-    return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2>Menaxhimi i Pronarëve (Business Owners)</h2>
-                <button onClick={fetchOwners} disabled={loading} style={styles.refreshBtn}>
-                    {loading ? 'Duke u përditësuar...' : 'Rifresko'}
-                </button>
-            </div>
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        return new Date(dateString).toLocaleDateString('sq-AL', {
+            day: 'numeric', month: 'short', year: 'numeric'
+        });
+    };
 
-            <table style={styles.table}>
-                <thead>
-                    <tr style={styles.thead}>
-                        <th style={styles.th}>Emri & Mbiemri</th>
-                        <th style={styles.th}>Email</th>
-                        <th style={styles.th}>Biznesi</th>
-                        <th style={styles.th}>Statusi</th>
-                        <th style={styles.th}>Veprime</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {owners.length > 0 ? (
-                        owners.map((owner) => (
-                            <tr key={owner.id} style={styles.tr}>
-                                <td style={styles.td}>{owner.name} {owner.surname}</td>
-                                <td style={styles.td}>{owner.email}</td>
-                                <td style={styles.td}>
-                                    <strong>{owner.business?.shop_name || 'Pa Biznes'}</strong>
-                                    <br />
-                                    <small style={{ color: '#666' }}>ID: {owner.business?.id || 'N/A'}</small>
-                                </td>
-                                <td style={styles.td}>
-                                    <span style={{
-                                        ...styles.statusBadge,
-                                        backgroundColor: owner.status === 'active' ? '#e6fffa' : '#fff5f5',
-                                        color: owner.status === 'active' ? '#2c7a7b' : '#c53030',
-                                        border: `1px solid ${owner.status === 'active' ? '#319795' : '#feb2b2'}`
-                                    }}>
-                                        {owner.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td style={styles.td}>
-                                    <button 
-                                        onClick={() => handleToggleStatus(owner)}
-                                        disabled={!owner.business?.id} // Disable nëse nuk ka biznes (siguri)
-                                        style={{
-                                            ...styles.actionBtn,
-                                            backgroundColor: owner.status === 'active' ? '#e53e3e' : '#38a169'
-                                        }}
-                                    >
-                                        {owner.status === 'active' ? 'Blloko Aksesin' : 'Aktivizo Aksesin'}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>
-                                Nuk u gjet asnjë pronar biznesi.
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+    return (
+        <div className="page-wrapper">
+            <AdminSidebar />
+            
+            <div className="main-content">
+                <div className="content-inner">
+                    <header className="modern-header">
+                        <div className="header-left">
+                            <h1>Menaxhimi i Pronarëve</h1>
+                            <p>Kontrollo dhe menaxho statusin e bizneseve në <span>Planora</span></p>
+                        </div>
+                        
+                        <div className="header-right">
+                            {/* Search Bar i ri */}
+                            <div className="search-pill">
+                                <Search size={18} />
+                                <input 
+                                    type="text" 
+                                    placeholder="Kërko pronar, email ose biznes..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="stats-indicator">
+                                <div className="icon-bg"><Users size={18} /></div>
+                                <div className="stat-info">
+                                    <span className="val">{owners.length}</span>
+                                    <span className="lbl">Totale</span>
+                                </div>
+                            </div>
+
+                            <button onClick={fetchOwners} className="btn-refresh" title="Rifresko">
+                                <RefreshCw size={18} className={loading ? 'spinning' : ''} />
+                            </button>
+                        </div>
+                    </header>
+
+                    <div className="premium-card">
+                        <div className="table-responsive">
+                            <table className="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pronari</th>
+                                        <th>Kontakte</th>
+                                        <th>Biznesi</th>
+                                        <th>Regjistrimi</th>
+                                        <th className="text-center">Statusi</th>
+                                        <th className="text-center">Veprime</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredOwners.length > 0 ? (
+                                        filteredOwners.map((owner) => (
+                                            <tr key={owner.id} className="row-animate">
+                                                <td data-label="Pronari">
+                                                    <div className="user-cell">
+                                                        <div className="user-avatar-modern">
+                                                            {owner.name?.[0]}{owner.surname?.[0]}
+                                                        </div>
+                                                        <div className="user-meta">
+                                                            <span className="u-name">{owner.name} {owner.surname}</span>
+                                                            <span className="u-id">ID: #{owner.id}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Kontakte">
+                                                    <div className="contact-meta">
+                                                        <div className="c-item"><Mail size={14} /> {owner.email}</div>
+                                                        {owner.phone_number && <div className="c-item"><Phone size={14} /> {owner.phone_number}</div>}
+                                                    </div>
+                                                </td>
+                                                <td data-label="Biznesi">
+                                                    <div className="business-meta">
+                                                        <span className="b-name">{owner.business?.name || 'Pa Biznes'}</span>
+                                                        <span className="b-id">BID: {owner.business?.id || 'N/A'}</span>
+                                                    </div>
+                                                </td>
+                                                <td data-label="Data">
+                                                    <div className="date-pill-modern">
+                                                        <Calendar size={14} />
+                                                        {formatDate(owner.created_at)}
+                                                    </div>
+                                                </td>
+                                                <td className="text-center" data-label="Statusi">
+                                                    <span className={`status-badge-modern ${owner.status}`}>
+                                                        {owner.status.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td className="text-center" data-label="Veprime">
+                                                    <button 
+                                                        onClick={() => handleToggleStatus(owner)}
+                                                        disabled={!owner.business?.id}
+                                                        className={`btn-premium-action ${owner.status === 'active' ? 'danger' : 'success'}`}
+                                                    >
+                                                        {owner.status === 'active' ? <ShieldAlert size={16} /> : <ShieldCheck size={16} />}
+                                                        <span>{owner.status === 'active' ? 'Blloko' : 'Aktivizo'}</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6" className="empty-state">
+                                                <div className="empty-info">
+                                                    <Search size={40} />
+                                                    <p>Nuk u gjet asnjë rezultat për kërkimin tuaj.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
-};
-
-// CSS-in-JS Styles
-const styles = {
-    table: {
-        width: '100%',
-        borderCollapse: 'collapse',
-        marginTop: '20px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-    },
-    thead: {
-        backgroundColor: '#2d3748',
-        color: 'white',
-        textAlign: 'left'
-    },
-    th: { padding: '15px' },
-    tr: { borderBottom: '1px solid #edf2f7' },
-    td: { padding: '15px' },
-    statusBadge: {
-        padding: '5px 10px',
-        borderRadius: '20px',
-        fontSize: '12px',
-        fontWeight: 'bold'
-    },
-    actionBtn: {
-        color: 'white',
-        border: 'none',
-        padding: '8px 16px',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        transition: 'opacity 0.2s'
-    },
-    refreshBtn: {
-        backgroundColor: '#4a5568',
-        color: 'white',
-        padding: '10px 20px',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer'
-    }
 };
 
 export default AdminOwnerList;
