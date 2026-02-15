@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://planora-production-bd59.up.railway.app/';
 
 // Konfigurimet Globale
 axios.defaults.withCredentials = true;
