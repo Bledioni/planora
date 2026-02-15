@@ -30,8 +30,6 @@ Route::middleware(['business.active'])->group(function () {
     Route::get('/business/{businessId}/services', [ServiceController::class, 'getBusinessServices']);
     Route::get('/businesses/all', [App\Http\Controllers\Public\PublicBusinessController::class, 'getAllBusinesses']);
     Route::get('/businesses/details/{slug}', [App\Http\Controllers\Public\PublicBusinessController::class, 'getBusinessBySlug']);
-
-
 });
     
     // Wishlist
