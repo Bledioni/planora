@@ -9,8 +9,7 @@ import '../style/BusinessDashboard.css';
 const BusinessDashboard = () => {
     const { businessId } = useParams();
     const navigate = useNavigate();
-    const [setLoading] = useState(false);
-
+    const [, setLoading] = useState(false);
     useEffect(() => {
         fetchBusinessData();
     }, [businessId]);
