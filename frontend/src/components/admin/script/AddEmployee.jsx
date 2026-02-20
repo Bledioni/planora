@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserPlus, Mail, Phone, Lock, User } from 'lucide-react';
+import { ArrowLeft, UserPlus, Mail, Phone, Lock, User, ShieldCheck } from 'lucide-react';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
-import '../style/AddEmployee.css';
+import '../style/AddEmployee.css'; // Përdorim stilin e unifikuar
 
 const AddEmployee = () => {
     const { businessId } = useParams();
@@ -28,8 +28,6 @@ const AddEmployee = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        // Validation
         if (formData.password !== formData.password_confirmation) {
             Swal.fire('Gabim', 'Fjalëkalimet nuk përputhen!', 'error');
             return;
@@ -37,13 +35,13 @@ const AddEmployee = () => {
 
         setLoading(true);
         try {
-            const response = await api.post('/auth/register', formData);
-            if (response.status === 201) {
+            const response = await api.post('/admin/employees/create', formData);
+            if (response.data.status === 'success') {
                 Swal.fire({
                     title: 'Sukses!',
-                    text: 'Punonjësi u shtua dhe është AKTIV!',
+                    text: 'Punonjësi u shtua me sukses!',
                     icon: 'success',
-                    confirmButtonColor: '#10b981'
+                    confirmButtonColor: '#2563eb'
                 });
                 navigate(`/admin/business/${businessId}`);
             }
@@ -55,175 +53,68 @@ const AddEmployee = () => {
     };
 
     return (
-        <div className="page-wrapper">
+        <div className="owner-layout">
             <AdminSidebar />
             
-            <div className="main-content">
-                <div className="content-inner form-page-content">
-                    {/* Header */}
-                    <header className="form-header">
-                        <button 
-                            onClick={() => navigate(`/admin/business/${businessId}`)} 
-                            className="back-link"
-                        >
-                            <ArrowLeft size={18} />
-                            <span>Kthehu tek Paneli</span>
+            <main className="owner-main-content">
+                <div className="schedule-container-wide form-flex-center">
+                    
+                    <header className="schedule-header-big">
+                        <button onClick={() => navigate(`/admin/business/${businessId}`)} className="header-top-tag" style={{border:'none', cursor:'pointer'}}>
+                            <ArrowLeft size={14} />
+                            <span>Paneli i Biznesit</span>
                         </button>
-                        
-                        <div className="header-title">
-                            <div className="icon-wrapper">
-                                <UserPlus size={32} />
-                            </div>
-                            <div>
-                                <h1>Shto Punonjës të Ri</h1>
-                                <p className="subtitle">Regjistro staf për biznesin #{businessId}</p>
-                            </div>
-                        </div>
+                        <h1>Shtimi i Stafit</h1>
+                        <p>Biznesi: <span className="price-tag">#{businessId}</span></p>
                     </header>
 
-                    {/* Form Card */}
-                    <div className="form-card">
-                        <form onSubmit={handleSubmit} className="employee-form">
-                            {/* Name & Surname Row */}
-                            <div className="form-row">
-                                <div className="input-group">
-                                    <label htmlFor="name">
-                                        <User size={16} />
-                                        <span>Emri</span>
-                                    </label>
-                                    <input
-                                        id="name"
-                                        name="name"
-                                        type="text"
-                                        placeholder="Shkruaj emrin"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        required
-                                        disabled={loading}
-                                    />
+                    <div className="premium-form-card">
+                        <form onSubmit={handleSubmit} className="planora-form">
+                            
+                            <div className="form-grid-2">
+                                <div className="premium-input-group">
+                                    <label><User size={14}/> Emri</label>
+                                    <input name="name" type="text" placeholder="Emri" value={formData.name} onChange={handleChange} required />
                                 </div>
-
-                                <div className="input-group">
-                                    <label htmlFor="surname">
-                                        <User size={16} />
-                                        <span>Mbiemri</span>
-                                    </label>
-                                    <input
-                                        id="surname"
-                                        name="surname"
-                                        type="text"
-                                        placeholder="Shkruaj mbiemrin"
-                                        value={formData.surname}
-                                        onChange={handleChange}
-                                        required
-                                        disabled={loading}
-                                    />
+                                <div className="premium-input-group">
+                                    <label><User size={14}/> Mbiemri</label>
+                                    <input name="surname" type="text" placeholder="Mbiemri" value={formData.surname} onChange={handleChange} required />
                                 </div>
                             </div>
 
-                            {/* Email */}
-                            <div className="input-group">
-                                <label htmlFor="email">
-                                    <Mail size={16} />
-                                    <span>Email</span>
-                                </label>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    placeholder="example@email.com"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={loading}
-                                />
+                            <div className="premium-input-group">
+                                <label><Mail size={14}/> Email Adresa</label>
+                                <input name="email" type="email" placeholder="email@planora.com" value={formData.email} onChange={handleChange} required />
                             </div>
 
-                            {/* Phone */}
-                            <div className="input-group">
-                                <label htmlFor="phone_number">
-                                    <Phone size={16} />
-                                    <span>Numri i Telefonit</span>
-                                </label>
-                                <input
-                                    id="phone_number"
-                                    name="phone_number"
-                                    type="tel"
-                                    placeholder="+383 XX XXX XXX"
-                                    value={formData.phone_number}
-                                    onChange={handleChange}
-                                    required
-                                    disabled={loading}
-                                />
+                            <div className="premium-input-group">
+                                <label><Phone size={14}/> Numri i Telefonit</label>
+                                <input name="phone_number" type="tel" placeholder="+383..." value={formData.phone_number} onChange={handleChange} required />
                             </div>
 
-                            {/* Password Row */}
-                            <div className="form-row">
-                                <div className="input-group">
-                                    <label htmlFor="password">
-                                        <Lock size={16} />
-                                        <span>Fjalëkalimi</span>
-                                    </label>
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type="password"
-                                        placeholder="Minimum 8 karaktere"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        required
-                                        disabled={loading}
-                                        minLength={8}
-                                    />
+                            <div className="form-grid-2">
+                                <div className="premium-input-group">
+                                    <label><Lock size={14}/> Fjalëkalimi</label>
+                                    <input name="password" type="password" placeholder="••••••••" value={formData.password} onChange={handleChange} required minLength={8} />
                                 </div>
-
-                                <div className="input-group">
-                                    <label htmlFor="password_confirmation">
-                                        <Lock size={16} />
-                                        <span>Konfirmo Fjalëkalimin</span>
-                                    </label>
-                                    <input
-                                        id="password_confirmation"
-                                        name="password_confirmation"
-                                        type="password"
-                                        placeholder="Rishkruaj fjalëkalimin"
-                                        value={formData.password_confirmation}
-                                        onChange={handleChange}
-                                        required
-                                        disabled={loading}
-                                        minLength={8}
-                                    />
+                                <div className="premium-input-group">
+                                    <label><Lock size={14}/> Konfirmimi</label>
+                                    <input name="password_confirmation" type="password" placeholder="••••••••" value={formData.password_confirmation} onChange={handleChange} required minLength={8} />
                                 </div>
                             </div>
 
-                            {/* Info Box */}
-                            <div className="info-box">
-                                <span className="info-icon">ℹ️</span>
-                                <p>Punonjësi do të ketë akses të plotë në sistem menjëherë pas regjistrimit.</p>
+                            <div className="form-info-alert">
+                                <ShieldCheck size={20} />
+                                <p>Punonjësi do të krijohet me rol <strong>Employee</strong> dhe do të jetë aktiv menjëherë.</p>
                             </div>
 
-                            {/* Submit Button */}
-                            <button 
-                                type="submit" 
-                                className="submit-btn"
-                                disabled={loading}
-                            >
-                                {loading ? (
-                                    <>
-                                        <span className="spinner"></span>
-                                        <span>Duke u ruajtur...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <UserPlus size={20} />
-                                        <span>Regjistro Punonjësin</span>
-                                    </>
-                                )}
+                            <button type="submit" className="planora-submit-btn" disabled={loading}>
+                                {loading ? <div className="loader-mini"></div> : <><UserPlus size={20}/> Regjistro Punonjësin</>}
                             </button>
                         </form>
                     </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 };

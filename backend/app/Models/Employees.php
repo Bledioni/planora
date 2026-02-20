@@ -41,4 +41,9 @@ class Employees extends Model
     {
         return $this->belongsTo(Business::class);
     }
+
+    public function schedules()
+{
+    return $this->hasMany(\App\Models\Schedules::class, 'employee_id');
+}
 }

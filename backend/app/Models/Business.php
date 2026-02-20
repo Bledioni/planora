@@ -29,6 +29,11 @@ class Business extends Model
         });
     }
 
+    public function subscription()
+{
+    return $this->hasOne(\App\Models\Subscription::class);
+}
+
     /**
      * The Owner of the business
      */
@@ -41,6 +46,11 @@ class Business extends Model
      * The Category of the business
      */
     public function category(): BelongsTo
+    {
+        return $this->belongsTo(Categories::class, 'category_id');
+    }
+
+    public function categories(): BelongsTo
     {
         return $this->belongsTo(Categories::class, 'category_id');
     }

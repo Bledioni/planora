@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import { api } from '../../../index';
 import '../../appointments/style/BookingApp.css';
+import '../../appointments/style/CustomCalendar.css';
 
 const BookingApp = () => {
   const { shopSlug } = useParams();
@@ -9,30 +12,22 @@ const BookingApp = () => {
   const [loading, setLoading] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
+  const [availableDates, setAvailableDates] = useState([]);
   
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [userInfo, setUserInfo] = useState({ name: '', email: '', phone: '' });
 
-  // 1. Load Initial Data
   const initApp = useCallback(async () => {
     if (!shopSlug) return;
     setLoading(true);
     try {
       const res = await api.get(`/public/businesses/details/${shopSlug}`);
-      
-      console.log("API Response:", res.data); // DEBUG
-
-      // FIX: API returns res.data.business NOT res.data.data
       const businessData = res.data.business || res.data.data || res.data;
       
-      console.log("Business Data:", businessData); // DEBUG
-      console.log("Employees:", businessData.employees); // DEBUG
-      console.log("Services:", businessData.services); // DEBUG
-
       setDetails(businessData);
       setSelectedBusiness(businessData.id);
     } catch (err) {
@@ -45,17 +40,44 @@ const BookingApp = () => {
 
   useEffect(() => { initApp(); }, [initApp]);
 
-  // 2. Fetch Slots
-  const fetchSlots = useCallback(async () => {
-    if (!selectedBarber || !selectedService || !selectedBusiness) return;
+  // Fetch available dates for the selected employee
+  const fetchAvailableDates = useCallback(async () => {
+    if (!selectedBarber || !selectedBusiness) return;
     
+    try {
+      // Get employee schedule
+      const res = await api.get(`/owner/schedules/employee/${selectedBusiness}/${selectedBarber}`);
+      const schedules = res.data;
+      
+      // Get day numbers where employee works
+      const workingDays = schedules
+        .filter(s => !s.is_off)
+        .map(s => s.day_of_week);
+      
+      setAvailableDates(workingDays);
+    } catch (err) {
+      console.error("Error fetching schedules:", err);
+    }
+  }, [selectedBusiness, selectedBarber]);
+
+  useEffect(() => {
+    if (selectedBarber) {
+      fetchAvailableDates();
+    }
+  }, [selectedBarber, fetchAvailableDates]);
+
+  // Fetch slots when date is selected
+  const fetchSlots = useCallback(async () => {
+    if (!selectedBarber || !selectedService || !selectedBusiness || !selectedDate) return;
     setLoading(true);
     try {
-      const res = await api.post('/public/booking/available-slots', {
-        // FIX: Use POST not GET (matches your routes)
-        employee_id: selectedBarber,
-        service_id: selectedService,
-        date: selectedDate
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const res = await api.get(`/public/business/${selectedBusiness}/${selectedBarber}/available-slots`, {
+        params: {
+          service_id: selectedService,
+          date: dateStr,
+          employee_id: selectedBarber,
+        }
       });
       setSlots(res.data);
     } catch (err) {
@@ -67,7 +89,7 @@ const BookingApp = () => {
   }, [selectedBusiness, selectedBarber, selectedService, selectedDate]);
 
   useEffect(() => {
-    if (step === 2) {
+    if (selectedDate && step === 2) {
       fetchSlots();
     }
   }, [selectedDate, fetchSlots, step]);
@@ -76,11 +98,12 @@ const BookingApp = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/public/booking/create-appointment', {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      await api.post('/public/appointments/create', {
         business_id: selectedBusiness,
         employee_id: selectedBarber,
         service_id: selectedService,
-        start_time: `${selectedDate} ${selectedTime}:00`,
+        start_time: `${dateStr} ${selectedTime}:00`,
         client_name: userInfo.name,
         client_email: userInfo.email,
         client_phone: userInfo.phone
@@ -94,7 +117,19 @@ const BookingApp = () => {
     }
   };
 
-  // FIX: Use employees not barbers
+  // Check if a date is available
+  const isDateAvailable = (date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Disable past dates
+    if (date < today) return false;
+    
+    // Disable dates where employee doesn't work
+    const dayOfWeek = date.getDay();
+    return availableDates.includes(dayOfWeek);
+  };
+
   const currentService = details.services?.find(s => s.id === selectedService);
 
   return (
@@ -109,16 +144,17 @@ const BookingApp = () => {
           {currentService && (
             <div style={{ marginTop: '40px', borderTop: '2px solid #e2e8f0', paddingTop: '20px' }}>
               <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--p-blue)', letterSpacing: '1px' }}>DETAJET</p>
-              {/* FIX: service fields - use service_name not name */}
               <h3 style={{ margin: '10px 0 5px 0' }}>{currentService.service_name || currentService.name}</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span className="service-duration">🕒 {currentService.service_duration || currentService.duration} min</span>
                 <span style={{fontWeight: '700'}}>{currentService.service_price || currentService.price}€</span>
               </div>
-              {selectedTime && (
+              {selectedDate && (
                 <div style={{ marginTop: '15px', padding: '10px', background: '#fff', borderRadius: '8px', border: '1px solid #ddd' }}>
-                  <p style={{margin:0, fontSize: '0.9rem'}}>📅 {selectedDate}</p>
-                  <p style={{margin:0, fontSize: '0.9rem', color: 'var(--p-blue)', fontWeight: '700'}}>⏰ {selectedTime}</p>
+                  <p style={{margin:0, fontSize: '0.9rem'}}>📅 {selectedDate.toLocaleDateString('sq-AL')}</p>
+                  {selectedTime && (
+                    <p style={{margin:0, fontSize: '0.9rem', color: 'var(--p-blue)', fontWeight: '700'}}>⏰ {selectedTime}</p>
+                  )}
                 </div>
               )}
             </div>
@@ -137,7 +173,6 @@ const BookingApp = () => {
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimin</h2>
               
-              {/* FIX: Use employees not barbers, use employee.user.name */}
               <div className="wide-grid">
                 {details.employees?.length > 0 ? (
                   details.employees.map(emp => (
@@ -154,7 +189,6 @@ const BookingApp = () => {
                 )}
               </div>
 
-              {/* Services */}
               <div style={{ display: 'grid', gap: '12px', marginTop: '20px' }}>
                 {details.services?.length > 0 ? (
                   details.services.map(s => (
@@ -164,11 +198,9 @@ const BookingApp = () => {
                       onClick={() => setSelectedService(s.id)}
                     >
                       <div className="service-info-main">
-                        {/* FIX: Use service_name not name */}
                         <strong>{s.service_name || s.name}</strong>
                         <span className="service-duration">🕒 {s.service_duration || s.duration} min</span>
                       </div>
-                      {/* FIX: Use service_price not price */}
                       <strong>{s.service_price || s.price}€</strong>
                     </div>
                   ))
@@ -190,30 +222,42 @@ const BookingApp = () => {
 
           {step === 2 && (
             <div className="fade-in">
-              <h2 className="section-title">Zgjidhni Kohën</h2>
-              <input 
-                type="date" 
-                className="booking-input" 
-                value={selectedDate} 
-                min={new Date().toISOString().split('T')[0]} 
-                onChange={(e) => setSelectedDate(e.target.value)} 
-              />
+              <h2 className="section-title">Zgjidhni Datën</h2>
               
-              {loading ? <p>Duke kërkuar oraret...</p> : (
-                <div className="slot-grid" style={{marginTop: '20px'}}>
-                  {slots.length > 0 ? slots.map(t => (
-                    <button 
-                      key={t} 
-                      className="select-btn" 
-                      onClick={() => { setSelectedTime(t); setStep(3); }}
-                    >
-                      {t}
-                    </button>
-                  )) : (
-                    <p style={{color: 'red'}}>Nuk ka orare të lira për këtë datë.</p>
+              <Calendar
+                onChange={setSelectedDate}
+                value={selectedDate}
+                minDate={new Date()}
+                tileDisabled={({ date }) => !isDateAvailable(date)}
+                tileClassName={({ date }) => {
+                  if (!isDateAvailable(date)) return 'unavailable-date';
+                  if (selectedDate && date.toDateString() === selectedDate.toDateString()) return 'selected-date';
+                  return null;
+                }}
+                locale="sq-AL"
+              />
+
+              {selectedDate && (
+                <>
+                  <h3 style={{marginTop: '30px', marginBottom: '15px'}}>Oraret e disponueshme</h3>
+                  {loading ? <p>Duke kërkuar oraret...</p> : (
+                    <div className="slot-grid">
+                      {slots.length > 0 ? slots.map(t => (
+                        <button 
+                          key={t} 
+                          className={`slot-btn ${selectedTime === t ? 'selected' : ''}`}
+                          onClick={() => { setSelectedTime(t); setStep(3); }}
+                        >
+                          {t}
+                        </button>
+                      )) : (
+                        <p style={{color: 'red'}}>Nuk ka orare të lira për këtë datë.</p>
+                      )}
+                    </div>
                   )}
-                </div>
+                </>
               )}
+
               <button 
                 onClick={() => setStep(1)} 
                 style={{marginTop: '20px', background: 'none', border: 'none', color: 'blue', cursor: 'pointer'}}

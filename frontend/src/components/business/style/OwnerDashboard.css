@@ -1,0 +1,87 @@
+/* OwnerDashboard.css - Zen Minimalism */
+.zen-container {
+    padding: 4rem 10% 2rem 10%;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: #1a1a1a;
+}
+
+.zen-header { margin-bottom: 4rem; }
+.zen-tag { 
+    font-size: 0.75rem; 
+    text-transform: uppercase; 
+    letter-spacing: 2px; 
+    color: #a0a0a0; 
+    font-weight: 600;
+}
+.zen-header h1 { font-size: 2.5rem; font-weight: 800; margin-top: 10px; letter-spacing: -1px; }
+
+/* Stats Row */
+.zen-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4rem;
+    padding-bottom: 4rem;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 4rem;
+}
+
+.zen-stat-item label { font-size: 0.8rem; color: #888; font-weight: 500; }
+.zen-stat-item p { font-size: 2rem; font-weight: 700; margin-top: 5px; }
+
+/* Content Grid */
+.zen-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 6rem; }
+
+.zen-subhead { 
+    font-size: 0.8rem; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5px; 
+    color: #bbb; 
+    margin-bottom: 2rem; 
+}
+
+/* List Items */
+.zen-list-item {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 20px 0;
+    border-bottom: 1px solid #fafafa;
+}
+
+.zen-time { font-weight: 700; font-size: 0.9rem; color: #000; min-width: 50px; }
+.zen-details strong { display: block; font-size: 1rem; font-weight: 600; }
+.zen-details span { font-size: 0.85rem; color: #888; }
+
+/* Right Column */
+.zen-service-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+.zen-service-row small { color: #aaa; font-weight: 400; }
+
+.zen-loader {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .zen-grid { grid-template-columns: 1fr; gap: 4rem; }
+    .zen-stats { gap: 2rem; }
+}
+@media (max-width: 600px) {
+    .zen-stats { grid-template-columns: 1fr; border-bottom: none; }
+    .zen-container { padding: 3rem 1.5rem; }
+}

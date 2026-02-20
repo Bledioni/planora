@@ -11,11 +11,15 @@ class Kernel extends ConsoleKernel
      * Define the application's command schedule.
      */
     protected function schedule(Schedule $schedule): void
-{
-    $schedule->command('appointments:cleanup')->everyMinute();
-    $schedule->command('app:send-reminders')->everyMinute();
-}
-
+    {
+        $schedule->command('appointments:cleanup')->everyMinute();
+        $schedule->command('app:send-reminders')->everyMinute();
+        
+        // Add this line - runs every hour to auto-complete finished appointments
+        $schedule->command('appointments:complete-finished')
+                 ->hourly()
+                 ->withoutOverlapping();
+    }
 
     /**
      * Register the commands for the application.

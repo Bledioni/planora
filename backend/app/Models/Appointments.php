@@ -26,4 +26,19 @@ class Appointments extends Model
         'start_time' => 'datetime',
         'finish_time' => 'datetime',
     ];
+
+    public function employee()
+{
+    return $this->belongsTo(\App\Models\Employees::class, 'employee_id');
+}
+
+public function service()
+{
+    return $this->belongsTo(\App\Models\Services::class, 'service_id');
+}
+
+public function business()
+{
+    return $this->belongsTo(\App\Models\Business::class, 'business_id');
+}
 }

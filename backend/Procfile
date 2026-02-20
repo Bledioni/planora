@@ -1,0 +1,2 @@
+web: ./rr serve -c .rr.yaml
+schedule: php artisan schedule:work
