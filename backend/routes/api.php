@@ -25,9 +25,10 @@ Route::prefix('public')->group(function () {
     // Booking & Appointments
     // Public appointment routes - CHECK IF BUSINESS IS ACTIVE
 Route::middleware(['business.active'])->group(function () {
-    Route::post('/appointments/create', [AppointmentController::class, 'createAppointment']);
-    Route::get('/business/{businessId}/available-slots', [AppointmentController::class, 'getAvailableSlots']);
-    Route::get('/business/{businessId}/services', [ServiceController::class, 'getBusinessServices']);
+    Route::post('/appointments/create', [App\Http\Controllers\Public\BookingController::class, 'createAppointment']);
+    Route::post('/available-slots', [App\Http\Controllers\Public\BookingController::class, 'getAvailableSlots']);
+    Route::get('/business/{businessId}/{employeeId}/available-slots', [App\Http\Controllers\Public\BookingController::class, 'getAvailableSlots']);
+    Route::get('/business/{businessId}/services', [App\Http\Controllers\Public\ServiceController::class, 'getBusinessServices']);
     Route::get('/businesses/all', [App\Http\Controllers\Public\PublicBusinessController::class, 'getAllBusinesses']);
     Route::get('/businesses/details/{slug}', [App\Http\Controllers\Public\PublicBusinessController::class, 'getBusinessBySlug']);
 });
@@ -57,6 +58,10 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('role:admin')->prefix('admin')->group(function () {
+
+
+        // Dashboard
+        Route::get('/dashboard/stats', [App\Http\Controllers\Admin\AdminDashboardController::class, 'getDashboardStats']);
         
         // Business Management
         Route::prefix('businesses')->group(function () {
@@ -64,6 +69,7 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
             Route::get('/list', [App\Http\Controllers\Admin\AdminBusinessController::class, 'listAllBusinesses']);
             Route::post('/deactivate/{id}', [App\Http\Controllers\Admin\AdminBusinessController::class, 'deactivateBusiness']);
             Route::post('/activate/{id}', [App\Http\Controllers\Admin\AdminBusinessController::class, 'activateBusiness']);
+            Route::post('/send-email', [App\Http\Controllers\Admin\AdminBusinessController::class, 'sendEmail']);
 
         });
         
@@ -100,12 +106,27 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
         Route::prefix('business')->group(function () {
             Route::get('/my-business', [App\Http\Controllers\Owner\OwnerBusinessController::class, 'getMyBusiness']);
             Route::get('/dashboard', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'getDashboardStats']);
+
+        });
+
+        Route::prefix('services')->group(function () {
+            Route::post('/create', [App\Http\Controllers\Owner\OwnerServiceController::class, 'createService']);
+            Route::put('/update/{serviceId}', [App\Http\Controllers\Owner\OwnerServiceController::class, 'updateService']);
+            Route::delete('/delete/{serviceId}', [App\Http\Controllers\Owner\OwnerServiceController::class, 'deleteService']);
         });
         
         // Staff Management
         Route::prefix('staff')->group(function () {
             Route::get('/list', [App\Http\Controllers\Owner\OwnerStaffController::class, 'getMyStaff']);
             // Route::post('/register-self-as-employee', [App\Http\Controllers\Owner\OwnerStaffController::class, 'registerOwnerAsEmployee']);
+        });
+
+        // Analytics & Stats
+        Route::prefix('analytics')->group(function () {
+            Route::get('/business-stats', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getBusinessStats']);
+            Route::get('/employee-stats/{employeeId}', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getEmployeeStats']);
+            Route::get('/owner-schedule', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getOwnerSchedule']);
+            Route::get('/employees-schedules', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getAllEmployeesWithSchedules']);
         });
         
         // Service Management
@@ -118,6 +139,12 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
             Route::post('/set', [App\Http\Controllers\Owner\OwnerScheduleController::class, 'setSchedule']);
             Route::get('/business/{businessId}', [App\Http\Controllers\Owner\OwnerScheduleController::class, 'getBusinessSchedule']);
             Route::get('/employee/{businessId}/{employeeId}', [App\Http\Controllers\Owner\OwnerScheduleController::class, 'getEmployeeSchedule']);
+        });
+
+        // Appointments Management
+        Route::prefix('appointments')->group(function () {
+            Route::get('/list', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getAppointments']);
+            Route::put('/update-status/{appointmentId}', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'updateAppointmentStatus']);
         });
     });
 });

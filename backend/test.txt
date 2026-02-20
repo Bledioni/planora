@@ -1,0 +1,50 @@
+public function activateBusiness($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $business = Business::findOrFail($id);
+
+            // Activate owner
+            if ($business->user_id) {
+                $owner = User::find($business->user_id);
+                if ($owner) {
+                    $owner->update(['status' => 'active']);
+                    $owner->touch();
+                }
+            }
+
+            // Activate all employees
+            $employeeCount = 0;
+            $employees = Employees::where('business_id', $id)->with('user')->get();
+            
+            foreach ($employees as $employee) {
+                if ($employee->user) {
+                    $employee->user->update(['status' => 'active']);
+                    $employee->user->touch();
+                    $employeeCount++;
+                }
+            }
+
+            DB::commit();
+
+            $totalAffected = 1 + $employeeCount;
+
+            Log::info("Business {$id} activated. Affected users: {$totalAffected}");
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "Biznesi u ri-aktivizua! {$totalAffected} përdorues janë tani ACTIVE (1 pronar + {$employeeCount} punonjës)."
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error activating business: ' . $e->getMessage());
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gabim gjatë aktivizimit të biznesit',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }

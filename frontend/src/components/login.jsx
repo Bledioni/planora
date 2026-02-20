@@ -45,7 +45,7 @@ const Login = () => {
     if (role === 'admin') {
         navigate('/admin/adminDashboard', { state: { user: res.data.user } });
     } else if (role === 'business_owner') {
-        navigate('/owner', { state: { user: res.data.user } });
+        navigate('/owner/owner-dashboard', { state: { user: res.data.user } });
     } else {
         navigate('/', { state: { user: res.data.user } });
     }

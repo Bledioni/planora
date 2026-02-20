@@ -46,14 +46,18 @@ class AdminUserController extends Controller
     public function GetBusinessOwners() 
 {
     try {
-        // Kjo merr të gjithë përdoruesit që kanë një regjistrim në tabelën businesses
         $owners = \App\Models\User::has('business')
-            ->with('business')
+            ->with([
+                'business',
+                'business.subscription'
+            ])
             ->latest()
             ->get();
 
-
-        return response()->json($owners);
+        return response()->json([
+            'status' => 'success',
+            'business_owners' => $owners
+        ]);
     } catch (\Exception $e) {
         return response()->json(['error' => $e->getMessage()], 500);
     }

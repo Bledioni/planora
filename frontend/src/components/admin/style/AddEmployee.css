@@ -1,412 +1,133 @@
-/* ====================================
-   ADD EMPLOYEE FORM - SUPER RESPONSIVE
-   All Devices Optimized
-==================================== */
-
-:root {
-    --primary: #2563eb;
-    --primary-hover: #1d4ed8;
-    --success: #10b981;
-    --bg-main: #f3f4f6;
-    --text-dark: #111827;
-    --text-muted: #6b7280;
-    --white: #ffffff;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-/* ====================================
-   PAGE LAYOUT
-==================================== */
-.page-wrapper {
-    display: flex;
-    min-height: 100vh;
-    background-color: var(--bg-main);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.main-content {
-    flex: 1;
+/* Premium Form Design */
+.form-flex-center {
     display: flex;
     flex-direction: column;
-    overflow: auto;
-    min-width: 0;
+    align-items: center;
 }
 
-.form-page-content {
-    padding: clamp(20px, 4vw, 40px);
-    max-width: 800px;
+.premium-form-card {
+    background: white;
     width: 100%;
-    margin: 0 auto;
+    max-width: 700px;
+    padding: clamp(1.5rem, 5vw, 3rem);
+    border-radius: 32px;
+    box-shadow: var(--shadow-medium);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    margin-bottom: 50px;
 }
 
-/* ====================================
-   HEADER SECTION
-==================================== */
-.form-header {
-    margin-bottom: clamp(24px, 4vw, 32px);
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 0.875rem;
-    cursor: pointer;
-    padding: 8px 0;
-    margin-bottom: 20px;
-    transition: all 0.2s ease;
-    font-family: inherit;
-}
-
-.back-link:hover {
-    opacity: 0.7;
-    transform: translateX(-4px);
-}
-
-.header-title {
+.planora-form {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 20px;
 }
 
-.icon-wrapper {
-    width: 64px;
-    height: 64px;
-    min-width: 64px;
-    background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
-    color: white;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-    flex-shrink: 0;
-}
-
-.header-title h1 {
-    font-size: clamp(1.5rem, 4vw, 1.875rem);
-    font-weight: 800;
-    color: var(--text-dark);
-    margin-bottom: 6px;
-    line-height: 1.2;
-}
-
-.subtitle {
-    color: var(--text-muted);
-    font-size: clamp(0.875rem, 2vw, 0.95rem);
-    line-height: 1.5;
-}
-
-/* ====================================
-   FORM CARD
-==================================== */
-.form-card {
-    background: var(--white);
-    border-radius: 24px;
-    padding: clamp(24px, 5vw, 40px);
-    box-shadow: var(--shadow);
-    border: 1px solid var(--gray-200);
-}
-
-.employee-form {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(20px, 3vw, 24px);
-}
-
-/* ====================================
-   FORM ROWS & GROUPS
-==================================== */
-.form-row {
+.form-grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: clamp(16px, 3vw, 20px);
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
-.input-group {
+.premium-input-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
-.input-group label {
+.premium-input-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #475569;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-dark);
+    margin-left: 5px;
 }
 
-.input-group label svg {
-    color: var(--primary);
-}
-
-.input-group input {
-    width: 100%;
-    padding: 14px 16px;
-    background-color: var(--gray-50);
-    border: 2px solid var(--gray-200);
-    border-radius: 12px;
+.premium-input-group input {
+    background: #f8fafc;
+    border: 2px solid #f1f5f9;
+    padding: 14px 18px;
+    border-radius: 16px;
     font-size: 1rem;
-    color: var(--text-dark);
-    transition: all 0.2s ease;
-    outline: none;
-    font-family: inherit;
+    color: #1e293b;
+    transition: all 0.3s;
 }
 
-.input-group input::placeholder {
-    color: var(--text-muted);
-}
-
-.input-group input:focus {
-    background-color: var(--white);
-    border-color: var(--primary);
+.premium-input-group input:focus {
+    background: white;
+    border-color: var(--planora-blue);
     box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    outline: none;
 }
 
-.input-group input:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* ====================================
-   INFO BOX
-==================================== */
-.info-box {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-    border-left: 4px solid var(--primary);
+/* Info Box */
+.form-info-alert {
+    background: #eff6ff;
+    border-left: 4px solid var(--planora-blue);
+    padding: 15px 20px;
     border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #1e40af;
+    font-size: 0.9rem;
 }
 
-.info-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
-}
-
-.info-box p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: var(--text-dark);
-    line-height: 1.6;
-}
-
-/* ====================================
-   SUBMIT BUTTON
-==================================== */
-.submit-btn {
-    width: 100%;
+/* Submit Button */
+.planora-submit-btn {
+    background: var(--planora-gradient);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 18px;
+    font-weight: 800;
+    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 16px 24px;
-    background: var(--success);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 1rem;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: inherit;
-    margin-top: 8px;
+    transition: all 0.3s;
+    margin-top: 10px;
 }
 
-.submit-btn:hover:not(:disabled) {
-    background: #059669;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+.planora-submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
 }
 
-.submit-btn:active:not(:disabled) {
-    transform: translateY(0);
-}
-
-.submit-btn:disabled {
+.planora-submit-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
-/* ====================================
-   LOADING SPINNER
-==================================== */
-.spinner {
+/* Loader Mini */
+.loader-mini {
     width: 20px;
     height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
+    border: 3px solid rgba(255,255,255,0.3);
     border-top-color: white;
     border-radius: 50%;
-    animation: spin 0.6s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ====================================
-   RESPONSIVE BREAKPOINTS
-==================================== */
-
-/* Tablet */
-@media (max-width: 1023px) {
-    .form-page-content {
-        max-width: 600px;
-    }
-}
-
-/* Mobile */
-@media (max-width: 767px) {
-    .form-page-content {
-        padding: 20px 16px;
+/* RESPONSIVE IPHONE 14 */
+@media (max-width: 768px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr; /* Një kolonë në mobile */
     }
 
-    .header-title {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+    .premium-form-card {
+        padding: 20px;
+        border-radius: 24px;
+        box-shadow: none; /* Heqim hijen e rëndë në mobile */
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
     }
 
-    .icon-wrapper {
-        width: 56px;
-        height: 56px;
-        min-width: 56px;
-        border-radius: 16px;
-    }
-
-    .icon-wrapper svg {
-        width: 28px;
-        height: 28px;
-    }
-
-    .header-title h1 {
-        font-size: 1.5rem;
-    }
-
-    .form-card {
-        padding: 24px 20px;
-        border-radius: 20px;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .employee-form {
-        gap: 20px;
-    }
-
-    .input-group input {
-        padding: 12px 14px;
-        font-size: 0.95rem;
-    }
-
-    .submit-btn {
-        padding: 14px 20px;
-        font-size: 0.95rem;
-    }
-}
-
-/* Small mobile */
-@media (max-width: 479px) {
-    .back-link {
-        font-size: 0.8rem;
-    }
-
-    .header-title h1 {
-        font-size: 1.375rem;
-    }
-
-    .icon-wrapper {
-        width: 48px;
-        height: 48px;
-    }
-
-    .icon-wrapper svg {
-        width: 24px;
-        height: 24px;
-    }
-
-    .form-card {
-        padding: 20px 16px;
-    }
-
-    .input-group label {
-        font-size: 0.8rem;
-    }
-
-    .input-group label svg {
-        width: 14px;
-        height: 14px;
-    }
-
-    .info-box {
-        padding: 12px 16px;
-        font-size: 0.8rem;
-    }
-
-    .submit-btn {
-        padding: 12px 16px;
-        font-size: 0.875rem;
-    }
-
-    .submit-btn svg {
-        width: 18px;
-        height: 18px;
-    }
-}
-
-/* Landscape mode */
-@media (max-height: 600px) and (orientation: landscape) {
-    .form-page-content {
-        padding: 16px;
-    }
-
-    .form-header {
-        margin-bottom: 16px;
-    }
-
-    .header-title {
-        gap: 12px;
-    }
-
-    .icon-wrapper {
-        width: 48px;
-        height: 48px;
-    }
-
-    .employee-form {
-        gap: 16px;
-    }
-}
-
-/* Print styles */
-@media print {
-    .back-link,
-    .submit-btn {
-        display: none;
-    }
-
-    .form-card {
-        box-shadow: none;
-        border: 1px solid #000;
+    .premium-input-group input {
+        padding: 12px 15px;
+        font-size: 16px; /* Ndalon Auto-Zoom në iOS */
     }
 }

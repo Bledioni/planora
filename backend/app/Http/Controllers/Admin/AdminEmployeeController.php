@@ -78,9 +78,9 @@ class AdminEmployeeController extends Controller
             // 2️⃣ Create employee (Lidhja me biznesin)
             // Përdorim updateOrCreate për të shmangur duplikimet
             $employee = Employees::updateOrCreate(
-                ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
-                ['user_id' => $targetUserId]
-            );
+    ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
+    ['user_id' => $targetUserId, 'business_id' => $validated['business_id']] // ✅ Add business_id here
+);
             
             DB::commit();
 
