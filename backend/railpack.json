@@ -2,6 +2,7 @@
   "steps": {
     "install:composer": {
       "commands": [
+        "cp /usr/bin/composer /usr/local/bin/composer",
         "composer install --ignore-platform-reqs --no-scripts --no-interaction"
       ]
     }
