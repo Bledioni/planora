@@ -6,8 +6,3 @@ cmds = ['composer install --ignore-platform-reqs --no-scripts']
 
 [build]
 cmds = ['composer dump-autoload --optimize', 'php artisan octane:install --server=roadrunner --no-interaction']
-```
-
-And set Railway **Custom Start Command** to:
-```
-php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=${PORT}
