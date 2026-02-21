@@ -2,7 +2,7 @@
 phpVersion = '8.2'
 
 [install]
-cmds = ['install-php-extensions bcmath pdo xml curl mbstring pdo_mysql zip ctype dom fileinfo hash openssl pcre session tokenizer sockets pcntl posix', 'composer install --ignore-platform-reqs --no-scripts']
+cmds = ['docker-php-ext-install pcntl posix', 'install-php-extensions bcmath pdo xml curl mbstring pdo_mysql zip ctype dom fileinfo hash openssl pcre session tokenizer sockets', 'composer install --ignore-platform-reqs --no-scripts']
 
 [build]
 cmds = ['composer dump-autoload --optimize']
