@@ -1,0 +1,9 @@
+{
+  "steps": {
+    "install:composer": {
+      "commands": [
+        "composer install --ignore-platform-reqs --no-scripts --no-interaction"
+      ]
+    }
+  }
+}
