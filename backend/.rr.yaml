@@ -3,3 +3,6 @@ http:
   pool:
     num_workers: 2
     max_jobs: 500
+
+server:
+  command: "php worker.php"
