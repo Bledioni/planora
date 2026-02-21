@@ -8,9 +8,6 @@ import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
 
-
-import '../style/AdminBusinessList.css'; 
-
 const AdminOwnerList = () => {
     const [owners, setOwners] = useState([]);
     const [loading, setLoading] = useState(false);
