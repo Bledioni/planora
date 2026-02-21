@@ -1,9 +1,0 @@
-{
-  "steps": {
-    "extensions": {
-      "commands": [
-        "install-php-extensions zip curl pdo_mysql bcmath xml mbstring pdo ctype curl dom fileinfo filter hash mbstring openssl pcre pdo session tokenizer xml pdo_mysql sockets"
-      ]
-    }
-  }
-}
