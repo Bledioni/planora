@@ -2,7 +2,12 @@
 phpVersion = '8.2'
 
 [install]
-cmds = ['docker-php-ext-install pcntl posix', 'install-php-extensions bcmath pdo xml curl mbstring pdo_mysql zip ctype dom fileinfo hash openssl pcre session tokenizer sockets', 'composer install --ignore-platform-reqs --no-scripts']
+cmds = ['composer install --ignore-platform-reqs --no-scripts']
 
 [build]
-cmds = ['composer dump-autoload --optimize']
+cmds = ['composer dump-autoload --optimize', 'php artisan octane:install --server=roadrunner --no-interaction']
+```
+
+And set Railway **Custom Start Command** to:
+```
+php artisan octane:start --server=roadrunner --host=0.0.0.0 --port=${PORT}
