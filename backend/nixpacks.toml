@@ -6,8 +6,3 @@ cmds = ['composer install --ignore-platform-reqs --no-scripts']
 
 [build]
 cmds = ['composer dump-autoload --optimize']
-```
-
-And add this Railway variable to stop double-loading:
-```
-PHP_INI_SCAN_DIR=
