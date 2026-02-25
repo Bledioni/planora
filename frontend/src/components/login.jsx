@@ -45,8 +45,14 @@ const Login = () => {
     if (role === 'admin') {
         navigate('/admin/adminDashboard', { state: { user: res.data.user } });
     } else if (role === 'business_owner') {
-        navigate('/owner/owner-dashboard', { state: { user: res.data.user } });
-    } else {
+        navigate('/owner/my-schedules', { state: { user: res.data.user } });
+    } 
+    else if(role === 'employee'){
+
+        navigate('/employee/dashboard', {state: {user: res.data.user}})
+
+    }
+    else {
         navigate('/', { state: { user: res.data.user } });
     }
 }
@@ -134,7 +140,10 @@ const Login = () => {
                 )}
 
                 <div className="register-footer">
-                    Nuk keni llogari? <Link to="/businessRegister" className="register-link">Regjistrohuni falas</Link>
+                    Nuk keni llogari? <Link to="/register" className="register-link">Regjistrohuni falas</Link>
+                </div>
+                <div className="register-footer">
+                    <Link to="/forgot-password" className="register-link">Keni harruar fjalëkalimin?</Link>
                 </div>
             </div>
         </div>

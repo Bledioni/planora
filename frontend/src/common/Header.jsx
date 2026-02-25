@@ -23,16 +23,15 @@ import AdminAnalyticsDashboard from "../components/admin/script/AdminAnalyticsDa
 import OwnerAnalyticsDashboard from "../components/business/script/OwnerAnalyticsDashboard";
 import EmployeesSchedule from "../components/business/script/EmployeesSchedule";
 import MySchedule from "../components/business/script/MySchedule";
-import OwnerDashboard from "../components/business/script/OwnerDashboard";
 import OwnerSidebar from "../components/business/script/OwnerSidebar";
 import ManageSchedule from "../components/business/script/ManageSchedule";
 import ManageServices from "../components/business/script/ManageServices";
-
-
-
-
-
-
+import EmployeeAppointments from "../components/employees/script/EmployeeAppointments";
+import EmployeeDashboard from "../components/employees/script/EmployeeDashboard";
+import EmployeeSidebar from "../components/employees/script/EmployeeSidebar";
+import EmployeeStats from "../components/employees/script/EmployeeStats";
+import ForgotPassword from "../components/ForgotPassword";
+import ResetPassword from "../components/ResetPassword";
 
 
 function Header() {
@@ -46,6 +45,8 @@ function Header() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/:shopSlug" element={<BookingApp />} />
         <Route path="/Register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* --- RRUGËT E MBROJTURA: PËRDORUESIT (Klientët) --- */}
         {/* Këtu shtohen të gjitha rolet që lejohen të kenë një wishlist */}
@@ -75,10 +76,18 @@ function Header() {
             <Route path="/owner/analytics-dashboard" element={<OwnerAnalyticsDashboard />} />
             <Route path="/owner/employees-schedules" element={<EmployeesSchedule />} />
             <Route path="/owner/my-schedules" element={<MySchedule />} />
-            <Route path="/owner/owner-dashboard" element={<OwnerDashboard />} />
             <Route path="/owner/side-bar" element={<OwnerSidebar />} />
             <Route path="/owner/manage-schedule" element={<ManageSchedule />} />
             <Route path="/owner/manage-services" element={<ManageServices />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['employee', 'admin']} />}>
+          <Route >
+              <Route path="/employee/appointments" element={<EmployeeAppointments />} />
+              <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+              <Route path="/employee/side-bar" element={<EmployeeSidebar />} />
+              <Route path="/employee/stats" element={<EmployeeStats />} />
           </Route>
         </Route>
 

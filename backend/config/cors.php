@@ -17,6 +17,7 @@ return [
     'allowed_origins' => [
     'http://localhost:3000',
     'https://www.planorabook.com',
+    'http://192.168.10.111:3000/',
 ],
 
     'allowed_origins_patterns' => [],

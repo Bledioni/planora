@@ -14,14 +14,12 @@ return new class extends Migration
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('business_id')->constrained('businesses')->onDelete('cascade');
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            $table->foreignId('employee_id')->constrained('employees');
+            $table->foreignId('service_id')->constrained('services');
             
-            // Koha e takimit
             $table->timestamp('start_time');
             $table->timestamp('finish_time');
             
-            // Fushat e klientit (Këto mungonin!)
             $table->string('client_name', 50);
             $table->string('client_phone');
             $table->string('client_email');
