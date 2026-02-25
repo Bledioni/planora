@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -132,4 +135,48 @@ class AuthController extends Controller
             'email'  => $request->user()->email,
         ]);
     }
+
+    public function forgotPassword(Request $request)
+{
+    $request->validate(['email' => 'required|email']);
+
+    $user = \App\Models\User::where('email', $request->email)->first();
+    if (!$user) {
+        return response()->json(['message' => 'Email nuk u gjet.'], 404);
+    }
+
+    $status = Password::sendResetLink($request->only('email'));
+
+    if ($status === Password::RESET_LINK_SENT) {
+        return response()->json(['message' => 'Link-u u dërgua me sukses.'], 200);
+    }
+
+    return response()->json(['message' => 'Gabim gjatë dërgimit.'], 500);
+}
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token'                 => 'required',
+        'email'                 => 'required|email',
+        'password'              => 'required|min:8|confirmed',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user, $password) {
+            $user->forceFill([
+                'password' => Hash::make($password),
+                'remember_token' => Str::random(60),
+            ])->save();
+            event(new PasswordReset($user));
+        }
+    );
+
+    if ($status === Password::PASSWORD_RESET) {
+        return response()->json(['message' => 'Fjalëkalimi u ndryshua me sukses.'], 200);
+    }
+
+    return response()->json(['message' => 'Token i pavlefshëm ose i skaduar.'], 422);
+}
 }

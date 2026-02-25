@@ -64,23 +64,29 @@ class AdminEmployeeController extends Controller
                 $targetUserId = $user->id;
             } else {
                 // Krijimi i përdoruesit të ri (vetëm nëse is_self është false)
-                $user = User::create([
-                    'name'         => $validated['name'],
-                    'surname'      => $validated['surname'],
-                    'email'        => $validated['email'],
-                    'phone_number' => $validated['phone_number'],
-                    'password'     => Hash::make($validated['password']),
-                    'role'         => 'employee',
-                ]);
+                // Get the business owner's status
+                    $business = Business::find($validated['business_id']);
+                    $ownerStatus = User::find($business->user_id)->status ?? 'pending';
+
+                    $user = User::create([
+                        'name'         => $validated['name'],
+                        'surname'      => $validated['surname'],
+                        'email'        => $validated['email'],
+                        'phone_number' => $validated['phone_number'],
+                        'password'     => Hash::make($validated['password']),
+                        'role'         => 'employee',
+                        'status'       => $ownerStatus, // inherits owner status
+                    ]);
                 $targetUserId = $user->id;
             }
 
             // 2️⃣ Create employee (Lidhja me biznesin)
             // Përdorim updateOrCreate për të shmangur duplikimet
+
             $employee = Employees::updateOrCreate(
-    ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
-    ['user_id' => $targetUserId, 'business_id' => $validated['business_id']] // ✅ Add business_id here
-);
+                ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
+                ['user_id' => $targetUserId, 'business_id' => $validated['business_id']] // ✅ Add business_id here
+            );
             
             DB::commit();
 

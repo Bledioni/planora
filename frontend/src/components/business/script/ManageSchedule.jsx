@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Save, XCircle , CheckCircle } from 'lucide-react';
+import { Clock, Save, XCircle, CheckCircle } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import Swal from 'sweetalert2';
-import '../style/OwnerDashboard.css';
-import '../style/ManageSchedule.css'
+import '../style/ManageSchedule.css';
 
 const DAYS = [
     { id: 0, name: 'E Diel' },
@@ -16,60 +15,65 @@ const DAYS = [
     { id: 6, name: 'E Shtunë' }
 ];
 
+const DEFAULT_SCHEDULE = {
+    open_at: '09:00',
+    close_at: '18:00',
+    break_start: '',
+    break_end: '',
+    is_off: false
+};
+
 const ManageSchedule = () => {
-    const [business, setBusiness] = useState(null);
-    const [employees, setEmployees] = useState([]);
+    const [business, setBusiness]               = useState(null);
+    const [employees, setEmployees]             = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [schedules, setSchedules] = useState({});
-    const [savedDays, setSavedDays] = useState(new Set());
-    const [loading, setLoading] = useState(true);
+    const [schedules, setSchedules]             = useState({});
+    const [savedSchedules, setSavedSchedules]   = useState({});
+    const [savedDays, setSavedDays]             = useState(new Set());
+    const [loading, setLoading]                 = useState(true);
+
+    useEffect(() => { fetchData(); }, []);
 
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    useEffect(() => {
-        if (selectedEmployee && business) {
-            fetchSchedules();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (selectedEmployee && business) fetchSchedules();
     }, [selectedEmployee]);
+
+    const parseSchedules = (data) => {
+        const schedulesMap = {};
+        const savedDaysSet = new Set();
+        data.forEach(s => {
+            schedulesMap[s.day_of_week] = {
+                open_at:     s.open_at     || '09:00',
+                close_at:    s.close_at    || '18:00',
+                break_start: s.break_start || '',
+                break_end:   s.break_end   || '',
+                is_off:      s.is_off      || false
+            };
+            savedDaysSet.add(s.day_of_week);
+        });
+        setSchedules(schedulesMap);
+        setSavedSchedules(schedulesMap);
+        setSavedDays(savedDaysSet);
+    };
 
     const fetchData = async () => {
         try {
             const businessRes = await api.get('/owner/business/my-business');
-            setBusiness(businessRes.data.business || businessRes.data);
+            const biz = businessRes.data.business || businessRes.data;
+            setBusiness(biz);
 
             const employeesRes = await api.get('/owner/analytics/employees-schedules');
-            setEmployees(employeesRes.data.employees || []);
-            
-            if (employeesRes.data.employees?.length > 0) {
-                const firstEmp = employeesRes.data.employees[0].id;
+            const emps = employeesRes.data.employees || [];
+            setEmployees(emps);
+
+            if (emps.length > 0) {
+                const firstEmp = emps[0].id;
                 setSelectedEmployee(firstEmp);
-                
-                const bizId = businessRes.data.business?.id || businessRes.data.id;
-                if (bizId) {
-                    const schedRes = await api.get(`/owner/schedules/employee/${bizId}/${firstEmp}`);
-                    const schedulesMap = {};
-                    const savedDaysSet = new Set();
-                    
-                    schedRes.data.forEach(schedule => {
-                        schedulesMap[schedule.day_of_week] = {
-                            open_at: schedule.open_at || '09:00',
-                            close_at: schedule.close_at || '18:00',
-                            break_start: schedule.break_start || '',
-                            break_end: schedule.break_end || '',
-                            is_off: schedule.is_off || false
-                        };
-                        savedDaysSet.add(schedule.day_of_week);
-                    });
-                    
-                    setSchedules(schedulesMap);
-                    setSavedDays(savedDaysSet);
-                }
+                const bizId = biz.id || biz;
+                const schedRes = await api.get(`/owner/schedules/employee/${bizId}/${firstEmp}`);
+                parseSchedules(schedRes.data);
             }
         } catch (err) {
-            console.error('Error fetching data:', err);
             Swal.fire('Gabim', 'Nuk u ngarkuan të dhënat.', 'error');
         } finally {
             setLoading(false);
@@ -78,40 +82,25 @@ const ManageSchedule = () => {
 
     const fetchSchedules = async () => {
         if (!business || !selectedEmployee) return;
-
         try {
             const bizId = business.id || business;
             const res = await api.get(`/owner/schedules/employee/${bizId}/${selectedEmployee}`);
-            
-            const schedulesMap = {};
-            const savedDaysSet = new Set();
-            
-            res.data.forEach(schedule => {
-                schedulesMap[schedule.day_of_week] = {
-                    open_at: schedule.open_at || '09:00',
-                    close_at: schedule.close_at || '18:00',
-                    break_start: schedule.break_start || '',
-                    break_end: schedule.break_end || '',
-                    is_off: schedule.is_off || false
-                };
-                savedDaysSet.add(schedule.day_of_week);
-            });
-            
-            setSchedules(schedulesMap);
-            setSavedDays(savedDaysSet);
+            parseSchedules(res.data);
         } catch (err) {
-            console.error('Error fetching schedules:', err);
+            console.error(err);
         }
     };
 
     const handleScheduleChange = (day, field, value) => {
         setSchedules(prev => ({
             ...prev,
-            [day]: {
-                ...(prev[day] || { open_at: '09:00', close_at: '18:00', break_start: '', break_end: '', is_off: false }),
-                [field]: value
-            }
+            [day]: { ...(prev[day] || DEFAULT_SCHEDULE), [field]: value }
         }));
+    };
+
+    const toggleDayOff = (dayId) => {
+        const current = schedules[dayId] || DEFAULT_SCHEDULE;
+        handleScheduleChange(dayId, 'is_off', !current.is_off);
     };
 
     const handleSaveDay = async (dayId) => {
@@ -119,68 +108,54 @@ const ManageSchedule = () => {
             Swal.fire('Gabim', 'Të dhënat nuk janë ngarkuar ende.', 'error');
             return;
         }
-
-        const schedule = schedules[dayId] || {
-            open_at: '09:00',
-            close_at: '18:00',
-            break_start: '',
-            break_end: '',
-            is_off: false
-        };
-
+        const schedule = schedules[dayId] || DEFAULT_SCHEDULE;
         const payload = {
-            business_id: business.id || business,
-            employee_id: selectedEmployee,
-            day_of_week: dayId,
-            open_at: schedule.open_at || '',
-            close_at: schedule.close_at || '',
-            break_start: schedule.break_start || '',
-            break_end: schedule.break_end || '',
-            is_off: schedule.is_off
+            business_id:  business.id || business,
+            employee_id:  selectedEmployee,
+            day_of_week:  dayId,
+            open_at:      schedule.open_at      || '',
+            close_at:     schedule.close_at     || '',
+            break_start:  schedule.break_start  || '',
+            break_end:    schedule.break_end     || '',
+            is_off:       schedule.is_off
         };
-
         try {
             await api.post('/owner/schedules/set', payload);
-
-            // Add to saved days
             setSavedDays(prev => new Set([...prev, dayId]));
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Sukses!',
-                text: 'Orari u ruajt.',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            setSavedSchedules(prev => ({ ...prev, [dayId]: { ...schedule } }));
+            Swal.fire({ icon: 'success', title: 'Sukses!', text: 'Orari u ruajt.', timer: 1500, showConfirmButton: false });
         } catch (err) {
-            console.error('Save error:', err.response);
             Swal.fire('Gabim', err.response?.data?.message || 'Ndodhi një gabim.', 'error');
         }
     };
 
-    const selectedEmp = employees.find(e => e.id === selectedEmployee);
-
-    if (loading) {
-        return (
-            <div className="owner-layout">
-                <OwnerSidebar />
-                <div className="loading-state">Duke ngarkuar...</div>
+    if (loading) return (
+        <div className="owner-layout">
+            <OwnerSidebar />
+            <div className="loading-state">
+                <div className="planora-loader-big"></div>
+                <p>Duke ngarkuar...</p>
             </div>
-        );
-    }
+        </div>
+    );
 
     return (
         <div className="owner-layout">
             <OwnerSidebar />
             <main className="owner-main-content">
+
                 <div className="owner-page-header">
-                    <div>
-                        <h1><Clock size={28} /> Menaxho Orarin</h1>
+                    <div className="page-header-text">
+                        <div className="header-top-tag">
+                            <Clock size={13} />
+                            <span>Orari</span>
+                        </div>
+                        <h1>Menaxho Orarin</h1>
                         <p>Vendos orarin e punës për punonjësit</p>
                     </div>
-                    {selectedEmp && employees.length > 0 && (
-                        <select 
-                            value={selectedEmployee} 
+                    {employees.length > 0 && (
+                        <select
+                            value={selectedEmployee}
                             onChange={(e) => setSelectedEmployee(Number(e.target.value))}
                             className="employee-select"
                         >
@@ -191,17 +166,17 @@ const ManageSchedule = () => {
                     )}
                 </div>
 
-                {/* Summary Stats */}
+                {/* Summary */}
                 <div className="schedule-summary">
-                    <div className="summary-card">
-                        <CheckCircle size={20} className="icon-success" />
+                    <div className="summary-card green">
+                        <CheckCircle size={18} />
                         <div>
                             <span className="summary-label">Ditë të Ruajtura</span>
                             <span className="summary-value">{savedDays.size} / 7</span>
                         </div>
                     </div>
-                    <div className="summary-card">
-                        <XCircle size={20} className="icon-warning" />
+                    <div className="summary-card red">
+                        <XCircle size={18} />
                         <div>
                             <span className="summary-label">Ditë Pa Orare</span>
                             <span className="summary-value">{7 - savedDays.size}</span>
@@ -212,95 +187,89 @@ const ManageSchedule = () => {
                 <div className="owner-content">
                     {employees.length === 0 ? (
                         <div className="empty-state">
+                            <Clock size={40} style={{ opacity: 0.2, marginBottom: 10 }} />
                             <p>Nuk ka punonjës të regjistruar.</p>
                         </div>
                     ) : (
                         <div className="schedule-table">
                             {DAYS.map(day => {
-                                const daySchedule = schedules[day.id] || {
-                                    open_at: '09:00',
-                                    close_at: '18:00',
-                                    break_start: '',
-                                    break_end: '',
-                                    is_off: false
-                                };
-
-                                const isSaved = savedDays.has(day.id);
+                                const daySchedule  = schedules[day.id]      || DEFAULT_SCHEDULE;
+                                const savedVersion = savedSchedules[day.id];
+                                const isSaved      = savedDays.has(day.id);
+                                const isOff        = daySchedule.is_off;
 
                                 return (
-                                    <div key={day.id} className={`schedule-row ${isSaved ? 'saved' : 'unsaved'}`}>
+                                    <div key={day.id} className={`schedule-row ${isSaved ? 'saved' : ''} ${isOff ? 'is-off' : ''}`}>
+
+                                        {/* Day Header */}
                                         <div className="day-header">
                                             <div className="day-title">
                                                 <span className="day-name">{day.name}</span>
-                                                {isSaved && (
-                                                    <span className="saved-badge">
-                                                        <CheckCircle size={14} />
-                                                        Ruajtur
+
+                                                {/* Badge reflects ONLY saved DB state */}
+                                                {isSaved ? (
+                                                    <span className={`badge ${savedVersion?.is_off ? 'badge-off' : 'badge-work'}`}>
+                                                        {savedVersion?.is_off
+                                                            ? <><XCircle size={12} /> Ditë Pushimi</>
+                                                            : <><CheckCircle size={12} /> Ditë Pune</>}
                                                     </span>
-                                                )}
-                                                {!isSaved && (
-                                                    <span className="saved-badge">
-                                                        <span className="pulse-dot"></span>
-                                                        Aktiv
+                                                ) : (
+                                                    <span className="badge badge-unsaved">
+                                                        <Clock size={12} /> Pa Ruajtur
                                                     </span>
                                                 )}
                                             </div>
-                                            <label className="switch">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={!daySchedule.is_off}
-                                                    onChange={(e) => handleScheduleChange(day.id, 'is_off', !e.target.checked)}
-                                                />
-                                                <span className="slider"></span>
-                                            </label>
+
+                                            {/* Working / Day Off toggle */}
+                                            <div className="day-type-toggle">
+                                                <button
+                                                    className={`toggle-btn ${!isOff ? 'active-work' : ''}`}
+                                                    onClick={() => isOff && toggleDayOff(day.id)}
+                                                >
+                                                    <CheckCircle size={14} /> Ditë Pune
+                                                </button>
+                                                <button
+                                                    className={`toggle-btn ${isOff ? 'active-off' : ''}`}
+                                                    onClick={() => !isOff && toggleDayOff(day.id)}
+                                                >
+                                                    <XCircle size={14} /> Ditë Pushimi
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        {!daySchedule.is_off ? (
+                                        {/* Time Inputs */}
+                                        {!isOff ? (
                                             <div className="schedule-inputs">
                                                 <div className="time-group">
                                                     <label>Hapet</label>
-                                                    <input
-                                                        type="time"
-                                                        value={daySchedule.open_at}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'open_at', e.target.value)}
-                                                    />
+                                                    <input type="time" value={daySchedule.open_at}
+                                                        onChange={(e) => handleScheduleChange(day.id, 'open_at', e.target.value)} />
                                                 </div>
-
                                                 <div className="time-group">
                                                     <label>Mbyllet</label>
-                                                    <input
-                                                        type="time"
-                                                        value={daySchedule.close_at}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'close_at', e.target.value)}
-                                                    />
+                                                    <input type="time" value={daySchedule.close_at}
+                                                        onChange={(e) => handleScheduleChange(day.id, 'close_at', e.target.value)} />
                                                 </div>
-
                                                 <div className="time-group">
-                                                    <label>Pushim nga (opsionale)</label>
-                                                    <input
-                                                        type="time"
-                                                        value={daySchedule.break_start}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'break_start', e.target.value)}
-                                                    />
+                                                    <label>Pushim nga</label>
+                                                    <input type="time" value={daySchedule.break_start}
+                                                        onChange={(e) => handleScheduleChange(day.id, 'break_start', e.target.value)} />
                                                 </div>
-
                                                 <div className="time-group">
-                                                    <label>Pushim deri (opsionale)</label>
-                                                    <input
-                                                        type="time"
-                                                        value={daySchedule.break_end}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'break_end', e.target.value)}
-                                                    />
+                                                    <label>Pushim deri</label>
+                                                    <input type="time" value={daySchedule.break_end}
+                                                        onChange={(e) => handleScheduleChange(day.id, 'break_end', e.target.value)} />
                                                 </div>
-
                                                 <button onClick={() => handleSaveDay(day.id)} className="btn-save">
-                                                    <Save size={16} />
-                                                    Ruaj
+                                                    <Save size={15} /> Ruaj
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div className="day-off-label">
-                                                <span>🚫 Dita pushimi</span>
+                                            <div className="day-off-banner">
+                                                <span>🚫 Ditë pushimi — punonjësi nuk punon</span>
+                                                <button onClick={() => handleSaveDay(day.id)} className="btn-save-off">
+                                                    <Save size={15} /> Ruaj
+                                                </button>
                                             </div>
                                         )}
                                     </div>
@@ -309,6 +278,7 @@ const ManageSchedule = () => {
                         </div>
                     )}
                 </div>
+
             </main>
         </div>
     );

@@ -50,6 +50,8 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [App\Http\Controllers\Auth\AuthController::class, 'logout']);
         Route::get('/profile', [App\Http\Controllers\Auth\AuthController::class, 'getUserProfile']);
+        Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'forgotPassword']);
+        Route::post('/reset-password',  [App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);
     });
 
     /*
@@ -146,5 +148,22 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
             Route::get('/list', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getAppointments']);
             Route::put('/update-status/{appointmentId}', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'updateAppointmentStatus']);
         });
+    });
+
+        /*
+    |--------------------------------------------------------------------------
+    | EMPLOYEE ROUTES - Only for employee role
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('role:employee')->prefix('employee')->group(function () {
+
+        // Appointments
+        Route::prefix('appointments')->group(function () {
+            Route::get('/list', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getAppointments']);
+            Route::put('/update-status/{appointmentId}', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'updateStatus']);
+        });
+
+        // Stats
+        Route::get('/stats', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getStats']);
     });
 });

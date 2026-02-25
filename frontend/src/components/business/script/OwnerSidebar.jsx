@@ -2,82 +2,88 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
     LayoutDashboard, Calendar, Users, BarChart3, 
-    LogOut, Building2, ChevronRight, Menu, X 
+    LogOut, Scissors, ChevronRight 
 } from 'lucide-react';
+import { api } from '../../../index';
 import '../style/OwnerSidebar.css';
+import logo from '../../../assets/IMG_5288.png';
 
 const OwnerSidebar = () => {
     const navigate = useNavigate();
-    const [isOpen, setIsOpen] = useState(false); // State for mobile menu
+    const [isOpen, setIsOpen] = useState(false);
 
-    const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);
 
-    const handleLogout = () => {
-        navigate('/logout');
+    const handleLogout = async () => {
+        try {
+            await api.post('/auth/logout');
+            localStorage.removeItem('token');
+            navigate('/login');
+        } catch {
+            localStorage.removeItem('token');
+            navigate('/login');
+        }
     };
 
     return (
         <>
-            {/* Mobile Hamburger Button */}
-            <button className="mobile-menu-toggle" onClick={toggleMenu}>
-                {isOpen ? <X size={24} /> : <Menu size={24} />}
+            <button
+                className={`mobile-menu-toggle ${isOpen ? 'is-open' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <span className="hamburger-bar" />
+                <span className="hamburger-bar" />
+                <span className="hamburger-bar" />
             </button>
 
-            {/* Overlay to close menu when clicking outside */}
-            {isOpen && <div className="sidebar-overlay" onClick={closeMenu}></div>}
+            {isOpen && (
+                <div className="sidebar-overlay" onClick={closeMenu} />
+            )}
 
             <aside className={`owner-sidebar ${isOpen ? 'open' : ''}`}>
-                <div className="owner-sidebar-header">
-                    <Building2 size={32} color="#1d7af2" />
-                    <div>
-                        <h2>Business Owner</h2>
-                        <p>Panel i menaxhimit</p>
+
+                <div className="sidebar-logo">
+                    <div className="sidebar-logo-icon">
+                        <img src={`${logo}`} alt="" style={{width: '20px' , backgroundColor:'none'}}/>
+                    </div>
+                    <div className="sidebar-logo-text">
+                        <span>Planora</span><strong>Book</strong>
                     </div>
                 </div>
 
                 <nav className="owner-sidebar-nav">
-                    <NavLink to="/owner/owner-dashboard" className="nav-item" onClick={closeMenu}>
-                        <LayoutDashboard size={20} />
-                        <span>Dashboard</span>
-                        <ChevronRight size={16} className="nav-arrow" />
+                    <p className="sidebar-section-label">Kryefaqja</p>
+                    <NavLink to="/owner/my-schedules" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Calendar size={18} /> Orari Im
                     </NavLink>
 
-                    <NavLink to="/owner/my-schedules" className="nav-item" onClick={closeMenu}>
-                        <Calendar size={20} />
-                        <span>Orari Im</span>
-                        <ChevronRight size={16} className="nav-arrow" />
+                    <p className="sidebar-section-label">Punonjësit</p>
+                    <NavLink to="/owner/employees-schedules" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Users size={18} /> Orari i Punonjësve
                     </NavLink>
 
-                    <NavLink to="/owner/employees-schedules" className="nav-item" onClick={closeMenu}>
-                        <Users size={20} />
-                        <span>Orari i Punonjësve</span>
-                        <ChevronRight size={16} className="nav-arrow" />
+                    <p className="sidebar-section-label">Analitika</p>
+                    <NavLink to="/owner/analytics-dashboard" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <BarChart3 size={18} /> Statistikat
                     </NavLink>
 
-                    <NavLink to="/owner/analytics-dashboard" className="nav-item" onClick={closeMenu}>
-                        <BarChart3 size={20} />
-                        <span>Statistikat</span>
-                        <ChevronRight size={16} className="nav-arrow" />
+                    <p className="sidebar-section-label">Menaxhimi</p>
+                    <NavLink to="/owner/manage-schedule" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Calendar size={18} /> Terminet
                     </NavLink>
-                    
-                    <NavLink to="/owner/manage-schedule" className="nav-item" onClick={closeMenu}>
-                        <Calendar size={20} />
-                        <span>Terminet</span>
-                        <ChevronRight size={16} className="nav-arrow" />
-                    </NavLink>
-                    
-                    <NavLink to="/owner/manage-services" className="nav-item" onClick={closeMenu}>
-                        <BarChart3 size={20} />
-                        <span>Sherbimet</span>
-                        <ChevronRight size={16} className="nav-arrow" />
+                    <NavLink to="/owner/manage-services" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <BarChart3 size={18} /> Shërbimet
                     </NavLink>
                 </nav>
 
                 <div className="owner-sidebar-footer">
-                    <button onClick={handleLogout} className="logout-btn">
-                        <LogOut size={20} />
-                        <span>Dil</span>
+                    <button onClick={handleLogout} className="sidebar-logout-btn">
+                        <LogOut size={16} /> Dil
                     </button>
                 </div>
             </aside>
