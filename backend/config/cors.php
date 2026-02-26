@@ -16,8 +16,9 @@ return [
     // Këtu shtohet linku i React-it (Netlify) dhe Localhost për testim
     'allowed_origins' => [
     'http://localhost:3000',
+    'http://192.168.10.111:3000',
+    'https://planorabook.com',
     'https://www.planorabook.com',
-    'http://192.168.10.111:3000/',
 ],
 
     'allowed_origins_patterns' => [],
