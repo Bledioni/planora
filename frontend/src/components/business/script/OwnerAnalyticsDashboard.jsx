@@ -72,8 +72,7 @@ const OwnerAnalyticsDashboard = () => {
             <main className="owner-main-content">
                 <header className="analytics-premium-header">
                     <div className="header-title">
-                        <h1>Analytics Dashboard</h1>
-                        <p>Pasqyra e performancës së biznesit tuaj</p>
+                        <h1>Analytics <span>Dashboard</span></h1>
                     </div>
                     
                     <div className="header-actions">
