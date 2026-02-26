@@ -30,7 +30,6 @@ Route::middleware(['business.active'])->group(function () {
     Route::post('/appointments/create', [App\Http\Controllers\Public\BookingController::class, 'createAppointment']);
     Route::post('/available-slots', [App\Http\Controllers\Public\BookingController::class, 'getAvailableSlots']);
     Route::get('/business/{businessId}/{employeeId}/available-slots', [App\Http\Controllers\Public\BookingController::class, 'getAvailableSlots']);
-    Route::get('/business/{businessId}/services', [App\Http\Controllers\Public\ServiceController::class, 'getBusinessServices']);
     Route::get('/businesses/all', [App\Http\Controllers\Public\PublicBusinessController::class, 'getAllBusinesses']);
     Route::get('/businesses/details/{slug}', [App\Http\Controllers\Public\PublicBusinessController::class, 'getBusinessBySlug']);
 });
