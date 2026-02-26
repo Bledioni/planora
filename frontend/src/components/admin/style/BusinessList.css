@@ -7,10 +7,8 @@
   --p-border: #e2e8f0;
   --p-text-muted: #64748b;
   --shadow-soft: 0 2px 16px rgba(15, 23, 42, 0.07);
-  --sidebar-width: 280px;
 }
 
-/* ── Layout ── */
 .owner-layout {
   display: flex;
   flex-direction: column;
@@ -25,13 +23,11 @@
   padding: 20px 16px;
 }
 
-/* ── Container ── */
 .schedule-container-wide {
   width: 100%;
   margin: 0 auto;
 }
 
-/* ── Header ── */
 .schedule-header-big {
   margin-bottom: 24px;
 }
@@ -64,7 +60,6 @@
   margin: 0;
 }
 
-/* ── Search / Calendar Strip ── */
 .planora-calendar-big {
   background: #ffffff;
   border: 1px solid var(--p-border);
@@ -77,7 +72,6 @@
   box-shadow: var(--shadow-soft);
 }
 
-/* ── Modern Search Wrapper ── */
 .modern-search-wrapper {
   display: flex;
   align-items: center;
@@ -104,7 +98,6 @@
   font-weight: 400;
 }
 
-/* ── Stats Badge ── */
 .stats-badge-mini {
   background: #eff6ff;
   color: var(--p-blue);
@@ -116,7 +109,6 @@
   white-space: nowrap;
 }
 
-/* ── Error Banner ── */
 .error-banner {
   background: #fee2e2;
   color: #ef4444;
@@ -128,53 +120,16 @@
   margin-bottom: 16px;
 }
 
-/* ── Timeline Container ── */
 .timeline-container {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* ── Timeline Row ── */
 .timeline-row {
   display: flex;
-  align-items: stretch;
-  gap: 12px;
 }
 
-/* ── Time Column ── */
-.time-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding-top: 16px;
-  min-width: 50px;
-  flex-shrink: 0;
-}
-
-.time-text {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--p-text-muted);
-  white-space: nowrap;
-  text-align: center;
-}
-
-.vertical-line {
-  width: 2px;
-  flex: 1;
-  min-height: 30px;
-  border-radius: 2px;
-  background: var(--p-border);
-}
-
-.vertical-line.confirmed { background: var(--p-blue); }
-.vertical-line.completed { background: #16a34a; }
-.vertical-line.cancelled { background: #ef4444; }
-.vertical-line.pending   { background: #ca8a04; }
-
-/* ── Appointment Card ── */
 .appointment-card-large {
   flex: 1;
   background: #ffffff;
@@ -195,7 +150,6 @@
   border-color: rgba(29, 122, 242, 0.2);
 }
 
-/* ── Client Section ── */
 .client-section {
   display: flex;
   align-items: center;
@@ -204,7 +158,6 @@
   min-width: 0;
 }
 
-/* ── Avatar ── */
 .avatar-circle {
   width: 44px;
   height: 44px;
@@ -219,7 +172,6 @@
   flex-shrink: 0;
 }
 
-/* ── Client Details ── */
 .client-details {
   display: flex;
   flex-direction: column;
@@ -255,13 +207,23 @@
   text-overflow: ellipsis;
 }
 
-/* ── Card Right Info ── */
 .card-right-info {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 6px;
   flex-shrink: 0;
+}
+
+.biz-id-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--p-text-muted);
+  background: var(--p-gray-bg);
+  border: 1px solid var(--p-border);
+  border-radius: 8px;
+  padding: 2px 8px;
+  letter-spacing: 0.03em;
 }
 
 .price-tag {
@@ -273,7 +235,6 @@
   gap: 5px;
 }
 
-/* ── Status Pills ── */
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -308,7 +269,6 @@
   color: #ca8a04;
 }
 
-/* ── Empty State ── */
 .empty-schedule-card {
   background: #ffffff;
   border: 1px dashed var(--p-border);
@@ -325,7 +285,6 @@
   gap: 4px;
 }
 
-/* ── Loader ── */
 .planora-loader-big {
   width: 38px;
   height: 38px;
@@ -336,30 +295,12 @@
   margin: 60px auto;
 }
 
-/* ── Animations ── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-.spin {
-  animation: spin 0.7s linear infinite;
-}
-
-/* ════════════════════════════════════
-   RESPONSIVE — MOBILE FIRST
-════════════════════════════════════ */
-
-/* ── Mobile only ── */
+/* ── Mobile ── */
 @media (max-width: 639px) {
-  .time-column {
-    min-width: 36px;
-  }
-
-  .time-text {
-    font-size: 0.68rem;
-    min-width: unset;
-  }
-
   .appointment-card-large {
     flex-direction: column;
     align-items: flex-start;
@@ -387,7 +328,7 @@
   }
 }
 
-/* ── Tablet: 640px ── */
+/* ── Tablet ── */
 @media (min-width: 640px) {
   .owner-main-content {
     padding: 28px 24px;
@@ -397,16 +338,12 @@
     font-size: 1.6rem;
   }
 
-  .header-top-tag {
-    font-size: 0.73rem;
-  }
-
   .appointment-card-large {
     padding: 16px 18px;
   }
 }
 
-/* ── Desktop: 1024px ── */
+/* ── Desktop ── */
 @media (min-width: 1024px) {
   .owner-layout {
     flex-direction: row;
@@ -428,11 +365,6 @@
     font-size: 1.9rem;
   }
 
-  .header-top-tag {
-    font-size: 0.75rem;
-    padding: 6px 12px;
-  }
-
   .avatar-circle {
     width: 48px;
     height: 48px;
@@ -449,7 +381,7 @@
   }
 }
 
-/* ── Large Desktop: 1280px ── */
+/* ── Large Desktop ── */
 @media (min-width: 1280px) {
   .owner-main-content {
     padding: 48px 48px;

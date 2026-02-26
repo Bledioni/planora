@@ -250,16 +250,6 @@ const ManageSchedule = () => {
                                                     <input type="time" value={daySchedule.close_at}
                                                         onChange={(e) => handleScheduleChange(day.id, 'close_at', e.target.value)} />
                                                 </div>
-                                                <div className="time-group">
-                                                    <label>Pushim nga</label>
-                                                    <input type="time" value={daySchedule.break_start}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'break_start', e.target.value)} />
-                                                </div>
-                                                <div className="time-group">
-                                                    <label>Pushim deri</label>
-                                                    <input type="time" value={daySchedule.break_end}
-                                                        onChange={(e) => handleScheduleChange(day.id, 'break_end', e.target.value)} />
-                                                </div>
                                                 <button onClick={() => handleSaveDay(day.id)} className="btn-save">
                                                     <Save size={15} /> Ruaj
                                                 </button>

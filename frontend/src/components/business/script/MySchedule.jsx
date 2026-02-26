@@ -108,10 +108,6 @@ const MySchedule = () => {
                             <div className="timeline-container">
                                 {appointments.length > 0 ? appointments.map(apt => (
                                     <div key={apt.id} className="timeline-row">
-                                        <div className="time-column">
-                                            <span className="time-text">{apt.appointment_time.slice(0,5)}</span>
-                                            <div className={`vertical-line ${apt.status}`}></div>
-                                        </div>
                                         <div className={`appointment-card-large ${apt.status === 'cancelled' ? 'is-cancelled' : ''}`}>
                                             <div className="client-section">
                                                 <div className="avatar-circle">
@@ -123,6 +119,7 @@ const MySchedule = () => {
                                                 </div>
                                             </div>
                                             <div className="card-right-info">
+                                                <span className="apt-time-tag">{apt.appointment_time.slice(0,5)}</span>
                                                 <span className="price-tag">{apt.service?.price}€</span>
                                                 <span className={`status-pill ${apt.status}`}>{apt.status}</span>
                                             </div>
