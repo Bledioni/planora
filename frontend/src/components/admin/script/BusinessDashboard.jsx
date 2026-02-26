@@ -5,7 +5,7 @@ import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
 import '../style/AdminDashboard.css'; // Përdorim këtë për të trashëguar stilin kryesor
-
+import '../style/BusinessDashboard.css';
 const BusinessDashboard = () => {
     const { businessId } = useParams();
     const navigate = useNavigate();

@@ -23,7 +23,7 @@ class AppServiceProvider extends ServiceProvider
 
         // 2. Your existing Password Reset logic
         ResetPassword::createUrlUsing(function ($user, string $token) {
-            return config('app.frontend_url', 'https://planorabook.com/') 
+            return config('app.frontend_url', 'http://127.0.0.1:800') 
                 . '/reset-password?token=' . $token 
                 . '&email=' . urlencode($user->email);
         });
