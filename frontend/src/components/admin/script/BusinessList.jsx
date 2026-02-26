@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import { Search, MapPin, Mail, ArrowUpRight, Building2 } from 'lucide-react';
-import '../style/AdminDashboard.css'; // Përdorim skedarin kryesor për konsistencë
+import '../style/BusinessList.css';
 
 const BusinessList = () => {
     const [businesses, setBusinesses] = useState([]);
@@ -43,7 +43,6 @@ const BusinessList = () => {
             <main className="owner-main-content">
                 <div className="schedule-container-wide">
                     
-                    {/* Header Ultra Premium */}
                     <header className="schedule-header-big">
                         <div className="header-top-tag">
                             <Building2 size={14} />
@@ -53,7 +52,6 @@ const BusinessList = () => {
                         <p>Shiko dhe menaxho të gjithë partnerët aktivë</p>
                     </header>
 
-                    {/* Search Bar - Glass Morphism Style */}
                     <div className="planora-calendar-big" style={{marginBottom: '2.5rem'}}>
                         <div className="modern-search-wrapper" style={{width: '100%', display: 'flex', alignItems: 'center', gap: '12px', background: 'white', padding: '12px 20px', borderRadius: '18px', boxShadow: 'var(--shadow-soft)'}}>
                             <Search size={20} color="#2563eb" />
@@ -78,14 +76,6 @@ const BusinessList = () => {
                         ) : filteredBusinesses.length > 0 ? (
                             filteredBusinesses.map((biz) => (
                                 <div key={biz.id} className="timeline-row" onClick={() => navigate(`/admin/business/${biz.id}`)} style={{cursor: 'pointer'}}>
-                                    
-                                    <div className="time-column">
-                                        <div className="time-text" style={{fontSize: '0.8rem', minWidth: '80px', textAlign: 'center'}}>
-                                            #{biz.id}
-                                        </div>
-                                        <div className="vertical-line confirmed"></div>
-                                    </div>
-
                                     <div className="appointment-card-large">
                                         <div className="client-section">
                                             <div className="avatar-circle">
@@ -105,6 +95,7 @@ const BusinessList = () => {
                                         </div>
 
                                         <div className="card-right-info">
+                                            <span className="biz-id-tag">#{biz.id}</span>
                                             <div className="status-pill confirmed" style={{fontSize: '0.65rem'}}>
                                                 {biz.business_type || biz.category?.name || 'Partner'}
                                             </div>

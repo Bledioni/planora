@@ -17,7 +17,6 @@ class AppServiceProvider extends ServiceProvider
     {
         // 1. Force HTTPS if in production
         if (config('app.env') === 'production') {
-            URL::forceRootUrl(config('app.url'));
             URL::forceScheme('https');
         }
 
