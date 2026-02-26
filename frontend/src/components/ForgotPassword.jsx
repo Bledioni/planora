@@ -14,7 +14,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError('');
         try {
-            await api.post('/auth/forgot-password', { email });
+            await api.post('/public/forgot-password', { email });
             setSuccess(true);
         } catch (err) {
             const status = err.response?.status;
@@ -49,7 +49,7 @@ const ForgotPassword = () => {
                             Email-i u dërgua!
                         </p>
                         <p style={{ color: '#4b5563', fontSize: '0.875rem' }}>
-                            Kontrolloni kutinë tuaj të postës dhe klikoni linkun për të rivendosur fjalëkalimin.
+                            Kontrolloni Emailin tuaj dhe klikoni linkun për të rivendosur fjalëkalimin.
                         </p>
                     </div>
                 ) : (

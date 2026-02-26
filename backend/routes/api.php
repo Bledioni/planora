@@ -21,6 +21,8 @@ Route::prefix('public')->group(function () {
         
     // Categories
     Route::get('/categories/all', [App\Http\Controllers\Public\PublicCategoryController::class, 'getAllCategories']);
+    Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password',  [App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);
     
     // Booking & Appointments
     // Public appointment routes - CHECK IF BUSINESS IS ACTIVE
@@ -50,8 +52,6 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [App\Http\Controllers\Auth\AuthController::class, 'logout']);
         Route::get('/profile', [App\Http\Controllers\Auth\AuthController::class, 'getUserProfile']);
-        Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'forgotPassword']);
-        Route::post('/reset-password',  [App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);
     });
 
     /*
