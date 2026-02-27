@@ -249,9 +249,8 @@ public function getAvailableSlots(Request $request): JsonResponse
                     now()->addMinutes(30),
                     ['id' => $appointments[0]->id]
                 );
-
-                Mail::to($appointments[0]->client_email)
-                    ->send(new AppointmentConfirmationMail($appointments[0], $confirmationUrl));
+Mail::to($appointments[0]->client_email)
+    ->queue(new AppointmentConfirmationMail($appointments[0], $confirmationUrl));
 
                 return response()->json([
                     'status'          => 'success',
