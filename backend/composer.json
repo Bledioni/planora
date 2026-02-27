@@ -75,7 +75,9 @@
             "php-http/discovery": true
         },
         "platform": {
-            "php": "8.2.0"
+            "php": "8.2.0",
+            "ext-sockets": "1.0.0"
+
         }
     }
 }
