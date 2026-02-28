@@ -95,7 +95,7 @@ public function getAvailableSlots(Request $request): JsonResponse
 
     $bookings = Appointments::where('employee_id', $request->employee_id)
         ->whereDate('start_time', $date)
-        ->whereIn('status', ['active', 'pending'])
+        ->whereIn('status', ['active', 'pending' , 'confirmed'])
         ->get()
         ->sortBy('start_time')
         ->values();
