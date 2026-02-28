@@ -211,7 +211,7 @@ public function getAvailableSlots(Request $request): JsonResponse
                 }
 
                 $isBusy = Appointments::where('employee_id', $request->employee_id)
-                    ->whereIn('status', ['active', 'pending'])
+                    ->whereIn('status', ['active', 'pending' , 'confirmed'])
                     ->where(function ($query) use ($startTime, $finishTime) {
                         $query->where('start_time', '<', $finishTime)->where('finish_time', '>', $startTime);
                     })
