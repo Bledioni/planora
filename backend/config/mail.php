@@ -50,6 +50,10 @@ return [
     'transport' => 'resend',
 ],
 
+'sendgrid' => [
+    'transport' => 'sendgrid',
+],
+
         'ses' => [
             'transport' => 'ses',
         ],
