@@ -23,6 +23,8 @@ Route::prefix('public')->group(function () {
     Route::get('/categories/all', [App\Http\Controllers\Public\PublicCategoryController::class, 'getAllCategories']);
     Route::post('/forgot-password', [App\Http\Controllers\Auth\AuthController::class, 'forgotPassword']);
     Route::post('/reset-password',  [App\Http\Controllers\Auth\AuthController::class, 'resetPassword']);
+
+    Route::get('/appointments/details/{id}', [App\Http\Controllers\Public\BookingController::class, 'getAppointmentDetails']);
     
     // Booking & Appointments
     // Public appointment routes - CHECK IF BUSINESS IS ACTIVE
@@ -166,3 +168,8 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
         Route::get('/stats', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getStats']);
     });
 });
+
+// Appointment confirmation - signed URL
+Route::get('/appointments/confirm/{id}', [App\Http\Controllers\Public\BookingController::class, 'confirmAppointment'])
+    ->name('appointment.confirm')
+    ->middleware('signed');

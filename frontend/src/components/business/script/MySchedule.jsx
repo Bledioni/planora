@@ -26,7 +26,6 @@ const MySchedule = () => {
         return days;
     }, [selectedDate]);
 
-    // Hook 1: Vetëm për inicializimin e employeeId
     useEffect(() => {
         const init = async () => {
             try {
@@ -36,32 +35,41 @@ const MySchedule = () => {
                 } else {
                     setLoading(false);
                 }
-            } catch (err) { 
-                setLoading(false); 
+            } catch (err) {
+                setLoading(false);
             }
         };
         init();
     }, []);
 
-    // Hook 2: Merr takimet kur ndryshon data ose ID-ja
     useEffect(() => {
         const fetchApts = async () => {
             if (!employeeId) return;
             setLoading(true);
             try {
-                const res = await api.get('/owner/appointments/list', { 
-                    params: { date: selectedDate, employee_id: employeeId } 
+                const res = await api.get('/owner/appointments/list', {
+                    params: { date: selectedDate, employee_id: employeeId }
                 });
                 setAppointments(res.data.appointments || []);
             } catch (err) {
                 console.error("Error fetching appointments:", err);
-            } finally { 
-                setLoading(false); 
+            } finally {
+                setLoading(false);
             }
         };
-
         fetchApts();
-    }, [selectedDate, employeeId]); // Tani është 100% OK dhe pa warning
+    }, [selectedDate, employeeId]);
+
+    const handleCancel = async (appointmentId) => {
+        if (!window.confirm('A jeni i sigurt që dëshironi të anuloni këtë termin?')) return;
+        try {
+await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'canceled' });            setAppointments(prev => prev.map(apt =>
+                apt.id === appointmentId ? { ...apt, status: 'canceled' } : apt
+            ));
+        } catch (err) {
+            alert('Gabim gjatë anulimit të terminit.');
+        }
+    };
 
     return (
         <div className="owner-layout">
@@ -85,9 +93,9 @@ const MySchedule = () => {
 
                         <div className="days-grid">
                             {calendarDays.map((day) => (
-                                <div 
-                                    key={day.full} 
-                                    className={`day-box ${day.full === selectedDate ? 'active' : ''}`} 
+                                <div
+                                    key={day.full}
+                                    className={`day-box ${day.full === selectedDate ? 'active' : ''}`}
                                     onClick={() => setSelectedDate(day.full)}
                                 >
                                     <span className="day-name-txt">{day.dayName}</span>
@@ -108,10 +116,10 @@ const MySchedule = () => {
                             <div className="timeline-container">
                                 {appointments.length > 0 ? appointments.map(apt => (
                                     <div key={apt.id} className="timeline-row">
-                                        <div className={`appointment-card-large ${apt.status === 'cancelled' ? 'is-cancelled' : ''}`}>
+                                        <div className={`appointment-card-large ${apt.status === 'canceled' ? 'is-cancelled' : ''}`}>
                                             <div className="client-section">
                                                 <div className="avatar-circle">
-                                                    {apt.status === 'cancelled' ? <AlertCircle size={24} /> : apt.client_name?.charAt(0)}
+                                                    {apt.status === 'canceled' ? <AlertCircle size={24} /> : apt.client_name?.charAt(0)}
                                                 </div>
                                                 <div className="client-details">
                                                     <h3>{apt.client_name}</h3>
@@ -119,9 +127,17 @@ const MySchedule = () => {
                                                 </div>
                                             </div>
                                             <div className="card-right-info">
-                                                <span className="apt-time-tag">{apt.appointment_time.slice(0,5)}</span>
+                                                <span className="apt-time-tag">{apt.appointment_time?.slice(0, 5)}</span>
                                                 <span className="price-tag">{apt.service?.price}€</span>
                                                 <span className={`status-pill ${apt.status}`}>{apt.status}</span>
+                                                {apt.status !== 'canceled' && apt.status !== 'completed' && (
+                                                    <button
+                                                        onClick={() => handleCancel(apt.id)}
+                                                        className="cancel-btn"
+                                                    >
+                                                        Anulo
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

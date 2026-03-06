@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, Calendar, User as ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
+import { Users, Calendar, ChevronLeft, ChevronRight, LayoutDashboard } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import '../style/EmployeesSchedule.css';
@@ -66,6 +66,18 @@ const EmployeesSchedule = () => {
         }
     };
 
+    const handleCancel = async (appointmentId) => {
+        if (!window.confirm('A jeni i sigurt që dëshironi të anuloni këtë termin?')) return;
+        try {
+            await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'canceled' });
+            setAppointments(prev => prev.map(apt =>
+                apt.id === appointmentId ? { ...apt, status: 'canceled' } : apt
+            ));
+        } catch (err) {
+            alert('Gabim gjatë anulimit të terminit.');
+        }
+    };
+
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
 
     return (
@@ -82,11 +94,10 @@ const EmployeesSchedule = () => {
                 </div>
 
                 <div className="schedule-container-wide">
-                    {/* Employee Selector */}
                     <div className="emp-selector-card">
                         <Users size={20} />
-                        <select 
-                            value={selectedEmployee || ''} 
+                        <select
+                            value={selectedEmployee || ''}
                             onChange={(e) => setSelectedEmployee(Number(e.target.value))}
                         >
                             {employees.map(emp => (
@@ -95,10 +106,9 @@ const EmployeesSchedule = () => {
                         </select>
                     </div>
 
-                    {/* Calendar */}
                     <div className="planora-calendar-big">
-                        <button 
-                            className="nav-btn-big" 
+                        <button
+                            className="nav-btn-big"
                             onClick={() => {
                                 const d = new Date(selectedDate);
                                 d.setDate(d.getDate() - 1);
@@ -110,9 +120,9 @@ const EmployeesSchedule = () => {
 
                         <div className="days-grid">
                             {calendarDays.map((day) => (
-                                <div 
-                                    key={day.full} 
-                                    className={`day-box ${day.full === selectedDate ? 'active' : ''}`} 
+                                <div
+                                    key={day.full}
+                                    className={`day-box ${day.full === selectedDate ? 'active' : ''}`}
                                     onClick={() => setSelectedDate(day.full)}
                                 >
                                     <span className="day-name-txt">{day.dayName}</span>
@@ -124,8 +134,8 @@ const EmployeesSchedule = () => {
                             ))}
                         </div>
 
-                        <button 
-                            className="nav-btn-big" 
+                        <button
+                            className="nav-btn-big"
                             onClick={() => {
                                 const d = new Date(selectedDate);
                                 d.setDate(d.getDate() + 1);
@@ -136,7 +146,6 @@ const EmployeesSchedule = () => {
                         </button>
                     </div>
 
-                    {/* Appointments List */}
                     <div className="appointments-list-wrapper">
                         {loading ? (
                             <div className="planora-loader-big"></div>
@@ -150,7 +159,7 @@ const EmployeesSchedule = () => {
                                             </span>
                                             <div className={`vertical-line ${apt.status}`}></div>
                                         </div>
-                                        <div className="appointment-card-large">
+                                        <div className={`appointment-card-large ${apt.status === 'canceled' ? 'is-cancelled' : ''}`}>
                                             <div className="client-section">
                                                 <div className="avatar-circle">
                                                     {apt.client_name.charAt(0)}
@@ -167,6 +176,14 @@ const EmployeesSchedule = () => {
                                                 <span className={`status-pill ${apt.status}`}>
                                                     {apt.status}
                                                 </span>
+                                                {apt.status !== 'canceled' && apt.status !== 'completed' && (
+                                                    <button
+                                                        onClick={() => handleCancel(apt.id)}
+                                                        className="cancel-btn"
+                                                    >
+                                                        Anulo
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

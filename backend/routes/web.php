@@ -15,61 +15,46 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/confirm-appointment/{id}', function (Request $request, $id) {
     if (! $request->hasValidSignature()) {
-        return response("Linku ka skaduar. Ju lutem bëni një termin të ri.", 403);
+        return redirect(env('FRONTEND_URL') . '/appointment/invalid');
     }
 
     $appointment = Appointments::findOrFail($id);
     
     if ($appointment->status === 'pending') {
-        
-        // Update to confirmed
-        $appointment->update([
-            'status' => 'confirmed'
-        ]);
+        $appointment->update(['status' => 'confirmed']);
 
         $cancelUrl = URL::signedRoute('appointment.cancel', ['id' => $appointment->id]);
-
         Mail::to($appointment->client_email)->send(new AppointmentConfirmedSuccess($appointment, $cancelUrl));
 
-        return "Termini u konfirmua me sukses! Kontrolloni email-in për detajet dhe opsionin e anulimit.";
+        return redirect(env('FRONTEND_URL') . '/appointment/confirmed?id=' . $id);
     }
 
-    // 3. Handling 'Canceled' status (If the 5-minute Janitor ran first)
     if ($appointment->status === 'canceled') {
-        return "Më vjen keq, ky termin është anuluar sepse nuk u konfirmua brenda 5 minutave.";
+        return redirect(env('FRONTEND_URL') . '/appointment/invalid?reason=canceled');
     }
 
-    // 4. Handling 'Already Confirmed'
     if ($appointment->status === 'confirmed') {
-        return "Ky termin është konfirmuar tashmë. Shihemi së shpejti!";
+        return redirect(env('FRONTEND_URL') . '/appointment/confirmed?id=' . $id);
     }
 
-    return response("Gabim në procesim.", 400);
+    return redirect(env('FRONTEND_URL') . '/appointment/invalid');
 
 })->name('appointment.confirm');
 
 
-/*
-|--------------------------------------------------------------------------
-| Appointment Cancellation Logic
-|--------------------------------------------------------------------------
-*/
-
 Route::get('/cancel-appointment/{id}', function (Request $request, $id) {
-    // Check if the link hasn't been tampered with
     if (! $request->hasValidSignature()) {
-        abort(403, 'Linku i anulimit nuk është i vlefshëm.');
+        return redirect(env('FRONTEND_URL') . '/appointment/invalid');
     }
 
     $appointment = Appointments::findOrFail($id);
     
     if ($appointment->status === 'canceled') {
-        return "Ky termin është anuluar më parë.";
+        return redirect(env('FRONTEND_URL') . '/appointment/canceled?id=' . $id);
     }
 
-    // Free up the slot by marking as canceled
     $appointment->update(['status' => 'canceled']);
 
-    return "Termini juaj u anulua me sukses. Ju mirëpresim herën tjetër!";
+    return redirect(env('FRONTEND_URL') . '/appointment/canceled?id=' . $id);
 
 })->name('appointment.cancel');
