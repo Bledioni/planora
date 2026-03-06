@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.confirmed-wrapper {
+    min-height: 100vh;
+    background: var(--p-gray-bg, #f8fafc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.confirmed-card {
+    background: #ffffff;
+    border: 1px solid var(--p-border, #e2e8f0);
+    border-radius: 20px;
+    padding: 40px 32px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+}
+
+.confirmed-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+}
+
+.confirmed-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--p-dark, #0f172a);
+    margin: 0 0 8px 0;
+}
+
+.confirmed-subtitle {
+    color: var(--p-text-muted, #64748b);
+    font-size: 0.9rem;
+    margin: 0 0 28px 0;
+}
+
+.confirmed-details-box {
+    background: var(--p-gray-bg, #f8fafc);
+    border: 1px solid var(--p-border, #e2e8f0);
+    border-radius: 14px;
+    padding: 4px 20px;
+    margin-bottom: 24px;
+    text-align: left;
+}
+
+.confirmed-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--p-border, #e2e8f0);
+}
+
+.confirmed-label {
+    color: var(--p-text-muted, #64748b);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.confirmed-value {
+    font-weight: 700;
+    color: var(--p-dark, #0f172a);
+    font-size: 0.85rem;
+}
+
+.confirmed-btn-primary {
+    background: var(--p-blue, #1d7af2);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.2s;
+    margin-bottom: 10px;
+}
+
+.confirmed-btn-primary:hover {
+    background: #1668d4;
+}
+
+.confirmed-btn-cancel {
+    display: block;
+    background: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: background 0.2s;
+    text-decoration: none;
+    box-sizing: border-box;
+    margin-bottom: 24px;
+}
+
+.confirmed-btn-cancel:hover {
+    background: #fecaca;
+}
+
+.confirmed-footer {
+    font-size: 0.75rem;
+    color: var(--p-text-muted, #64748b);
+    margin: 0;
+}
+
+@media (max-width: 480px) {
+    .confirmed-card {
+        padding: 28px 20px;
+    }
+    .confirmed-title {
+        font-size: 1.3rem;
+    }
+}

@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class OwnerAnalyticsController extends Controller
 {
@@ -282,6 +283,11 @@ class OwnerAnalyticsController extends Controller
             }
 
             $appointment->update(['status' => $request->status]);
+
+            if ($request->status === 'canceled') {
+                Mail::to($appointment->client_email)
+                    ->send(new \App\Mail\AppointmentCancelledMail($appointment));
+            }
 
             return response()->json([
                 'status' => 'success',

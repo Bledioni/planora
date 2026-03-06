@@ -272,4 +272,45 @@ public function getAvailableSlots(Request $request): JsonResponse
             ], 500);
         }
     }
+
+    public function getAppointmentDetails(Request $request, $id): JsonResponse
+{
+    $appointment = Appointments::with(['service', 'employee.user', 'business'])
+        ->findOrFail($id);
+
+    return response()->json([
+        'status' => 'success',
+        'appointment' => [
+            'id'            => $appointment->id,
+            'client_name'   => $appointment->client_name,
+            'client_email'  => $appointment->client_email,
+            'client_phone'  => $appointment->client_phone,
+            'status'        => $appointment->status,
+            'start_time'    => Carbon::parse($appointment->start_time)->format('d/m/Y H:i'),
+            'finish_time'   => Carbon::parse($appointment->finish_time)->format('d/m/Y H:i'),
+            'service'       => $appointment->service->service_name ?? 'N/A',
+            'employee'      => ($appointment->employee->user->name ?? '') . ' ' . ($appointment->employee->user->surname ?? ''),
+            'business'      => $appointment->business->shop_name ?? 'N/A',
+            'cancel_url' => URL::signedRoute('appointment.cancel', ['id' => $appointment->id]),
+        ]
+    ]);
+}
+
+public function confirmAppointment(Request $request, $id): \Illuminate\Http\RedirectResponse
+{
+    if (!$request->hasValidSignature()) {
+        return redirect(env('FRONTEND_URL') . '/appointment/invalid');
+    }
+
+    $appointment = Appointments::findOrFail($id);
+
+    if ($appointment->status === 'pending') {
+        $appointment->update(['status' => 'confirmed']);
+
+        Mail::to($appointment->client_email)
+            ->send(new \App\Mail\AppointmentConfirmedSuccess($appointment, ''));
+    }
+
+    return redirect(env('FRONTEND_URL') . '/appointment/confirmed?id=' . $id);
+}
 }

@@ -32,6 +32,8 @@ import EmployeeSidebar from "../components/employees/script/EmployeeSidebar";
 import EmployeeStats from "../components/employees/script/EmployeeStats";
 import ForgotPassword from "../components/ForgotPassword";
 import ResetPassword from "../components/ResetPassword";
+import AppointmentConfirmed from "../components/appointments/scripts/AppointmentConfirmed";
+
 
 
 function Header() {
@@ -47,6 +49,7 @@ function Header() {
         <Route path="/Register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/appointment/confirmed" element={<AppointmentConfirmed />} />
 
         {/* --- RRUGËT E MBROJTURA: PËRDORUESIT (Klientët) --- */}
         {/* Këtu shtohen të gjitha rolet që lejohen të kenë një wishlist */}

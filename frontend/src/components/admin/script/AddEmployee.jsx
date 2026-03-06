@@ -46,8 +46,11 @@ const AddEmployee = () => {
                 navigate(`/admin/business/${businessId}`);
             }
         } catch (err) {
-            Swal.fire('Gabim', err.response?.data?.message || "Dështoi regjistrimi", 'error');
-        } finally {
+const errors = err.response?.data?.errors;
+const errorMessage = errors 
+    ? Object.values(errors).flat().join('\n') 
+    : err.response?.data?.message || "Dështoi regjistrimi";
+Swal.fire('Gabim', errorMessage, 'error');        } finally {
             setLoading(false);
         }
     };
