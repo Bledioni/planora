@@ -94,6 +94,7 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
             Route::post('/register-owner-as-employee', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'registerOwnerAsEmployee']);
             Route::get('/{businessId}/employees', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'getBusinessEmployees']);
             Route::delete('/delete/{employeeId}', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'deleteEmployee']);
+            Route::put('/update/{employeeId}', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'updateEmployee']);
 
         });
     });
@@ -170,6 +171,3 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
 });
 
 // Appointment confirmation - signed URL
-Route::get('/appointments/confirm/{id}', [App\Http\Controllers\Public\BookingController::class, 'confirmAppointment'])
-    ->name('appointment.confirm')
-    ->middleware('signed');

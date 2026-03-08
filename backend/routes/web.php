@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +23,15 @@ Route::get('/confirm-appointment/{id}', function (Request $request, $id) {
     $appointment = Appointments::findOrFail($id);
     
     if ($appointment->status === 'pending') {
-        $appointment->update(['status' => 'confirmed']);
+        Appointments::where('client_email', $appointment->client_email)
+            ->where('business_id', $appointment->business_id)
+            ->where('employee_id', $appointment->employee_id)
+            ->where('status', 'pending')
+            ->whereBetween('start_time', [
+                Carbon::parse($appointment->start_time)->subMinutes(120),
+                Carbon::parse($appointment->start_time)->addMinutes(120),
+            ])
+            ->update(['status' => 'confirmed']);
 
         $cancelUrl = URL::signedRoute('appointment.cancel', ['id' => $appointment->id]);
         Mail::to($appointment->client_email)->send(new AppointmentConfirmedSuccess($appointment, $cancelUrl));
@@ -42,6 +52,12 @@ Route::get('/confirm-appointment/{id}', function (Request $request, $id) {
 })->name('appointment.confirm');
 
 
+/*
+|--------------------------------------------------------------------------
+| Appointment Cancellation Logic
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/cancel-appointment/{id}', function (Request $request, $id) {
     if (! $request->hasValidSignature()) {
         return redirect(env('FRONTEND_URL') . '/appointment/invalid');
@@ -53,7 +69,15 @@ Route::get('/cancel-appointment/{id}', function (Request $request, $id) {
         return redirect(env('FRONTEND_URL') . '/appointment/canceled?id=' . $id);
     }
 
-    $appointment->update(['status' => 'canceled']);
+    Appointments::where('client_email', $appointment->client_email)
+        ->where('business_id', $appointment->business_id)
+        ->where('employee_id', $appointment->employee_id)
+        ->whereIn('status', ['pending', 'confirmed'])
+        ->whereBetween('start_time', [
+            Carbon::parse($appointment->start_time)->subMinutes(120),
+            Carbon::parse($appointment->start_time)->addMinutes(120),
+        ])
+        ->update(['status' => 'canceled']);
 
     return redirect(env('FRONTEND_URL') . '/appointment/canceled?id=' . $id);
 

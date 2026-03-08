@@ -305,7 +305,19 @@ public function confirmAppointment(Request $request, $id): \Illuminate\Http\Redi
     $appointment = Appointments::findOrFail($id);
 
     if ($appointment->status === 'pending') {
-        $appointment->update(['status' => 'confirmed']);
+        $toConfirm = Appointments::where('client_email', $appointment->client_email)
+            ->where('business_id', $appointment->business_id)
+            ->where('employee_id', $appointment->employee_id)
+            ->where('status', 'pending')
+            ->whereBetween('start_time', [
+                Carbon::parse($appointment->start_time)->subMinutes(120),
+                Carbon::parse($appointment->start_time)->addMinutes(120),
+            ])
+            ->get();
+
+        Log::info('Appointments to confirm:', $toConfirm->pluck('id')->toArray());
+
+        $toConfirm->each->update(['status' => 'confirmed']);
 
         Mail::to($appointment->client_email)
             ->send(new \App\Mail\AppointmentConfirmedSuccess($appointment, ''));
@@ -313,4 +325,5 @@ public function confirmAppointment(Request $request, $id): \Illuminate\Http\Redi
 
     return redirect(env('FRONTEND_URL') . '/appointment/confirmed?id=' . $id);
 }
+
 }

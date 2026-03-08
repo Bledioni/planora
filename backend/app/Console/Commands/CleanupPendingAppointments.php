@@ -17,7 +17,7 @@ class CleanupPendingAppointments extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Anulon terminet që nuk janë konfirmuar brenda 5 minutave';
+    protected $description = 'Anulon terminet që nuk janë konfirmuar brenda 15 minutave';
 
     /**
      * Execute the console command.
@@ -25,7 +25,7 @@ class CleanupPendingAppointments extends Command
     public function handle()
     {
         // 1. Find pending appointments older than 5 minutes
-        $expiryTime = Carbon::now()->subMinutes(5);
+        $expiryTime = Carbon::now()->subMinutes(1);
 
         $expiredAppointments = Appointments::where('status', 'pending')
             ->where('created_at', '<', $expiryTime);
