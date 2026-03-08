@@ -22,36 +22,45 @@ class AuthController extends Controller
         'name'         => 'required|string',
         'surname'      => 'required|string',
         'email'        => 'required|email|unique:users,email',
-        'phone_number'        => 'required|string|unique:users,phone_number',
+        'phone_number' => 'required|string|unique:users,phone_number',
         'password'     => 'required|min:8|confirmed',
-        'role'         => 'required|string', 
+        'role'         => 'required|string|in:business_owner,employee',
         'business_id'  => 'nullable|integer' 
     ]);
 
     $status = 'pending';
+    $finalBusinessId = $validated['business_id'] ?? null;
 
+    // Logjika e Autentikimit
     if (auth('sanctum')->check()) {
         $currentUser = auth('sanctum')->user();
 
+        // Vetëm Admini mund të krijojë përdorues direkt 'active'
         if ($currentUser->role === 'admin') {
             $status = 'active';
         }
 
+        // Pronari shton punëtorin direkt 'active' dhe ia lidh Business ID-në e tij
         if ($currentUser->role === 'business_owner' && $validated['role'] === 'employee') {
             $status = 'active';
-            $validated['business_id'] = $currentUser->business_id;
+            $finalBusinessId = $currentUser->business_id;
         }
+    }
+
+    // Sigurohemi që 'customer' është gjithmonë active (nuk ka nevojë për aprovim)
+    if ($validated['role'] === 'customer') {
+        $status = 'active';
     }
 
     $user = User::create([
         'name'         => $validated['name'],
         'surname'      => $validated['surname'],
         'email'        => $validated['email'],
-        'phone_number' => $request->phone_number,
-        'password'     => Hash::make($validated['password']),
+        'phone_number' => $validated['phone_number'],
+        'password'     => $validated['password'],
         'role'         => $validated['role'],
         'status'       => $status,
-        'business_id'  => $validated['business_id'] ?? null,
+        'business_id'  => $finalBusinessId,
     ]);
 
     return response()->json(['status' => 'success', 'user' => $user], 201);

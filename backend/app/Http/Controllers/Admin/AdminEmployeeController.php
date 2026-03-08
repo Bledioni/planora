@@ -246,4 +246,33 @@ public function deleteEmployee($employeeId)
         ], 500);
     }
 }
+
+public function updateEmployee(Request $request, $employeeId)
+{
+    try {
+        $employee = Employees::findOrFail($employeeId);
+        $user = User::findOrFail($employee->user_id);
+
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
+            'surname'      => 'required|string|max:255',
+            'email'        => 'required|email|unique:users,email,' . $user->id,
+            'phone_number' => 'required|string|max:20|unique:users,phone_number,' . $user->id,
+            'status'       => 'required|in:active,pending,inactive,suspended',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Punonjësi u përditësua me sukses.',
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json(['status' => 'validation_error', 'errors' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+    }
+}
+
 }

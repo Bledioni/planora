@@ -9,6 +9,7 @@ const MySchedule = () => {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [employeeId, setEmployeeId] = useState(null);
+    const [cache, setCache] = useState({});
 
     const calendarDays = useMemo(() => {
         const days = [];
@@ -25,6 +26,16 @@ const MySchedule = () => {
         }
         return days;
     }, [selectedDate]);
+
+    const sortedAppointments = useMemo(() => {
+        const active = appointments
+            .filter(a => a.status !== 'canceled')
+            .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
+        const canceled = appointments
+            .filter(a => a.status === 'canceled')
+            .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
+        return [...active, ...canceled];
+    }, [appointments]);
 
     useEffect(() => {
         const init = async () => {
@@ -45,12 +56,20 @@ const MySchedule = () => {
     useEffect(() => {
         const fetchApts = async () => {
             if (!employeeId) return;
+
+            if (cache[selectedDate]) {
+                setAppointments(cache[selectedDate]);
+                return;
+            }
+
             setLoading(true);
             try {
                 const res = await api.get('/owner/appointments/list', {
                     params: { date: selectedDate, employee_id: employeeId }
                 });
-                setAppointments(res.data.appointments || []);
+                const data = res.data.appointments || [];
+                setCache(prev => ({ ...prev, [selectedDate]: data }));
+                setAppointments(data);
             } catch (err) {
                 console.error("Error fetching appointments:", err);
             } finally {
@@ -63,13 +82,19 @@ const MySchedule = () => {
     const handleCancel = async (appointmentId) => {
         if (!window.confirm('A jeni i sigurt që dëshironi të anuloni këtë termin?')) return;
         try {
-await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'canceled' });            setAppointments(prev => prev.map(apt =>
+            await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'canceled' });
+            const updated = appointments.map(apt =>
                 apt.id === appointmentId ? { ...apt, status: 'canceled' } : apt
-            ));
+            );
+            setAppointments(updated);
+            setCache(prev => ({ ...prev, [selectedDate]: updated }));
         } catch (err) {
             alert('Gabim gjatë anulimit të terminit.');
         }
     };
+
+    const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
+    const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
 
     return (
         <div className="owner-layout">
@@ -114,12 +139,16 @@ await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'c
                     <div className="appointments-list-wrapper">
                         {loading ? <div className="planora-loader-big"></div> : (
                             <div className="timeline-container">
-                                {appointments.length > 0 ? appointments.map(apt => (
+                                {appointments.length === 0 && (
+                                    <div className="empty-schedule-card">Nuk ka terminë për këtë ditë.</div>
+                                )}
+
+                                {activeApts.length > 0 && activeApts.map(apt => (
                                     <div key={apt.id} className="timeline-row">
-                                        <div className={`appointment-card-large ${apt.status === 'canceled' ? 'is-cancelled' : ''}`}>
+                                        <div className="appointment-card-large">
                                             <div className="client-section">
                                                 <div className="avatar-circle">
-                                                    {apt.status === 'canceled' ? <AlertCircle size={24} /> : apt.client_name?.charAt(0)}
+                                                    {apt.client_name?.charAt(0)}
                                                 </div>
                                                 <div className="client-details">
                                                     <h3>{apt.client_name}</h3>
@@ -130,7 +159,7 @@ await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'c
                                                 <span className="apt-time-tag">{apt.appointment_time?.slice(0, 5)}</span>
                                                 <span className="price-tag">{apt.service?.price}€</span>
                                                 <span className={`status-pill ${apt.status}`}>{apt.status}</span>
-                                                {apt.status !== 'canceled' && apt.status !== 'completed' && (
+                                                {apt.status !== 'completed' && (
                                                     <button
                                                         onClick={() => handleCancel(apt.id)}
                                                         className="cancel-btn"
@@ -141,7 +170,44 @@ await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'c
                                             </div>
                                         </div>
                                     </div>
-                                )) : <div className="empty-schedule-card">Nuk ka terminë për këtë ditë.</div>}
+                                ))}
+
+                                {canceledApts.length > 0 && (
+                                    <>
+                                        <div style={{
+                                            fontSize: '0.75rem',
+                                            fontWeight: '700',
+                                            color: '#ef4444',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.08em',
+                                            padding: '16px 0 8px',
+                                            borderTop: '1px dashed #fecaca',
+                                            marginTop: '8px'
+                                        }}>
+                                            Terminet e Anuluara
+                                        </div>
+                                        {canceledApts.map(apt => (
+                                            <div key={apt.id} className="timeline-row">
+                                                <div className="appointment-card-large is-cancelled">
+                                                    <div className="client-section">
+                                                        <div className="avatar-circle">
+                                                            <AlertCircle size={24} />
+                                                        </div>
+                                                        <div className="client-details">
+                                                            <h3>{apt.client_name}</h3>
+                                                            <span className="service-txt">{apt.service?.name}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="card-right-info">
+                                                        <span className="apt-time-tag">{apt.appointment_time?.slice(0, 5)}</span>
+                                                        <span className="price-tag">{apt.service?.price}€</span>
+                                                        <span className="status-pill cancelled">canceled</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
