@@ -1,1 +1,1 @@
-web: ./rr serve -c .rr.yaml
+web: ./start.sh
