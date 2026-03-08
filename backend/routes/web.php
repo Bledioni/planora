@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
+Route::get('/up', function () {
+    return response()->json(['status' => 'ok'], 200);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Appointment Confirmation Logic
