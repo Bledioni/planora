@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 1. Nise scheduler-in në prapaskenë
+# Nise scheduler-in në prapaskenë (background)
 php artisan schedule:work &
 
-# 2. Nise serverin kryesor RoadRunner
+# Nise serverin kryesor RoadRunner (foreground)
 ./rr serve -c .rr.yaml
