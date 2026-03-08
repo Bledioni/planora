@@ -1,2 +1,1 @@
-web: ./rr serve -c .rr.yaml
-schedule: php artisan schedule:work
+web: ./rr serve -c .rr.yaml & php artisan schedule:work >> storage/logs/scheduler.log 2>&1
