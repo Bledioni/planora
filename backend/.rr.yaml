@@ -1,0 +1,20 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+http:
+  address: :${PORT}
+  middleware: ["static", "gzip"]
+  static:
+    dir: "public"
+    forbid: [".php"]
+  pool:
+    num_workers: 2
+
+# Kjo pjesë e re këtu poshtë:
+service:
+  laravel_scheduler:
+    command: "php artisan schedule:work"
+    process_num: 1
+    restart_sec: 5
