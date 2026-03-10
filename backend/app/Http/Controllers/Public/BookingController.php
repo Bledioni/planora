@@ -225,7 +225,7 @@ public function getAvailableSlots(Request $request): JsonResponse
 
                 $appointments = [];
                 $serviceStart = $startTime->copy();
-                $bookingId    = (string) Str::uuid(); // same ID for all services in this booking
+                $bookingId    = (string) Str::uuid();
 
                 foreach ($services as $service) {
                     $serviceDuration = $this->parseDurationToMinutes($service->service_duration);
@@ -241,7 +241,7 @@ public function getAvailableSlots(Request $request): JsonResponse
                         'start_time'   => $serviceStart,
                         'finish_time'  => $serviceFinish,
                         'status'       => 'pending',
-                        'booking_id'   => $bookingId, // 👈 added
+                        'booking_id'   => $bookingId,
                     ]);
 
                     $serviceStart = $serviceFinish->copy();
