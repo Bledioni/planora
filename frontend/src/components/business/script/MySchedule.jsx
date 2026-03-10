@@ -79,12 +79,18 @@ const MySchedule = () => {
         fetchApts();
     }, [selectedDate, employeeId]);
 
-    const handleCancel = async (appointmentId) => {
+    const handleCancel = async (apt) => {
         if (!window.confirm('A jeni i sigurt që dëshironi të anuloni këtë termin?')) return;
         try {
-            await api.put(`/owner/appointments/update-status/${appointmentId}`, { status: 'canceled' });
-            const updated = appointments.map(apt =>
-                apt.id === appointmentId ? { ...apt, status: 'canceled' } : apt
+            await Promise.all(
+                apt.ids.map(id =>
+                    api.put(`/owner/appointments/update-status/${id}`, { status: 'canceled' })
+                )
+            );
+            const updated = appointments.map(a =>
+                JSON.stringify(a.ids) === JSON.stringify(apt.ids)
+                    ? { ...a, status: 'canceled' }
+                    : a
             );
             setAppointments(updated);
             setCache(prev => ({ ...prev, [selectedDate]: updated }));
@@ -112,9 +118,12 @@ const MySchedule = () => {
                 <div className="schedule-container-wide">
                     <div className="planora-calendar-big">
                         <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate); d.setDate(d.getDate() - 1);
+                            const d = new Date(selectedDate);
+                            d.setDate(d.getDate() - 1);
                             setSelectedDate(d.toISOString().split('T')[0]);
-                        }}><ChevronLeft size={24} /></button>
+                        }}>
+                            <ChevronLeft size={24} />
+                        </button>
 
                         <div className="days-grid">
                             {calendarDays.map((day) => (
@@ -125,26 +134,35 @@ const MySchedule = () => {
                                 >
                                     <span className="day-name-txt">{day.dayName}</span>
                                     <span className="day-num-txt">{day.dayNum}</span>
-                                    {day.full === new Date().toISOString().split('T')[0] && <div className="today-indicator"></div>}
+                                    {day.full === new Date().toISOString().split('T')[0] && (
+                                        <div className="today-indicator"></div>
+                                    )}
                                 </div>
                             ))}
                         </div>
 
                         <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate); d.setDate(d.getDate() + 1);
+                            const d = new Date(selectedDate);
+                            d.setDate(d.getDate() + 1);
                             setSelectedDate(d.toISOString().split('T')[0]);
-                        }}><ChevronRight size={24} /></button>
+                        }}>
+                            <ChevronRight size={24} />
+                        </button>
                     </div>
 
                     <div className="appointments-list-wrapper">
-                        {loading ? <div className="planora-loader-big"></div> : (
+                        {loading ? (
+                            <div className="planora-loader-big"></div>
+                        ) : (
                             <div className="timeline-container">
                                 {appointments.length === 0 && (
-                                    <div className="empty-schedule-card">Nuk ka terminë për këtë ditë.</div>
+                                    <div className="empty-schedule-card">
+                                        Nuk ka terminë për këtë ditë.
+                                    </div>
                                 )}
 
                                 {activeApts.length > 0 && activeApts.map(apt => (
-                                    <div key={apt.id} className="timeline-row">
+                                    <div key={apt.ids.join('-')} className="timeline-row">
                                         <div className="appointment-card-large">
                                             <div className="client-section">
                                                 <div className="avatar-circle">
@@ -152,16 +170,24 @@ const MySchedule = () => {
                                                 </div>
                                                 <div className="client-details">
                                                     <h3>{apt.client_name}</h3>
-                                                    <span className="service-txt">{apt.service?.name}</span>
+                                                    <span className="service-txt">
+                                                        {apt.services.map(s => s?.name).filter(Boolean).join(' + ')}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="card-right-info">
-                                                <span className="apt-time-tag">{apt.appointment_time?.slice(0, 5)}</span>
-                                                <span className="price-tag">{apt.service?.price}€</span>
-                                                <span className={`status-pill ${apt.status}`}>{apt.status}</span>
+                                                <span className="apt-time-tag">
+                                                    {apt.appointment_time?.slice(0, 5)}
+                                                </span>
+                                                <span className="price-tag">
+                                                    {Number(apt.total_price).toFixed(2)}€
+                                                </span>
+                                                <span className={`status-pill ${apt.status}`}>
+                                                    {apt.status}
+                                                </span>
                                                 {apt.status !== 'completed' && (
                                                     <button
-                                                        onClick={() => handleCancel(apt.id)}
+                                                        onClick={() => handleCancel(apt)}
                                                         className="cancel-btn"
                                                     >
                                                         Anulo
@@ -187,7 +213,7 @@ const MySchedule = () => {
                                             Terminet e Anuluara
                                         </div>
                                         {canceledApts.map(apt => (
-                                            <div key={apt.id} className="timeline-row">
+                                            <div key={apt.ids.join('-')} className="timeline-row">
                                                 <div className="appointment-card-large is-cancelled">
                                                     <div className="client-section">
                                                         <div className="avatar-circle">
@@ -195,13 +221,21 @@ const MySchedule = () => {
                                                         </div>
                                                         <div className="client-details">
                                                             <h3>{apt.client_name}</h3>
-                                                            <span className="service-txt">{apt.service?.name}</span>
+                                                            <span className="service-txt">
+                                                                {apt.services.map(s => s?.name).filter(Boolean).join(' + ')}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                     <div className="card-right-info">
-                                                        <span className="apt-time-tag">{apt.appointment_time?.slice(0, 5)}</span>
-                                                        <span className="price-tag">{apt.service?.price}€</span>
-                                                        <span className="status-pill cancelled">canceled</span>
+                                                        <span className="apt-time-tag">
+                                                            {apt.appointment_time?.slice(0, 5)}
+                                                        </span>
+                                                        <span className="price-tag">
+                                                            {Number(apt.total_price).toFixed(2)}€
+                                                        </span>
+                                                        <span className="status-pill cancelled">
+                                                            canceled
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
