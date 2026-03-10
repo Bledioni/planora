@@ -309,72 +309,87 @@ class OwnerAnalyticsController extends Controller
      * Get appointments with filters
      */
     public function getAppointments(Request $request)
-    {
-        try {
-            $user = $request->user();
-            $business = Business::where('user_id', $user->id)->firstOrFail();
+{
+    try {
+        $user = $request->user();
+        $business = Business::where('user_id', $user->id)->firstOrFail();
 
-            // Filters
-            $date = $request->get('date');
-            $employeeId = $request->get('employee_id');
-            $status = $request->get('status');
+        $date = $request->get('date');
+        $employeeId = $request->get('employee_id');
+        $status = $request->get('status');
 
-            $query = Appointments::where('business_id', $business->id)
-                ->with(['employee.user:id,name,surname', 'service:id,service_name,service_price,service_duration']);
+        $query = Appointments::where('business_id', $business->id)
+            ->with(['employee.user:id,name,surname', 'service:id,service_name,service_price,service_duration']);
 
-            // Apply filters
-            if ($date) {
-                $query->whereDate('start_time', $date);
-            }
-
-            if ($employeeId) {
-                $query->where('employee_id', $employeeId);
-            }
-
-            if ($status) {
-                $query->where('status', $status);
-            }
-
-            $appointments = $query->orderBy('start_time', 'desc')
-                ->get()
-                ->map(function($apt) {
-                    // Parse start_time (format: YYYY-MM-DD HH:MM:SS)
-                    $startTime = Carbon::parse($apt->start_time);
-                    
-                    return [
-                        'id' => $apt->id,
-                        'appointment_date' => $startTime->format('Y-m-d'),
-                        'appointment_time' => $startTime->format('H:i'),
-                        'client_name' => $apt->client_name,
-                        'client_email' => $apt->client_email,
-                        'client_phone' => $apt->client_phone,
-                        'status' => $apt->status,
-                        'employee' => [
-                            'id' => $apt->employee->id,
-                            'name' => ($apt->employee->user->name ?? '') . ' ' . ($apt->employee->user->surname ?? '')
-                        ],
-                        'service' => [
-                            'id' => $apt->service->id ?? null,
-                            'name' => $apt->service->service_name ?? 'N/A',
-                            'price' => $apt->service->service_price ?? 0,
-                            'duration' => $apt->service->service_duration ?? 0
-                        ]
-                    ];
-                });
-
-            return response()->json([
-                'status' => 'success',
-                'appointments' => $appointments,
-                'total' => $appointments->count()
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Error fetching appointments: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gabim gjatë marrjes së termineve',
-                'error' => $e->getMessage()
-            ], 500);
+        if ($date) {
+            $query->whereDate('start_time', $date);
         }
+
+        if ($employeeId) {
+            $query->where('employee_id', $employeeId);
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $appointments = $query->orderBy('start_time', 'asc')
+    ->get()
+    ->map(function($apt) {
+        $startTime = Carbon::parse($apt->start_time);
+        return [
+            'id'               => $apt->id,
+            'booking_id'       => $apt->booking_id, // 👈 added
+            'appointment_date' => $startTime->format('Y-m-d'),
+            'appointment_time' => $startTime->format('H:i'),
+            'client_name'      => $apt->client_name,
+            'client_email'     => $apt->client_email,
+            'client_phone'     => $apt->client_phone,
+            'status'           => $apt->status,
+            'employee' => [
+                'id'   => $apt->employee->id,
+                'name' => ($apt->employee->user->name ?? '') . ' ' . ($apt->employee->user->surname ?? '')
+            ],
+            'service' => [
+                'id'       => $apt->service->id ?? null,
+                'name'     => $apt->service->service_name ?? 'N/A',
+                'price'    => $apt->service->service_price ?? 0,
+                'duration' => $apt->service->service_duration ?? 0
+            ]
+        ];
+    });
+
+$grouped = $appointments->groupBy(fn($apt) => $apt['booking_id'] ?? $apt['id'])
+    ->map(function($group) {
+        $first = $group->first();
+        return [
+            'ids'              => $group->pluck('id')->toArray(),
+            'booking_id'       => $first['booking_id'],
+            'appointment_date' => $first['appointment_date'],
+            'appointment_time' => $first['appointment_time'],
+            'client_name'      => $first['client_name'],
+            'client_email'     => $first['client_email'],
+            'client_phone'     => $first['client_phone'],
+            'status'           => $first['status'],
+            'employee'         => $first['employee'],
+            'services'         => $group->map(fn($a) => $a['service'])->values(),
+            'total_price'      => $group->sum(fn($a) => $a['service']['price']),
+        ];
+    })->values();
+
+        return response()->json([
+            'status' => 'success',
+            'appointments' => $grouped,
+            'total' => $grouped->count()
+        ], 200);
+
+    } catch (\Exception $e) {
+        Log::error('Error fetching appointments: ' . $e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gabim gjatë marrjes së termineve',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 }

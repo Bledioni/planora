@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -224,6 +225,7 @@ public function getAvailableSlots(Request $request): JsonResponse
 
                 $appointments = [];
                 $serviceStart = $startTime->copy();
+                $bookingId    = (string) Str::uuid(); // same ID for all services in this booking
 
                 foreach ($services as $service) {
                     $serviceDuration = $this->parseDurationToMinutes($service->service_duration);
@@ -239,6 +241,7 @@ public function getAvailableSlots(Request $request): JsonResponse
                         'start_time'   => $serviceStart,
                         'finish_time'  => $serviceFinish,
                         'status'       => 'pending',
+                        'booking_id'   => $bookingId, // 👈 added
                     ]);
 
                     $serviceStart = $serviceFinish->copy();

@@ -10,6 +10,7 @@ class Appointments extends Model
     use HasFactory;
 
     protected $fillable = [
+        'booking_id',
         'business_id',
         'employee_id',
         'service_id',
