@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, Navigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { api } from "../../../index";
@@ -29,6 +29,7 @@ const BookingApp = () => {
   const { shopSlug } = useParams();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
 
@@ -39,7 +40,6 @@ const BookingApp = () => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
 
-  // Load business details
   const initApp = useCallback(async () => {
     if (!shopSlug) return;
     setLoading(true);
@@ -49,7 +49,7 @@ const BookingApp = () => {
       setDetails(businessData);
       setSelectedBusiness(businessData.id);
     } catch (err) {
-      alert("Biznesi nuk u gjet.");
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
@@ -59,15 +59,8 @@ const BookingApp = () => {
     initApp();
   }, [initApp]);
 
-  // Fetch available slots
   const fetchSlots = useCallback(async () => {
-    if (
-      !selectedBarber ||
-      !selectedServices.length ||
-      !selectedBusiness ||
-      !selectedDate
-    )
-      return;
+    if (!selectedBarber || !selectedServices.length || !selectedBusiness || !selectedDate) return;
     setLoading(true);
     try {
       const dateStr = getLocalDateString(selectedDate);
@@ -90,7 +83,7 @@ const BookingApp = () => {
             });
             return searchParams.toString();
           },
-        },
+        }
       );
       setSlots(res.data);
     } catch (err) {
@@ -108,7 +101,7 @@ const BookingApp = () => {
     setSelectedServices((prev) =>
       prev.includes(serviceId)
         ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId],
+        : [...prev, serviceId]
     );
   };
 
@@ -116,13 +109,8 @@ const BookingApp = () => {
     setSelectedDate(date);
     setSelectedTime(null);
     setSlots([]);
-
-    // Scroll all the way to the bottom when date is clicked
     setTimeout(() => {
-      window.scrollTo({
-        top: document.documentElement.scrollHeight,
-        behavior: "smooth",
-      });
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
     }, 250);
   };
 
@@ -154,94 +142,65 @@ const BookingApp = () => {
     return date < today;
   };
 
-  const selectedServiceObjects =
-    details.services?.filter((s) => selectedServices.includes(s.id)) || [];
+  const selectedServiceObjects = details.services?.filter((s) => selectedServices.includes(s.id)) || [];
   const totalDuration = selectedServiceObjects.reduce(
-    (sum, s) => sum + parseDurationToMinutes(s.service_duration || s.duration),
-    0,
+    (sum, s) => sum + parseDurationToMinutes(s.service_duration || s.duration), 0
   );
   const totalPrice = selectedServiceObjects.reduce(
-    (sum, s) => sum + parseFloat(s.service_price || s.price || 0),
-    0,
+    (sum, s) => sum + parseFloat(s.service_price || s.price || 0), 0
   );
+
+  // ← Redirect happens here, after hooks, cleanly
+  if (notFound) return <Navigate to="/404" replace />;
 
   return (
     <div className="booking-page-wrapper">
       <div className="booking-layout">
-        {/* ── Sidebar ── */}
+
+        {/* SIDEBAR */}
         <aside className="shop-sidebar">
           <h1>{details.shop_name || "Planora"}</h1>
-          <div className="sidebar-info-item">
-            📍 {details.address || "Kosovë"}
-          </div>
+          <div className="sidebar-info-item">📍 {details.address || "Kosovë"}</div>
 
           {step > 2 && selectedServiceObjects.length > 0 && (
-            <div
-              className="fade-in"
-              style={{
-                marginTop: "40px",
-                borderTop: "2px solid #e2e8f0",
-                paddingTop: "20px",
-              }}
-            >
+            <div className="fade-in" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
               <p className="summary-label">SHËRBIMET E ZGJEDHURA</p>
               {selectedServiceObjects.map((s) => (
                 <div key={s.id} style={{ marginTop: "10px" }}>
-                  <h3 style={{ margin: "0 0 3px 0", fontSize: "0.95rem" }}>
-                    {s.service_name || s.name}
-                  </h3>
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
+                  <h3 style={{ margin: "0 0 3px 0", fontSize: "0.95rem" }}>{s.service_name || s.name}</h3>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span className="service-duration">
-                      🕒{" "}
-                      {parseDurationToMinutes(s.service_duration || s.duration)}{" "}
-                      min
+                      🕒 {parseDurationToMinutes(s.service_duration || s.duration)} min
                     </span>
-                    <span style={{ fontWeight: "700" }}>
-                      {s.service_price || s.price}€
-                    </span>
+                    <span style={{ fontWeight: "700" }}>{s.service_price || s.price}€</span>
                   </div>
                 </div>
               ))}
-              <div
-                style={{
-                  marginTop: "12px",
-                  borderTop: "1px solid #ddd",
-                  paddingTop: "10px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontWeight: "800",
-                }}
-              >
+              <div style={{ marginTop: "12px", borderTop: "1px solid #ddd", paddingTop: "10px", display: "flex", justifyContent: "space-between", fontWeight: "800" }}>
                 <span>🕒 {totalDuration} min</span>
                 <span>{totalPrice.toFixed(2)}€</span>
               </div>
               {selectedDate && (
                 <div className="date-summary-box">
                   <p>📅 {selectedDate.toLocaleDateString("sq-AL")}</p>
-                  {selectedTime && (
-                    <p className="time-text">⏰ {selectedTime}</p>
-                  )}
+                  {selectedTime && <p className="time-text">⏰ {selectedTime}</p>}
                 </div>
               )}
             </div>
           )}
         </aside>
 
-        {/* ── Main ── */}
+        {/* MAIN */}
         <main className="booking-main">
           {step < 4 && (
             <div className="step-indicator">
               {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className={`step-dot ${step >= i ? "active" : ""}`}
-                />
+                <div key={i} className={`step-dot ${step >= i ? "active" : ""}`} />
               ))}
             </div>
           )}
 
+          {/* STEP 1 */}
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
@@ -252,9 +211,7 @@ const BookingApp = () => {
                     className={`service-row ${selectedBarber === emp.id ? "active" : ""}`}
                     onClick={() => setSelectedBarber(emp.id)}
                   >
-                    <strong>
-                      {emp.user?.name} {emp.user?.surname}
-                    </strong>
+                    <strong>{emp.user?.name} {emp.user?.surname}</strong>
                   </div>
                 ))}
               </div>
@@ -268,24 +225,12 @@ const BookingApp = () => {
                     <div className="service-info-main">
                       <strong>{s.service_name || s.name}</strong>
                       <span className="service-duration">
-                        🕒{" "}
-                        {parseDurationToMinutes(
-                          s.service_duration || s.duration,
-                        )}{" "}
-                        min
+                        🕒 {parseDurationToMinutes(s.service_duration || s.duration)} min
                       </span>
                     </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                      }}
-                    >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <strong>{s.service_price || s.price}€</strong>
-                      <span style={{ fontSize: "18px" }}>
-                        {selectedServices.includes(s.id) ? "✅" : "⬜"}
-                      </span>
+                      <span style={{ fontSize: "18px" }}>{selectedServices.includes(s.id) ? "✅" : "⬜"}</span>
                     </div>
                   </div>
                 ))}
@@ -301,6 +246,7 @@ const BookingApp = () => {
             </div>
           )}
 
+          {/* STEP 2 */}
           {step === 2 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Datën</h2>
@@ -313,36 +259,17 @@ const BookingApp = () => {
                 maxDetail="month"
                 prev2Label={null}
                 next2Label={null}
-                /* Force Albanian Weekday Initials (H, M, M, E, P, SH, D) */
                 formatShortWeekday={(locale, date) =>
                   ["Di", "Hë", "Ma", "Më", "En", "Pr", "Sh"][date.getDay()]
                 }
-                /* Force Albanian Month Names in the Header */
                 formatMonthYear={(locale, date) => {
-                  const months = [
-                    "Janar",
-                    "Shkurt",
-                    "Mars",
-                    "Prill",
-                    "Maj",
-                    "Qershor",
-                    "Korrik",
-                    "Gusht",
-                    "Shtator",
-                    "Tetor",
-                    "Nëntor",
-                    "Dhjetor",
-                  ];
+                  const months = ["Janar","Shkurt","Mars","Prill","Maj","Qershor","Korrik","Gusht","Shtator","Tetor","Nëntor","Dhjetor"];
                   return `${months[date.getMonth()]} ${date.getFullYear()}`;
                 }}
               />
-
               {selectedDate && (
                 <div style={{ marginTop: "40px" }}>
-                  <h3
-                    className="section-title"
-                    style={{ fontSize: "1.1rem", marginBottom: "20px" }}
-                  >
+                  <h3 className="section-title" style={{ fontSize: "1.1rem", marginBottom: "20px" }}>
                     Oraret e disponueshme
                   </h3>
                   {loading ? (
@@ -356,10 +283,7 @@ const BookingApp = () => {
                           <button
                             key={t}
                             className={`slot-btn ${selectedTime === t ? "selected" : ""}`}
-                            onClick={() => {
-                              setSelectedTime(t);
-                              setStep(3);
-                            }}
+                            onClick={() => { setSelectedTime(t); setStep(3); }}
                           >
                             {t}
                           </button>
@@ -368,96 +292,71 @@ const BookingApp = () => {
                         <div className="no-slots-card">
                           <div className="no-slots-icon">📅</div>
                           <h4>Nuk ka termine të lira</h4>
-                          <p>
-                            Të gjitha oraret për këtë datë janë të rezervuara.
-                            Ju lutem zgjidhni një ditë tjetër.
-                          </p>
+                          <p>Të gjitha oraret për këtë datë janë të rezervuara. Ju lutem zgjidhni një ditë tjetër.</p>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
               )}
-              <button
-                onClick={() => setStep(1)}
-                className="secondary-button-back"
-              >
+              <button onClick={() => setStep(1)} className="secondary-button-back">
                 <span className="arrow">←</span> Mbrapa
               </button>
             </div>
           )}
 
+          {/* STEP 3 */}
           {step === 3 && (
-  <div className="fade-in">
-    <h2 className="section-title">Shënoni të dhënat</h2>
-    <form onSubmit={handleFinalBooking}>
-      <input
-        className="booking-input"
-        placeholder="Emri"
-        required
-        onChange={(e) =>
-          setUserInfo({ ...userInfo, name: e.target.value })
-        }
-      />
-      <input
-        className="booking-input"
-        type="email"
-        placeholder="Email"
-        required
-        onChange={(e) =>
-          setUserInfo({ ...userInfo, email: e.target.value })
-        }
-      />
-      
-      {/* This is the only phone input you need. 
-          The old <input placeholder="Telefoni" /> has been removed.
-      */}
-      <PhoneInputField 
-        value={userInfo.phone}
-        onChange={(phoneValue, isValid) => {
-          setUserInfo({ ...userInfo, phone: phoneValue });
-        }}
-      />
+            <div className="fade-in">
+              <h2 className="section-title">Shënoni të dhënat</h2>
+              <form onSubmit={handleFinalBooking}>
+                <input
+                  className="booking-input"
+                  placeholder="Emri"
+                  required
+                  onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+                />
+                <input
+                  className="booking-input"
+                  type="email"
+                  placeholder="Email"
+                  required
+                  onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                />
+                <PhoneInputField
+                  value={userInfo.phone}
+                  onChange={(phoneValue) => setUserInfo({ ...userInfo, phone: phoneValue })}
+                />
+                <button type="submit" className="primary-button" style={{ marginTop: "20px" }} disabled={loading}>
+                  {loading ? "Duke dërguar..." : "Konfirmo Rezervimin"}
+                </button>
+              </form>
+              <button onClick={() => setStep(2)} className="secondary-button-back">
+                <span className="arrow">←</span> Mbrapa
+              </button>
+            </div>
+          )}
 
-      <button
-        type="submit"
-        className="primary-button"
-        style={{ marginTop: "20px" }}
-        disabled={loading}
-      >
-        {loading ? "Duke dërguar..." : "Konfirmo Rezervimin"}
-      </button>
-    </form>
-    
-    <button
-      onClick={() => setStep(2)}
-      className="secondary-button-back"
-    >
-      <span className="arrow">←</span> Mbrapa
-    </button>
-  </div>
-)}
-
+          {/* STEP 4 */}
           {step === 4 && (
-  <div className="fade-in success-screen-compact">
-    <div className="compact-card">
-      <div className="check-badge">✓</div>
-      <h2>Rezervimi u dërgua!</h2>
-      
-      <div className="compact-instruction">
-        <p>Kemi dërguar një email konfirmimi.</p>
-        <div className="critical-notice">
-          <strong>VEPRIM I DETYRUESHËM:</strong>
-          <span>Pa klikuar linkun në email, rezervimi mbetet i pavlefshëm.</span>
-        </div>
-      </div>
+            <div className="fade-in success-screen-compact">
+              <div className="compact-card">
+                <div className="check-badge">✓</div>
+                <h2>Rezervimi u dërgua!</h2>
+                <div className="compact-instruction">
+                  <p>Kemi dërguar një email konfirmimi.</p>
+                  <div className="critical-notice">
+                    <strong>VEPRIM I DETYRUESHËM:</strong>
+                    <span>Pa klikuar linkun në email, rezervimi mbetet i pavlefshëm.</span>
+                  </div>
+                </div>
+                <button className="primary-button" onClick={() => window.location.reload()}>
+                  Kthehu te Fillimi
+                </button>
+              </div>
+            </div>
+          )}
 
-      <button className="primary-button" onClick={() => window.location.reload()}>
-        Kthehu te Fillimi
-      </button>
-    </div>
-  </div>
-)}
         </main>
       </div>
     </div>

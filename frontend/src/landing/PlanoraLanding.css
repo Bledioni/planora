@@ -748,3 +748,115 @@ body {
   .pl-photo-content { padding: 0 20px; }
   .pl-photo-content h2 { font-size: 1.8rem; }
 }
+
+/* ── DISCOVER SECTION ── */
+.pl-discover {
+  padding: 100px 40px;
+  text-align: center;
+  background: var(--bg);
+  position: relative;
+}
+
+.pl-discover-sub {
+  max-width: 500px;
+  margin: 0 auto 48px;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.pl-discover-preview {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Fake search bar */
+.pl-discover-search {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 100px;
+  padding: 10px 10px 10px 22px;
+  box-shadow: 0 8px 32px rgba(10,15,40,0.09);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pl-discover-search:hover {
+  border-color: var(--blue);
+  box-shadow: 0 8px 32px rgba(37,99,235,0.15);
+  transform: translateY(-2px);
+}
+
+.pl-discover-search svg {
+  color: var(--muted-2);
+  flex-shrink: 0;
+}
+
+.pl-discover-search span {
+  flex: 1;
+  text-align: left;
+  font-size: 0.925rem;
+  color: var(--muted-2);
+  font-weight: 400;
+}
+
+.pl-discover-search-btn {
+  background: var(--blue);
+  color: #fff;
+  border-radius: 100px;
+  padding: 9px 22px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+}
+
+/* Category pills */
+.pl-discover-cats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pl-discover-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 100px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pl-discover-pill:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-light);
+  transform: translateY(-2px);
+}
+
+.pl-discover-cta {
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .pl-discover { padding: 72px 20px; }
+  .pl-discover-search span { font-size: 0.8rem; }
+  .pl-discover-search-btn { padding: 9px 16px; }
+}
+
