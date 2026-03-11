@@ -24,8 +24,8 @@ class CleanupPendingAppointments extends Command
      */
     public function handle()
     {
-        // 1. Find pending appointments older than 5 minutes
-        $expiryTime = Carbon::now()->subMinutes(1);
+        // 1. Find pending appointments older than 15 minutes
+        $expiryTime = Carbon::now()->subMinutes(15);
 
         $expiredAppointments = Appointments::where('status', 'pending')
             ->where('created_at', '<', $expiryTime);

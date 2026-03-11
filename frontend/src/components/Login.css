@@ -1,157 +1,267 @@
-/* Container-i kryesor që qendron në mes të ekranit */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:       #2563eb;
+  --blue-dark:  #1d4ed8;
+  --blue-light: #eff6ff;
+  --blue-mid:   #bfdbfe;
+  --dark:       #0a0f1e;
+  --surface:    #ffffff;
+  --bg:         #f4f7fe;
+  --border:     #e2e8f4;
+  --muted:      #64748b;
+  --muted-2:    #94a3b8;
+  --red:        #ef4444;
+  --red-light:  #fef2f2;
+  --red-border: #fecaca;
+  --shadow-sm:  0 1px 3px rgba(10,15,40,0.06);
+  --shadow-md:  0 8px 30px rgba(10,15,40,0.1);
+  --shadow-lg:  0 24px 60px rgba(10,15,40,0.13);
+  --shadow-blue: 0 8px 24px rgba(37,99,235,0.22);
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* ── PAGE WRAPPER ── */
 .login-page-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f3f4f6; /* Gri e hapur */
-    background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
-    background-size: 20px 20px; /* Efekt pikezash ne sfond */
-    padding: 20px;
-    font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
 }
 
-/* Karta e Login-it */
+/* Subtle background decoration */
+.login-page-wrapper::before {
+  content: '';
+  position: fixed;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.07), transparent 70%);
+  top: -200px;
+  right: -200px;
+  pointer-events: none;
+}
+
+.login-page-wrapper::after {
+  content: '';
+  position: fixed;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.05), transparent 70%);
+  bottom: -150px;
+  left: -100px;
+  pointer-events: none;
+}
+
+/* ── CARD ── */
 .login-card {
-    width: 100%;
-    max-width: 420px;
-    background: #ffffff;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e5e7eb;
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 48px 44px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  z-index: 1;
+  animation: cardIn 0.5s ease both;
 }
 
-/* Header-i i kartës */
+/* Top accent line */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), #38bdf8);
+  border-radius: 24px 24px 0 0;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── HEADER ── */
 .login-header {
-    text-align: center;
-    margin-bottom: 32px;
+  text-align: center;
+  margin-bottom: 36px;
 }
 
 .login-header h2 {
-    font-size: 1.875rem;
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 8px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--dark);
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
 }
 
 .login-header p {
-    color: #6b7280;
-    font-size: 0.95rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.5;
 }
 
-/* Stilimi i formës dhe inputeve */
+/* ── ERROR / INFO BOXES ── */
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--red-light) !important;
+  color: var(--red) !important;
+  border: 1px solid var(--red-border) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 20px !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.error-box p { margin: 0; }
+
+.info-box {
+  background: var(--blue-light) !important;
+  color: var(--blue) !important;
+  border: 1px solid var(--blue-mid) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  margin-bottom: 20px !important;
+  font-size: 0.875rem;
+}
+
+/* ── FORM ── */
 .login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
 
 .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .input-group label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--dark);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .login-input {
-    width: 100%;
-    padding: 12px 16px;
-    background-color: #f9fafb;
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    font-size: 1rem;
-    color: #111827;
-    transition: all 0.2s ease;
-    outline: none;
+  width: 100%;
+  padding: 13px 16px;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.925rem;
+  font-weight: 500;
+  color: var(--dark);
+  transition: all 0.15s ease;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.login-input::placeholder {
+  color: var(--muted-2);
+  font-weight: 400;
 }
 
 .login-input:focus {
-    background-color: #ffffff;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  border-color: var(--blue);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
 }
 
-/* Butoni i Hyrjes */
+.login-input:hover:not(:focus) {
+  border-color: var(--blue-mid);
+}
+
+/* ── BUTTON ── */
 .login-button {
-    margin-top: 10px;
-    padding: 14px;
-    background-color: #2563eb;
-    color: #ffffff;
-    border: none;
-    border-radius: 10px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-blue);
+  letter-spacing: -0.01em;
+  margin-top: 4px;
 }
 
 .login-button:hover:not(:disabled) {
-    background-color: #1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  background: var(--blue-dark);
+  box-shadow: 0 10px 30px rgba(37,99,235,0.35);
+  transform: translateY(-1px);
 }
 
 .login-button:active:not(:disabled) {
-    transform: translateY(0);
+  transform: translateY(0);
+  box-shadow: var(--shadow-blue);
 }
 
 .login-button:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    background-color: #94a3b8;
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-/* Mesazhet e Gabimit */
-.error-box {
-    background-color: #fef2f2;
-    border-left: 4px solid #ef4444;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-}
-
-.error-box p {
-    color: #b91c1c;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-/* Linku për Regjistrim */
+/* ── FOOTER LINKS ── */
 .register-footer {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 0.875rem;
-    color: #4b5563;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .register-link {
-    color: #2563eb;
-    font-weight: 600;
-    text-decoration: none;
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s ease;
 }
 
 .register-link:hover {
-    text-decoration: underline;
+  color: var(--blue-dark);
+  text-decoration: underline;
 }
 
-/* Responsive */
+/* ── DIVIDER between footer links ── */
+.register-footer + .register-footer {
+  margin-top: 10px;
+}
+
+/* ── RESPONSIVE ── */
 @media (max-width: 480px) {
-    .login-card {
-        padding: 30px 20px;
-        box-shadow: none;
-        border: none;
-        background: transparent;
-    }
-    .login-page-wrapper {
-        background-color: #ffffff;
-    }
+  .login-card {
+    padding: 36px 28px;
+    border-radius: 20px;
+  }
+
+  .login-header h2 { font-size: 1.5rem; }
 }

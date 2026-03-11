@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, LayoutDashboard, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, Clock, Banknote } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import '../style/MySchedule.css';
@@ -46,7 +46,7 @@ const MySchedule = () => {
                 } else {
                     setLoading(false);
                 }
-            } catch (err) {
+            } catch {
                 setLoading(false);
             }
         };
@@ -56,12 +56,10 @@ const MySchedule = () => {
     useEffect(() => {
         const fetchApts = async () => {
             if (!employeeId) return;
-
             if (cache[selectedDate]) {
                 setAppointments(cache[selectedDate]);
                 return;
             }
-
             setLoading(true);
             try {
                 const res = await api.get('/owner/appointments/list', {
@@ -94,35 +92,46 @@ const MySchedule = () => {
             );
             setAppointments(updated);
             setCache(prev => ({ ...prev, [selectedDate]: updated }));
-        } catch (err) {
+        } catch {
             alert('Gabim gjatë anulimit të terminit.');
         }
     };
 
+    const navigate = (dir) => {
+        const d = new Date(selectedDate);
+        d.setDate(d.getDate() + dir);
+        setSelectedDate(d.toISOString().split('T')[0]);
+    };
+
     const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
     const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
+    const today = new Date().toISOString().split('T')[0];
+
+    const formattedDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('sq-AL', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
 
     return (
         <div className="owner-layout">
             <OwnerSidebar />
             <main className="owner-main-content">
+
+                {/* Header */}
                 <div className="schedule-header-big">
                     <div className="header-top-tag">
-                        <LayoutDashboard size={20} />
-                        <span>MENAXHIMI I ORARIT</span>
+                        <CalendarDays size={13} />
+                        <span>Orari Im</span>
                     </div>
-                    <h1>Mirësevini në orarin tuaj</h1>
-                    <p>Shikoni dhe menaxhoni të gjitha takimet tuaja në një vend.</p>
+                    <h1>Terminet e Mia</h1>
+                    <p>{formattedDate}</p>
                 </div>
 
                 <div className="schedule-container-wide">
+
+                    {/* Calendar Strip */}
                     <div className="planora-calendar-big">
-                        <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate);
-                            d.setDate(d.getDate() - 1);
-                            setSelectedDate(d.toISOString().split('T')[0]);
-                        }}>
-                            <ChevronLeft size={24} />
+                        <button className="nav-btn-big" onClick={() => navigate(-1)} aria-label="Dita e mëparshme">
+                            <ChevronLeft size={18} />
                         </button>
 
                         <div className="days-grid">
@@ -134,49 +143,51 @@ const MySchedule = () => {
                                 >
                                     <span className="day-name-txt">{day.dayName}</span>
                                     <span className="day-num-txt">{day.dayNum}</span>
-                                    {day.full === new Date().toISOString().split('T')[0] && (
-                                        <div className="today-indicator"></div>
-                                    )}
+                                    {day.full === today && <div className="today-indicator" />}
                                 </div>
                             ))}
                         </div>
 
-                        <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate);
-                            d.setDate(d.getDate() + 1);
-                            setSelectedDate(d.toISOString().split('T')[0]);
-                        }}>
-                            <ChevronRight size={24} />
+                        <button className="nav-btn-big" onClick={() => navigate(1)} aria-label="Dita tjetër">
+                            <ChevronRight size={18} />
                         </button>
                     </div>
 
+                    {/* Appointments */}
                     <div className="appointments-list-wrapper">
                         {loading ? (
-                            <div className="planora-loader-big"></div>
+                            <div className="planora-loader-big" />
                         ) : (
                             <div className="timeline-container">
+
                                 {appointments.length === 0 && (
                                     <div className="empty-schedule-card">
+                                        <CalendarDays size={40} />
                                         Nuk ka terminë për këtë ditë.
                                     </div>
                                 )}
 
-                                {activeApts.length > 0 && activeApts.map(apt => (
-                                    <div key={apt.ids.join('-')} className="timeline-row">
+                                {activeApts.map((apt, i) => (
+                                    <div
+                                        key={apt.ids.join('-')}
+                                        className="timeline-row"
+                                        style={{ animationDelay: `${i * 0.04}s` }}
+                                    >
                                         <div className="appointment-card-large">
                                             <div className="client-section">
                                                 <div className="avatar-circle">
-                                                    {apt.client_name?.charAt(0)}
+                                                    {apt.client_name?.charAt(0)?.toUpperCase()}
                                                 </div>
                                                 <div className="client-details">
                                                     <h3>{apt.client_name}</h3>
                                                     <span className="service-txt">
-                                                        {apt.services.map(s => s?.name).filter(Boolean).join(' + ')}
+                                                        {apt.services.map(s => s?.name).filter(Boolean).join(' · ')}
                                                     </span>
                                                 </div>
                                             </div>
                                             <div className="card-right-info">
                                                 <span className="apt-time-tag">
+                                                    <Clock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
                                                     {apt.appointment_time?.slice(0, 5)}
                                                 </span>
                                                 <span className="price-tag">
@@ -186,10 +197,7 @@ const MySchedule = () => {
                                                     {apt.status}
                                                 </span>
                                                 {apt.status !== 'completed' && (
-                                                    <button
-                                                        onClick={() => handleCancel(apt)}
-                                                        className="cancel-btn"
-                                                    >
+                                                    <button onClick={() => handleCancel(apt)} className="cancel-btn">
                                                         Anulo
                                                     </button>
                                                 )}
@@ -200,41 +208,34 @@ const MySchedule = () => {
 
                                 {canceledApts.length > 0 && (
                                     <>
-                                        <div style={{
-                                            fontSize: '0.75rem',
-                                            fontWeight: '700',
-                                            color: '#ef4444',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.08em',
-                                            padding: '16px 0 8px',
-                                            borderTop: '1px dashed #fecaca',
-                                            marginTop: '8px'
-                                        }}>
+                                        <div className="canceled-section-label">
+                                            <AlertCircle size={13} />
                                             Terminet e Anuluara
                                         </div>
-                                        {canceledApts.map(apt => (
+                                        {canceledApts.map((apt) => (
                                             <div key={apt.ids.join('-')} className="timeline-row">
                                                 <div className="appointment-card-large is-cancelled">
                                                     <div className="client-section">
                                                         <div className="avatar-circle">
-                                                            <AlertCircle size={24} />
+                                                            <AlertCircle size={18} />
                                                         </div>
                                                         <div className="client-details">
                                                             <h3>{apt.client_name}</h3>
                                                             <span className="service-txt">
-                                                                {apt.services.map(s => s?.name).filter(Boolean).join(' + ')}
+                                                                {apt.services.map(s => s?.name).filter(Boolean).join(' · ')}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="card-right-info">
                                                         <span className="apt-time-tag">
+                                                            <Clock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
                                                             {apt.appointment_time?.slice(0, 5)}
                                                         </span>
                                                         <span className="price-tag">
                                                             {Number(apt.total_price).toFixed(2)}€
                                                         </span>
-                                                        <span className="status-pill cancelled">
-                                                            canceled
+                                                        <span className="status-pill canceled">
+                                                            anuluar
                                                         </span>
                                                     </div>
                                                 </div>
