@@ -1,6 +1,10 @@
-import { BrowserRouter as Router, Routes, Route} from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-// Importet tuaja
 import Wishlist from "../components/wishlist/script/Wishlist";
 import BookingApp from "../components/appointments/scripts/BookingApp";
 import BarberDiscovery from "../components/appointments/scripts/BarberDiscovery";
@@ -34,31 +38,28 @@ import ForgotPassword from "../components/ForgotPassword";
 import ResetPassword from "../components/ResetPassword";
 import AppointmentConfirmed from "../components/appointments/scripts/AppointmentConfirmed";
 
-
-
 function Header() {
   return (
     <Router>
       <Routes>
-        {/* --- RRUGËT PUBLIKE --- */}
+
+        {/* --- PUBLIC --- */}
         <Route path="/" element={<PlanoraLanding />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/barberdiscovery" element={<BarberDiscovery />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/:shopSlug" element={<BookingApp />} />
-        <Route path="/Register" element={<Register />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/barberdiscovery" element={<BarberDiscovery />} />
         <Route path="/appointment/confirmed" element={<AppointmentConfirmed />} />
 
-        {/* --- RRUGËT E MBROJTURA: PËRDORUESIT (Klientët) --- */}
-        {/* Këtu shtohen të gjitha rolet që lejohen të kenë një wishlist */}
-        <Route element={<ProtectedRoute allowedRoles={['user', 'admin', 'business_owner']} />}>
+        {/* --- PROTECTED: USER --- */}
+        <Route element={<ProtectedRoute allowedRoles={["user", "admin", "business_owner"]} />}>
           <Route path="/wishlist" element={<Wishlist />} />
         </Route>
 
-        {/* --- RRUGËT E MBROJTURA: ADMIN --- */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+        {/* --- PROTECTED: ADMIN --- */}
+        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           <Route path="/admin/adminDashboard" element={<AdminDashboard />} />
           <Route path="/admin/businesses" element={<BusinessList />} />
           <Route path="/admin/business/:businessId" element={<BusinessDashboard />} />
@@ -69,33 +70,33 @@ function Header() {
           <Route path="/admin/employees/:businessId/employees" element={<BusinessEmployees />} />
           <Route path="/admin/send-email" element={<SendEmail />} />
           <Route path="/admin/admin-analytics-dashboard" element={<AdminAnalyticsDashboard />} />
-
         </Route>
 
-        {/* --- RRUGËT E MBROJTURA: BUSINESS OWNER --- */}
-        <Route element={<ProtectedRoute allowedRoles={['business_owner', 'admin']} />}>
-          <Route >
-            
-            <Route path="/owner/analytics-dashboard" element={<OwnerAnalyticsDashboard />} />
-            <Route path="/owner/employees-schedules" element={<EmployeesSchedule />} />
-            <Route path="/owner/my-schedules" element={<MySchedule />} />
-            <Route path="/owner/side-bar" element={<OwnerSidebar />} />
-            <Route path="/owner/manage-schedule" element={<ManageSchedule />} />
-            <Route path="/owner/manage-services" element={<ManageServices />} />
-          </Route>
+        {/* --- PROTECTED: BUSINESS OWNER --- */}
+        <Route element={<ProtectedRoute allowedRoles={["business_owner", "admin"]} />}>
+          <Route path="/owner/analytics-dashboard" element={<OwnerAnalyticsDashboard />} />
+          <Route path="/owner/employees-schedules" element={<EmployeesSchedule />} />
+          <Route path="/owner/my-schedules" element={<MySchedule />} />
+          <Route path="/owner/side-bar" element={<OwnerSidebar />} />
+          <Route path="/owner/manage-schedule" element={<ManageSchedule />} />
+          <Route path="/owner/manage-services" element={<ManageServices />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['employee', 'admin']} />}>
-          <Route >
-              <Route path="/employee/appointments" element={<EmployeeAppointments />} />
-              <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-              <Route path="/employee/side-bar" element={<EmployeeSidebar />} />
-              <Route path="/employee/stats" element={<EmployeeStats />} />
-          </Route>
+        {/* --- PROTECTED: EMPLOYEE --- */}
+        <Route element={<ProtectedRoute allowedRoles={["employee", "admin"]} />}>
+          <Route path="/employee/appointments" element={<EmployeeAppointments />} />
+          <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/employee/side-bar" element={<EmployeeSidebar />} />
+          <Route path="/employee/stats" element={<EmployeeStats />} />
         </Route>
+
+        {/* /:shopSlug — must stay last among real routes */}
+        <Route path="/:shopSlug" element={<BookingApp />} />
 
         {/* --- 404 --- */}
-        <Route path="*" element={<NotFound/>} />
+        <Route path="/404" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
+
       </Routes>
     </Router>
   );

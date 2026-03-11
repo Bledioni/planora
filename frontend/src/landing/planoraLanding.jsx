@@ -44,9 +44,9 @@ export default function PlanoraLanding() {
           <a href="#faq">FAQ</a>
         </div>
         <div className="pl-nav-cta">
-          <button className="pl-ghost-btn" onClick={() => navigate("/login")}>Hyr</button>
-          <button className="pl-primary-btn" onClick={() => navigate("/register")}>
-            Fillo Falas <span className="pl-arrow">↗</span>
+          {/* KËTU: Kemi hequr butonin "Fillo Falas" dhe kemi lënë vetëm "Hyr" */}
+          <button className="pl-primary-btn" onClick={() => navigate("/login")}>
+            Hyr <span className="pl-arrow">→</span>
           </button>
         </div>
       </nav>
@@ -221,6 +221,42 @@ export default function PlanoraLanding() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* DISCOVER SECTION */}
+      <section className="pl-discover" id="discover">
+        <div className="pl-section-tag">Eksploro tani</div>
+        <h2 className="pl-section-h2">Gjej sallonin<br /><span>e duhur për ty.</span></h2>
+        <p className="pl-discover-sub">
+          Qindra sallone dhe berberí në Kosovë — kërko, filtro dhe rezervo terminin tënd në sekonda.
+        </p>
+        <div className="pl-discover-preview">
+          <div className="pl-discover-search" onClick={() => navigate("/barberdiscovery")}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Kërko salon, adresë ose shërbim...</span>
+            <div className="pl-discover-search-btn">Kërko →</div>
+          </div>
+          <div className="pl-discover-cats">
+            {[
+              { emoji: "✂️", label: "Barber" },
+              { emoji: "💇", label: "Salon" },
+              { emoji: "💅", label: "Kozmetikë" },
+              { emoji: "🧖", label: "Spa" },
+              { emoji: "🖊️", label: "Tatuazhe" },
+            ].map((c) => (
+              <button key={c.label} className="pl-discover-pill" onClick={() => navigate("/barberdiscovery")}>
+                <span>{c.emoji}</span> {c.label}
+              </button>
+            ))}
+          </div>
+          <div className="pl-discover-cta">
+            <button className="pl-cta-primary" onClick={() => navigate("/barberdiscovery")}>
+              Shfleto të gjitha salonet <span>→</span>
+            </button>
+          </div>
         </div>
       </section>
 
