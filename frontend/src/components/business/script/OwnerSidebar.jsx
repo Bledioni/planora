@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
-    LayoutDashboard, Calendar, Users, BarChart3, 
-    LogOut, Scissors, ChevronRight 
+    Calendar, Users, BarChart3, 
+    LogOut, Scissors, ClipboardList
 } from 'lucide-react';
 import { api } from '../../../index';
 import '../style/OwnerSidebar.css';
@@ -44,7 +44,7 @@ const OwnerSidebar = () => {
 
                 <div className="sidebar-logo">
                     <div className="sidebar-logo-icon">
-                        <img src={`${logo}`} alt="" style={{width: '20px' , backgroundColor:'none'}}/>
+                        <img src={`${logo}`} alt="" style={{width: '20px', backgroundColor: 'none'}}/>
                     </div>
                     <div className="sidebar-logo-text">
                         <span>Planora</span><strong>Book</strong>
@@ -55,13 +55,13 @@ const OwnerSidebar = () => {
                     <p className="sidebar-section-label">Kryefaqja</p>
                     <NavLink to="/owner/my-schedules" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                        <Calendar size={18} /> Orari Im
+                        <Calendar size={18} /> Terminet e Mia
                     </NavLink>
 
                     <p className="sidebar-section-label">Punonjësit</p>
                     <NavLink to="/owner/employees-schedules" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                        <Users size={18} /> Orari i Punonjësve
+                        <Users size={18} /> Terminet e Punonjësve
                     </NavLink>
 
                     <p className="sidebar-section-label">Analitika</p>
@@ -73,11 +73,11 @@ const OwnerSidebar = () => {
                     <p className="sidebar-section-label">Menaxhimi</p>
                     <NavLink to="/owner/manage-schedule" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                        <Calendar size={18} /> Terminet
+                        <Calendar size={18} /> Orari
                     </NavLink>
                     <NavLink to="/owner/manage-services" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                        <BarChart3 size={18} /> Shërbimet
+                        <ClipboardList size={18} /> Shërbimet
                     </NavLink>
                 </nav>
 
