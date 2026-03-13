@@ -63,9 +63,7 @@ const BusinessRegister = ({ isAdminCreator = false }) => {
                     </div>
                 )}
 
-                {error && <div className="error-alert">{error}</div>}
-                {successMsg && <div className="success-alert" style={{color: 'green', marginBottom: '15px'}}>{successMsg}</div>}
-
+{successMsg && <div className="success-alert">{successMsg}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="input-row">
                         <div className="input-field">

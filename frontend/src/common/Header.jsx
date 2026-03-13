@@ -37,6 +37,11 @@ import EmployeeStats from "../components/employees/script/EmployeeStats";
 import ForgotPassword from "../components/ForgotPassword";
 import ResetPassword from "../components/ResetPassword";
 import AppointmentConfirmed from "../components/appointments/scripts/AppointmentConfirmed";
+import AdminBusinessConfig from "../components/admin/script/AdminBusinessConfig";
+import AdminBusinessVisits from "../components/admin/script/AdminBusinessVisits";
+import AdminCreateCategory from "../components/admin/script/AdminCreateCategory";
+
+
 
 function Header() {
   return (
@@ -51,8 +56,7 @@ function Header() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/barberdiscovery" element={<BarberDiscovery />} />
-        <Route path="/appointment/confirmed" element={<AppointmentConfirmed />} />
-
+        <Route path="/appointment/:id" element={<AppointmentConfirmed />} />
         {/* --- PROTECTED: USER --- */}
         <Route element={<ProtectedRoute allowedRoles={["user", "admin", "business_owner"]} />}>
           <Route path="/wishlist" element={<Wishlist />} />
@@ -70,6 +74,9 @@ function Header() {
           <Route path="/admin/employees/:businessId/employees" element={<BusinessEmployees />} />
           <Route path="/admin/send-email" element={<SendEmail />} />
           <Route path="/admin/admin-analytics-dashboard" element={<AdminAnalyticsDashboard />} />
+          <Route path="/admin/business/:businessId/config" element={<AdminBusinessConfig />} />
+          <Route path="/admin/visits" element={<AdminBusinessVisits />} />
+          <Route path="/admin/categories" element={<AdminCreateCategory />} />
         </Route>
 
         {/* --- PROTECTED: BUSINESS OWNER --- */}

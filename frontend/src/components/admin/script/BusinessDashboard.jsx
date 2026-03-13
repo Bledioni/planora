@@ -69,10 +69,10 @@ const BusinessDashboard = () => {
             title: "Konfigurime",
             desc: "Modifiko të dhënat e biznesit",
             icon: <Settings size={24} />,
-            onClick: () => {},
-            active: false,
-            color: "disabled"
-        }
+            onClick: () => navigate(`/admin/business/${businessId}/config`),
+            active: true,
+            color: "dark"
+        },
     ];
 
     return (

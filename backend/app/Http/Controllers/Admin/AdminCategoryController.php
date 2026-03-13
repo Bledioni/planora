@@ -58,5 +58,24 @@ class AdminCategoryController extends Controller
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+    public function deleteCategory($id): JsonResponse
+{
+    $category = Categories::find($id);
+
+    if (!$category) {
+        return response()->json(['message' => 'Kategoria nuk u gjet.'], 404);
+    }
+
+    $category->delete();
+
+    return response()->json(['message' => 'Kategoria u fshi me sukses.']);
+}
+
+public function getCategories(): JsonResponse
+{
+    $categories = Categories::orderBy('name', 'asc')->get();
+
+    return response()->json($categories);
+}
 
 }

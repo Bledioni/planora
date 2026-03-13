@@ -290,3 +290,14 @@ form {
   .register-header h2 { font-size: 1.4rem; }
   .input-row { flex-direction: column; gap: 14px; }
 }
+
+.success-alert {
+  background: var(--green-light);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+}

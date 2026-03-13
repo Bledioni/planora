@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, Clock, Banknote } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
@@ -12,20 +13,20 @@ const MySchedule = () => {
     const [cache, setCache] = useState({});
 
     const calendarDays = useMemo(() => {
-        const days = [];
-        const start = new Date(selectedDate);
-        start.setDate(start.getDate() - 3);
-        for (let i = 0; i < 7; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
-            days.push({
-                full: d.toISOString().split('T')[0],
-                dayNum: d.getDate(),
-                dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
-            });
-        }
-        return days;
-    }, [selectedDate]);
+    const days = [];
+    const start = new Date(selectedDate + 'T00:00:00');
+    start.setDate(start.getDate() - 3);
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        days.push({
+            full: d.toISOString().split('T')[0],
+            dayNum: d.getDate(),
+            dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
+        });
+    }
+    return days;
+}, [selectedDate]);
 
     const sortedAppointments = useMemo(() => {
         const active = appointments

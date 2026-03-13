@@ -5,11 +5,9 @@ import '../../appointments/style/BarberDiscovery.css';
 
 const CATEGORIES = [
   { label: 'Të gjitha',  value: 'all',        emoji: '✦' },
-  { label: 'Barber',     value: 'Barber',      emoji: '✂️' },
+  { label: 'Berber',     value: 'Berber',      emoji: '✂️' },
   { label: 'Salon',      value: 'Salon',       emoji: '💇' },
   { label: 'Kozmetikë',  value: 'Kozmetikë',   emoji: '💅' },
-  { label: 'Spa',        value: 'Spa',         emoji: '🧖' },
-  { label: 'Tatuazhe',   value: 'Tatuazhe',    emoji: '🖊️' },
 ];
 
 const BarberDiscovery = () => {
@@ -28,6 +26,8 @@ const BarberDiscovery = () => {
           ? res.data
           : (res.data.businesses || res.data.data || []);
         setBusinesses(data);
+        console.log(data);
+        
       })
       .catch(() => setBusinesses([]))
       .finally(() => setLoading(false));
@@ -147,7 +147,7 @@ const BarberDiscovery = () => {
                     {shop.shop_name ? shop.shop_name.charAt(0).toUpperCase() : '?'}
                   </span>
                   <span className="card-type-badge">
-                    {shop.business_type || 'Barber'}
+                    {shop.business_type || 'Berber'}
                   </span>
                 </div>
 
@@ -158,7 +158,7 @@ const BarberDiscovery = () => {
                   </p>
                   <div className="badge-container">
                     <span className="category-badge">
-                      {shop.business_type || 'Barber'}
+                      {shop.business_type || 'Berber'}
                     </span>
                     <div className="rating-box">
                       <span>★</span> 5.0
