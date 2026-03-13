@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, Navigate, useNavigate } from "react-router-dom"; // Shto useNavigate
+import { useParams, Navigate, useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { api } from "../../../index";
 import "../../appointments/style/BookingApp.css";
 import "../../appointments/style/CustomCalendar.css";
 import PhoneInputField from '../../phoneInputs/script/PhoneInputField';
+
+const STORAGE_KEY = 'planora_user_info';
 
 const parseDurationToMinutes = (duration) => {
   if (!duration) return 0;
@@ -25,9 +27,29 @@ const getLocalDateString = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+const getSavedUserInfo = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : { name: "", email: "", phone: "" };
+  } catch {
+    return { name: "", email: "", phone: "" };
+  }
+};
+
+const saveUserInfo = (info) => {
+  try {
+    // Only save if at least one field has a value
+    if (info.name || info.email || info.phone) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
+    }
+  } catch {
+    // localStorage not available
+  }
+};
+
 const BookingApp = () => {
   const { shopSlug } = useParams();
-  const navigate = useNavigate(); // Hook-u për navigim
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -39,7 +61,16 @@ const BookingApp = () => {
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
+  const [userInfo, setUserInfo] = useState(getSavedUserInfo);
+  const [isAutofilled, setIsAutofilled] = useState(false);
+
+  // Check on mount if we have saved data
+  useEffect(() => {
+    const saved = getSavedUserInfo();
+    if (saved.name || saved.email || saved.phone) {
+      setIsAutofilled(true);
+    }
+  }, []);
 
   const initApp = useCallback(async () => {
     if (!shopSlug) return;
@@ -115,10 +146,17 @@ const BookingApp = () => {
     }, 250);
   };
 
-  // LOGJIKA E RE E KONFIRMIMIT
+  const handleUserInfoChange = (field, value) => {
+    const updated = { ...userInfo, [field]: value };
+    setUserInfo(updated);
+    saveUserInfo(updated);
+  };
+
   const handleFinalBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
+    // Save before submitting
+    saveUserInfo(userInfo);
     try {
       const dateStr = getLocalDateString(selectedDate);
       const response = await api.post("/public/appointments/create", {
@@ -131,10 +169,9 @@ const BookingApp = () => {
         client_phone: userInfo.phone,
       });
 
-      // Sapo konfirmohet, marrim ID e parë dhe ikim te faqja e detajeve
       if (response.data.status === 'success') {
         const appointmentId = response.data.appointment_ids[0];
-        navigate(`/appointment/${appointmentId}`); 
+        navigate(`/appointment/${appointmentId}`);
       }
     } catch (err) {
       alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
@@ -206,7 +243,7 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 1: SERVICES */}
+          {/* STEP 1 */}
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
@@ -252,7 +289,7 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 2: SLOTS */}
+          {/* STEP 2 */}
           {step === 2 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Datën & Orën</h2>
@@ -294,17 +331,36 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 3: USER INFO */}
+          {/* STEP 3 */}
           {step === 3 && (
             <div className="fade-in">
               <h2 className="section-title">Të dhënat tuaja</h2>
+
+              {isAutofilled && (
+                <div className="autofill-notice">
+                  <span>✓ Të dhënat u plotësuan automatikisht</span>
+                  <button
+                    type="button"
+                    className="autofill-clear"
+                    onClick={() => {
+                      const empty = { name: "", email: "", phone: "" };
+                      setUserInfo(empty);
+                      localStorage.removeItem(STORAGE_KEY);
+                      setIsAutofilled(false);
+                    }}
+                  >
+                    Pastro
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleFinalBooking}>
                 <input
                   className="booking-input"
                   placeholder="Emri i plotë"
                   required
                   value={userInfo.name}
-                  onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+                  onChange={(e) => handleUserInfoChange('name', e.target.value)}
                 />
                 <input
                   className="booking-input"
@@ -312,13 +368,18 @@ const BookingApp = () => {
                   placeholder="Email adresa"
                   required
                   value={userInfo.email}
-                  onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
+                  onChange={(e) => handleUserInfoChange('email', e.target.value)}
                 />
                 <PhoneInputField
                   value={userInfo.phone}
-                  onChange={(val) => setUserInfo({ ...userInfo, phone: val })}
+                  onChange={(val) => handleUserInfoChange('phone', val)}
                 />
-                <button type="submit" className="primary-button" style={{ marginTop: "20px" }} disabled={loading}>
+                <button
+                  type="submit"
+                  className="primary-button"
+                  style={{ marginTop: "20px" }}
+                  disabled={loading}
+                >
                   {loading ? "Duke u rezervuar..." : "Konfirmo Termin"}
                 </button>
               </form>

@@ -539,3 +539,35 @@
 .country-list .country.highlight {
   background-color: var(--p-gray) !important;
 }
+
+/* ── AUTOFILL NOTICE ── */
+.autofill-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+.autofill-clear {
+  background: none;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.autofill-clear:hover {
+  color: #ef4444;
+}
