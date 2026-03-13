@@ -1,344 +1,533 @@
-/* PLANORA DISCOVERY - BOLD BLUE EDITION */
-/* Mentaining all original sizes, adding brand-focused blue accents */
-
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+/* BarberDiscovery.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg:           #ffffff;
-  --bg-subtle:    #f0f7ff; /* Nuancë e lehtë blu në vend të hirit */
-  --surface:      #ffffff;
-  --dark:         #0f172a;
-  --blue:         #0066ff; /* Bluja elektrike e Planora-s */
-  --blue-soft:    #e6f0ff;
-  --blue-deep:    #0052cc;
-  --border:       #e2e8f0;
-  --border-hover: #cbdfff; /* Border blu kur i afrohesh */
-  --muted:        #64748b;
-  --shadow-sm:    0 2px 8px rgba(0, 102, 255, 0.08);
-  --shadow-md:    0 12px 24px -8px rgba(0, 102, 255, 0.15);
-  --radius-lg:    24px;
-  --radius-md:    16px;
-  --radius-sm:    12px;
+  --p-blue: #1d7af2;
+  --p-dark: #0f172a;
+  --p-gray: #f8fafc;
+  --p-border: #e2e8f0;
+  --p-text-muted: #64748b;
+  --p-green: #10b981;
+  --p-red: #e11d48;
+  --p-red-light: #fff1f2;
 }
 
-*, *::before, *::after { 
-  box-sizing: border-box; 
-  margin: 0; 
-  padding: 0; 
+/* ── LOADING ── */
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--p-text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
-body {
-  font-family: 'Manrope', sans-serif;
-  background-color: var(--bg);
-  color: var(--dark);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--p-border);
+  border-top-color: var(--p-blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-/* ── HEADER ── */
+/* ── MAIN CONTAINER ── */
+.discovery-container {
+  min-height: 100vh;
+  background-color: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ── HERO HEADER ── */
 .discovery-header {
-  padding: 120px 24px 80px;
+  background: #ffffff;
+  color: var(--p-dark);
+  padding: 32px 16px 40px;
   text-align: center;
-  background: linear-gradient(180deg, var(--bg-subtle) 0%, #ffffff 100%);
-  border-bottom: 1px solid var(--border);
   position: relative;
-}
-
-/* Pattern-i në sfond tani me pika blu */
-.discovery-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(var(--border-hover) 1px, transparent 1px);
-  background-size: 24px 24px;
-  opacity: 0.6;
+  border-bottom: 1px solid var(--p-border);
 }
 
 .header-eyebrow {
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: var(--blue); /* Eyebrow me sfond blu të plotë */
-  color: #ffffff;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 24px;
+  color: var(--p-text-muted);
+  margin-bottom: 14px;
+}
+
+.header-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--p-blue);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .discovery-header h1 {
-  position: relative;
-  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-size: 2rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  color: var(--dark);
-  line-height: 1;
-  margin-bottom: 16px;
+  margin: 0 0 10px;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: var(--p-dark);
 }
 
 .discovery-header h1 span {
-  color: var(--blue);
+  color: var(--p-blue);
 }
 
 .discovery-header p {
-  position: relative;
-  font-size: 1.125rem;
-  color: var(--muted);
-  max-width: 520px;
-  margin: 0 auto;
+  font-size: 0.95rem;
+  color: var(--p-text-muted);
+  font-weight: 500;
+  margin: 0 0 24px;
+  line-height: 1.5;
 }
 
 /* ── SEARCH BAR ── */
 .search-bar-wrapper {
-  max-width: 720px;
-  margin: 48px auto 0;
-  padding: 0 20px;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border-hover);
-  padding: 10px 10px 10px 28px;
-  border-radius: 100px;
-  box-shadow: var(--shadow-md);
-  transition: all 0.3s ease;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 6px 6px 6px 14px;
+  gap: 8px;
+  border: 1.5px solid var(--p-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: border-color 0.2s ease;
 }
 
 .search-bar:focus-within {
-  border-color: var(--blue);
-  box-shadow: 0 20px 40px -10px rgba(0,102,255,0.2);
-  transform: translateY(-2px);
+  border-color: var(--p-blue);
+}
+
+.search-icon {
+  color: var(--p-text-muted);
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 .search-bar input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 1rem;
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--dark);
+  color: var(--p-dark);
+  background: transparent;
+  min-width: 0;
+}
+
+.search-bar input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 .search-btn {
-  background: var(--blue);
-  color: #fff;
+  background: var(--p-blue);
+  color: #ffffff;
   border: none;
-  padding: 12px 32px;
-  border-radius: 100px;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .search-btn:hover {
-  background: var(--blue-deep);
+  background: var(--p-dark);
 }
 
 /* ── BODY ── */
 .discovery-body {
-  max-width: 1240px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 80px 32px;
+  padding: 24px 16px 48px;
 }
 
-/* ── RESULTS META (Shiriti i filtrave) ── */
+/* ── CATEGORIES ── */
+.category-section {
+  margin-bottom: 24px;
+}
+
+.category-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.category-pills {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.category-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  border: 1px solid var(--p-border);
+  background: #ffffff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--p-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pill:hover {
+  border-color: var(--p-blue);
+  color: var(--p-blue);
+}
+
+.pill.active {
+  background: var(--p-dark);
+  border-color: var(--p-dark);
+  color: #ffffff;
+}
+
+.pill-emoji {
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ── RESULTS META ── */
 .results-meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
-  padding: 16px 24px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-hover);
-  border-radius: var(--radius-md);
-}
-
-.results-count {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--dark);
-}
-
-.results-count strong {
-  color: var(--blue);
-}
-
-/* Butoni "Pastro Filtrat" */
-.results-meta .pill {
-  background: #ffffff;
-  color: var(--blue);
-  border: 1px solid var(--border-hover);
-  font-size: 0.8rem;
-  padding: 8px 16px;
-  font-weight: 700;
-}
-
-.results-meta .pill:hover {
-  background: #fff1f1;
-  color: #ef4444;
-  border-color: #fecaca;
-}
-
-/* ── CATEGORY PILLS ── */
-.pill {
-  padding: 10px 24px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-hover);
-  border-radius: 100px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--blue);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.pill:hover {
-  border-color: var(--blue);
-  background: #fff;
-}
-
-.pill.active {
-  background: var(--blue);
-  color: #fff;
-  border-color: var(--blue);
-  box-shadow: var(--shadow-sm);
-}
-
-/* ── GRID & CARDS ── */
-.discovery-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 32px;
-}
-
-.shop-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  transition: all 0.4s cubic-bezier(0.15, 0, 0.15, 1);
-  cursor: pointer;
-}
-
-.shop-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--blue);
-}
-
-.image-wrapper {
-  height: 200px;
-  background-color: var(--bg-subtle);
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
+.results-count {
+  font-size: 0.875rem;
+  color: var(--p-text-muted);
+  font-weight: 500;
+}
+
+.results-count strong {
+  color: var(--p-dark);
+  font-weight: 700;
+}
+
+/* ── GRID ── */
+.discovery-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* ── SHOP CARD ── */
+.shop-card {
+  background: #ffffff;
+  border: 1px solid var(--p-border);
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.shop-card:hover {
+  border-color: var(--p-blue);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(29, 122, 242, 0.1);
+}
+
+/* Image placeholder block */
+.image-wrapper {
+  position: relative;
+  height: 120px;
+  background: var(--p-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .image-initial {
-  font-size: 4rem;
+  font-size: 2.4rem;
   font-weight: 800;
-  color: var(--border-hover);
+  color: var(--p-border);
+  line-height: 1;
   user-select: none;
 }
 
 .card-type-badge {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: var(--blue);
-  padding: 6px 14px;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--p-border);
   border-radius: 100px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: #fff;
-  box-shadow: var(--shadow-sm);
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--p-dark);
+}
+
+/* Shop info */
+.shop-info {
+  padding: 14px 16px 12px;
+  flex: 1;
 }
 
 .shop-name {
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--dark);
-  margin-bottom: 4px;
+  color: var(--p-dark);
+  margin: 0 0 5px;
+  line-height: 1.3;
 }
 
 .shop-address {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin-bottom: 20px;
+  font-size: 0.82rem;
+  color: var(--p-text-muted);
+  margin: 0 0 12px;
+  font-weight: 500;
+}
+
+.badge-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .category-badge {
+  display: inline-block;
+  background: var(--p-gray);
+  border: 1px solid var(--p-border);
+  border-radius: 100px;
+  padding: 3px 10px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--blue);
-  background: var(--blue-soft);
-  padding: 4px 12px;
-  border-radius: 100px;
+  color: var(--p-text-muted);
 }
 
-/* ── CTA INSIDE CARD ── */
+.rating-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--p-dark);
+}
+
+.rating-box span {
+  color: #f59e0b;
+}
+
+/* CTA row */
 .card-cta {
-  background: var(--blue-soft);
-  padding: 14px;
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--blue);
-  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  border-top: 1px solid var(--p-border);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--p-blue);
+  transition: background 0.2s ease;
 }
 
 .shop-card:hover .card-cta {
-  background: var(--blue);
-  color: #fff;
+  background: rgba(29, 122, 242, 0.04);
+}
+
+.card-cta-arrow {
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.shop-card:hover .card-cta-arrow {
+  transform: translateX(4px);
 }
 
 /* ── EMPTY STATE ── */
 .no-data {
   grid-column: 1 / -1;
+  background: var(--p-gray);
+  border: 2px dashed var(--p-border);
+  border-radius: 18px;
+  padding: 48px 20px;
   text-align: center;
-  padding: 80px 24px;
-  background: var(--bg-subtle);
-  border: 2px dashed var(--border-hover);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  animation: slideUp 0.5s ease-out;
 }
 
 .no-data-icon {
-  font-size: 3.5rem;
-  margin-bottom: 16px;
-  opacity: 0.8;
+  font-size: 2rem;
+  margin-bottom: 12px;
 }
 
 .no-data h3 {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--dark);
-  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--p-dark);
+  margin: 0 0 6px;
 }
 
 .no-data p {
-  color: var(--muted);
+  font-size: 0.875rem;
+  color: var(--p-text-muted);
+  margin: 0;
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 768px) {
-  .discovery-header { padding: 80px 20px 60px; }
-  .discovery-body { padding: 40px 20px; }
-  .discovery-grid { grid-template-columns: 1fr; }
+/* ── KEYFRAMES ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── TABLET: 480px ── */
+@media (min-width: 480px) {
+  .discovery-header {
+    padding: 40px 24px 48px;
+  }
+
+  .discovery-header h1 {
+    font-size: 2.4rem;
+  }
+
+  .discovery-body {
+    padding: 28px 24px 52px;
+  }
+
+  .discovery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .image-wrapper {
+    height: 130px;
+  }
+}
+
+/* ── TABLET LARGE: 768px ── */
+@media (min-width: 768px) {
+  .discovery-header {
+    padding: 52px 40px 60px;
+  }
+
+  .discovery-header h1 {
+    font-size: 2.8rem;
+  }
+
+  .discovery-header p {
+    font-size: 1rem;
+  }
+
+  .search-btn {
+    padding: 11px 20px;
+    font-size: 0.9rem;
+  }
+
+  .discovery-body {
+    padding: 32px 32px 56px;
+  }
+
+  .category-pills {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
+  .pill {
+    font-size: 0.875rem;
+    padding: 8px 18px;
+  }
+
+  .discovery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+
+  .image-wrapper {
+    height: 140px;
+  }
+
+  .results-meta {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ── DESKTOP: 1024px ── */
+@media (min-width: 1024px) {
+  .discovery-header {
+    padding: 60px 40px 72px;
+  }
+
+  .discovery-header h1 {
+    font-size: 3rem;
+  }
+
+  .discovery-body {
+    padding: 40px 20px 64px;
+  }
+
+  .discovery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .image-wrapper {
+    height: 150px;
+  }
+}
+
+/* ── WIDE: 1280px ── */
+@media (min-width: 1280px) {
+  .discovery-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }

@@ -44,8 +44,11 @@ export default function PlanoraLanding() {
           <a href="#faq">FAQ</a>
         </div>
         <div className="pl-nav-cta">
-          {/* KËTU: Kemi hequr butonin "Fillo Falas" dhe kemi lënë vetëm "Hyr" */}
-          <button className="pl-primary-btn" onClick={() => navigate("/login")}>
+          <button
+            className="pl-primary-btn"
+            onClick={() => navigate("/login")}
+            type="button"
+          >
             Hyr <span className="pl-arrow">→</span>
           </button>
         </div>

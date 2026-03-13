@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, Building2, Store, 
-  LogOut, Menu, X, ChevronRight, ChevronDown 
+  LayoutDashboard, Building2, Store, MapPin,
+  LogOut, Menu, X, ChevronRight, ChevronDown ,Tag
 } from 'lucide-react';
 import '../style/AdminSidebar.css';
 
@@ -24,22 +24,22 @@ const AdminSidebar = () => {
       icon: Building2,
       hasSubmenu: true,
       submenu: [
-        { name: 'All Businesses', path: '/admin/businesses', icon: Store },
-        { name: 'Business List', path: '/admin/AdminBusinessList', icon: Building2 },
+        { name: 'All Businesses', path: '/admin/businesses',        icon: Store },
+        { name: 'Business List',  path: '/admin/AdminBusinessList', icon: Building2 },
+        { name: 'Vizitat',        path: '/admin/visits',            icon: MapPin },
       ]
     },
-    { name: 'Email', path: '/admin/send-email', icon: LayoutDashboard },
-    { name: 'Analytics', path: '/admin/admin-analytics-dashboard', icon: LayoutDashboard },
+    { name: 'Email',     path: '/admin/send-email',                 icon: LayoutDashboard },
+    { name: 'Analytics', path: '/admin/admin-analytics-dashboard',  icon: LayoutDashboard },
+    { name: 'Kategoritë', path: '/admin/categories', icon: Tag },
   ];
 
   return (
     <>
-      {/* 3 VIJAT (HAMBURGER) - Shfaqet vetëm në Mobile */}
       <button className="mobile-menu-toggle" onClick={() => setIsMobileOpen(!isMobileOpen)}>
         {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* OVERLAY KUR SIDEBAR-I ËSHTË I HAPUR NË MOBILE */}
       {isMobileOpen && <div className="sidebar-overlay" onClick={() => setIsMobileOpen(false)} />}
 
       <aside className={`owner-sidebar ${isMobileOpen ? 'open' : ''}`}>
@@ -55,8 +55,8 @@ const AdminSidebar = () => {
           {menuItems.map((item, index) => (
             <div key={index} className="nav-group">
               {!item.hasSubmenu ? (
-                <Link 
-                  to={item.path} 
+                <Link
+                  to={item.path}
                   className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                   onClick={() => setIsMobileOpen(false)}
                 >
@@ -66,8 +66,8 @@ const AdminSidebar = () => {
                 </Link>
               ) : (
                 <div className="submenu-wrapper">
-                  <button 
-                    className={`nav-item ${location.pathname.includes('business') ? 'active' : ''}`}
+                  <button
+                    className={`nav-item ${location.pathname.includes('business') || location.pathname.includes('visits') ? 'active' : ''}`}
                     onClick={() => setIsBusinessMenuOpen(!isBusinessMenuOpen)}
                   >
                     <item.icon size={20} />
@@ -76,12 +76,13 @@ const AdminSidebar = () => {
                   </button>
                   <div className={`submenu-content ${isBusinessMenuOpen ? 'expanded' : ''}`}>
                     {item.submenu.map((sub, i) => (
-                      <Link 
-                        key={i} 
-                        to={sub.path} 
+                      <Link
+                        key={i}
+                        to={sub.path}
                         className={`sub-nav-item ${location.pathname === sub.path ? 'active' : ''}`}
                         onClick={() => setIsMobileOpen(false)}
                       >
+                        <sub.icon size={15} />
                         {sub.name}
                       </Link>
                     ))}

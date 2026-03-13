@@ -44,8 +44,8 @@ body {
 .pl-nav {
   position: fixed;
   inset: 0 0 auto 0;
-  z-index: 200;
-  height: 70px;
+  z-index: 1000;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,8 +55,9 @@ body {
 }
 
 .pl-nav--scrolled {
-  background: rgba(255,255,255,0.92);
+  background: rgba(255,255,255,0.95);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 1px 20px rgba(10,15,40,0.06);
 }
@@ -69,6 +70,7 @@ body {
   background: linear-gradient(135deg, var(--blue), var(--cyan));
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+  flex-shrink: 0;
 }
 
 .pl-nav-logo { width: 22px; height: auto; }
@@ -98,22 +100,50 @@ body {
   font-size: 0.85rem; font-weight: 600;
   color: var(--muted); cursor: pointer;
   transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 .pl-ghost-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
 
 .pl-primary-btn {
-  padding: 9px 20px;
+  padding: 10px 22px;
   background: var(--blue); border: none;
   border-radius: var(--r-sm);
   font-family: 'Manrope', sans-serif;
-  font-size: 0.85rem; font-weight: 700;
+  font-size: 0.875rem; font-weight: 700;
   color: #fff; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-blue);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
+  position: relative;
+  z-index: 1;
 }
 .pl-primary-btn:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,0.35); }
+.pl-primary-btn:active { transform: translateY(0); background: var(--blue-dark); }
 .pl-arrow { font-size: 1rem; }
+
+@media (max-width: 1000px) {
+  .pl-nav { padding: 0 24px; }
+  .pl-nav-links { display: none; }
+}
+
+@media (max-width: 640px) {
+  .pl-nav {
+    padding: 0 16px;
+    height: 60px;
+  }
+  .pl-ghost-btn { display: none; }
+  .pl-primary-btn {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    min-height: 44px;
+    min-width: 80px;
+    justify-content: center;
+  }
+  .pl-nav-name { font-size: 1rem; }
+}
 
 /* ── HERO ── */
 .pl-root { background: #ffffff; }

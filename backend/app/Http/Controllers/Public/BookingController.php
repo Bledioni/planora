@@ -151,130 +151,119 @@ public function getAvailableSlots(Request $request): JsonResponse
     return response()->json($availableSlots);
 }
 
-    public function createAppointment(Request $request): JsonResponse
-    {
-        $request->validate([
-            'business_id'   => 'required|exists:businesses,id',
-            'employee_id'   => 'required|exists:employees,id',
-            'service_ids'   => 'required|array|min:1',
-            'service_ids.*' => 'exists:services,id',
-            'start_time'    => 'required|date|after:now',
-            'client_name'   => 'required|string|max:50',
-            'client_phone'  => 'required|string|min:9',
-            'client_email'  => 'required|email',
-        ]);
+public function createAppointment(Request $request): JsonResponse
+{
+    // 1. Validimi i të dhënave
+    $request->validate([
+        'business_id'   => 'required|exists:businesses,id',
+        'employee_id'   => 'required|exists:employees,id',
+        'service_ids'   => 'required|array|min:1',
+        'service_ids.*' => 'exists:services,id',
+        'start_time'    => 'required|date|after:now',
+        'client_name'   => 'required|string|max:50',
+        'client_phone'  => 'required|string|min:9',
+        'client_email'  => 'required|email',
+    ]);
 
-        $businessCheck = $this->checkBusinessActive($request->business_id);
-        if ($businessCheck) return $businessCheck;
+    // 2. Kontrollo nëse biznesi është aktiv (Middleware-i yt ose funksioni privat)
+    $businessCheck = $this->checkBusinessActive($request->business_id);
+    if ($businessCheck) return $businessCheck;
 
-        try {
-            return DB::transaction(function () use ($request) {
+    try {
+        return DB::transaction(function () use ($request) {
 
-                $services = Services::whereIn('id', $request->service_ids)
-                    ->where('business_id', $request->business_id)
-                    ->get();
+            // 3. Merr shërbimet dhe llogarit kohëzgjatjen
+            $services = Services::whereIn('id', $request->service_ids)
+                ->where('business_id', $request->business_id)
+                ->get();
 
-                if ($services->count() !== count($request->service_ids)) {
-                    return response()->json(['status' => 'error', 'message' => 'Një ose më shumë shërbime nuk u gjetën për këtë biznes.'], 422);
-                }
+            if ($services->count() !== count($request->service_ids)) {
+                return response()->json(['status' => 'error', 'message' => 'Një ose më shumë shërbime nuk u gjetën.'], 422);
+            }
 
-                $totalDuration       = $this->sumDurations($services);
-                $startTime           = Carbon::parse($request->start_time);
-                $finishTime          = $startTime->copy()->addMinutes($totalDuration);
-                $dayOfWeek           = $startTime->dayOfWeek;
-                $requestedTimeOnly   = $startTime->format('H:i:s');
-                $requestedFinishOnly = $finishTime->format('H:i:s');
+            $totalDuration = $this->sumDurations($services);
+            $startTime     = Carbon::parse($request->start_time);
+            $finishTime    = $startTime->copy()->addMinutes($totalDuration);
+            $dayOfWeek     = $startTime->dayOfWeek;
 
-                $schedule = Schedules::where('business_id', $request->business_id)
-                    ->where('day_of_week', $dayOfWeek)
-                    ->where(function ($query) use ($request) {
-                        $query->where('employee_id', $request->employee_id)->orWhereNull('employee_id');
-                    })
-                    ->orderBy('employee_id', 'desc')
-                    ->first();
+            // 4. Kontrolli i orarit të punës
+            $schedule = Schedules::where('business_id', $request->business_id)
+                ->where('day_of_week', $dayOfWeek)
+                ->where(function ($query) use ($request) {
+                    $query->where('employee_id', $request->employee_id)->orWhereNull('employee_id');
+                })
+                ->orderBy('employee_id', 'desc')
+                ->first();
 
-                if (!$schedule || $schedule->is_off) {
-                    return response()->json(['status' => 'error', 'message' => 'Ky biznes ose punonjës nuk punon në këtë ditë.'], 422);
-                }
+            if (!$schedule || $schedule->is_off) {
+                return response()->json(['status' => 'error', 'message' => 'Ky biznes ose punonjës nuk punon në këtë ditë.'], 422);
+            }
 
-                if ($requestedTimeOnly < $schedule->open_at || $requestedFinishOnly > $schedule->close_at) {
-                    return response()->json(['status' => 'error', 'message' => 'Termini duhet të jetë brenda orarit të punës.'], 422);
-                }
+            // 5. Kontrolli i "Double Booking" (Këtu kontrollojmë vetëm për active/confirmed)
+            $isBusy = Appointments::where('employee_id', $request->employee_id)
+                ->whereIn('status', ['active', 'confirmed'])
+                ->where(function ($query) use ($startTime, $finishTime) {
+                    $query->where('start_time', '<', $finishTime)
+                          ->where('finish_time', '>', $startTime);
+                })
+                ->lockForUpdate()
+                ->exists();
 
-                if ($schedule->break_start && $schedule->break_end) {
-                    $startsInBreak = ($requestedTimeOnly >= $schedule->break_start && $requestedTimeOnly < $schedule->break_end);
-                    $endsInBreak   = ($requestedFinishOnly > $schedule->break_start && $requestedFinishOnly <= $schedule->break_end);
-                    $coversBreak   = ($requestedTimeOnly < $schedule->break_start && $requestedFinishOnly > $schedule->break_end);
+            if ($isBusy) {
+                return response()->json(['status' => 'error', 'message' => 'Ky termin sapo u zu nga dikush tjetër.'], 409);
+            }
 
-                    if ($startsInBreak || $endsInBreak || $coversBreak) {
-                        return response()->json(['status' => 'error', 'message' => 'Ky orar përfshin pauzën e bukës.'], 422);
-                    }
-                }
+            // 6. Krijimi i rezervimeve
+            $appointments = [];
+            $serviceStart = $startTime->copy();
+            $bookingId    = (string) Str::uuid();
 
-                $isBusy = Appointments::where('employee_id', $request->employee_id)
-                    ->whereIn('status', ['active', 'pending' , 'confirmed'])
-                    ->where(function ($query) use ($startTime, $finishTime) {
-                        $query->where('start_time', '<', $finishTime)->where('finish_time', '>', $startTime);
-                    })
-                    ->lockForUpdate()
-                    ->exists();
+            foreach ($services as $service) {
+                $serviceDuration = $this->parseDurationToMinutes($service->service_duration);
+                $serviceFinish   = $serviceStart->copy()->addMinutes($serviceDuration);
 
-                if ($isBusy) {
-                    return response()->json(['status' => 'error', 'message' => 'Ky termin sapo u zunë nga dikush tjetër.'], 409);
-                }
+                $appointments[] = Appointments::create([
+                    'business_id'  => $request->business_id,
+                    'employee_id'  => $request->employee_id,
+                    'service_id'   => $service->id,
+                    'client_name'  => $request->client_name,
+                    'client_phone' => $request->client_phone,
+                    'client_email' => $request->client_email,
+                    'start_time'   => $serviceStart,
+                    'finish_time'  => $serviceFinish,
+                    'status'       => 'confirmed', // Direkt Confirmed!
+                    'booking_id'   => $bookingId,
+                ]);
 
-                $appointments = [];
-                $serviceStart = $startTime->copy();
-                $bookingId    = (string) Str::uuid();
+                $serviceStart = $serviceFinish->copy();
+            }
 
-                foreach ($services as $service) {
-                    $serviceDuration = $this->parseDurationToMinutes($service->service_duration);
-                    $serviceFinish   = $serviceStart->copy()->addMinutes($serviceDuration);
+            // 7. Dërgimi i Email-it të Suksesit (me vetëm 1 argument)
+            try {
+                Mail::to($request->client_email)
+                    ->send(new \App\Mail\AppointmentConfirmedSuccess($appointments[0]));
+            } catch (\Exception $e) {
+                Log::warning("Email failed but appointment was saved: " . $e->getMessage());
+            }
 
-                    $appointments[] = Appointments::create([
-                        'business_id'  => $request->business_id,
-                        'employee_id'  => $request->employee_id,
-                        'service_id'   => $service->id,
-                        'client_name'  => $request->client_name,
-                        'client_phone' => $request->client_phone,
-                        'client_email' => $request->client_email,
-                        'start_time'   => $serviceStart,
-                        'finish_time'  => $serviceFinish,
-                        'status'       => 'pending',
-                        'booking_id'   => $bookingId,
-                    ]);
-
-                    $serviceStart = $serviceFinish->copy();
-                }
-
-                $confirmationUrl = URL::temporarySignedRoute(
-                    'appointment.confirm',
-                    now()->addMinutes(30),
-                    ['id' => $appointments[0]->id]
-                );
-
-                Mail::to($appointments[0]->client_email)
-                    ->send(new AppointmentConfirmationMail($appointments[0], $confirmationUrl));
-
-                return response()->json([
-                    'status'          => 'success',
-                    'message'         => 'Termini u rezervua me sukses! Kontrolloni email-in tuaj për konfirmim.',
-                    'appointment_ids' => array_map(fn($a) => $a->id, $appointments),
-                    'total_duration'  => $totalDuration,
-                    'start_time'      => $startTime->format('Y-m-d H:i'),
-                    'finish_time'     => $finishTime->format('Y-m-d H:i'),
-                ], 201);
-            });
-
-        } catch (\Exception $e) {
-            Log::error("❌ Appointment creation failed:", ['error' => $e->getMessage()]);
+            // 8. Përgjigja për Frontend
             return response()->json([
-                'status'  => 'error',
-                'message' => 'Diçka shkoi keq gjatë krijimit të terminit.',
-                'debug'   => config('app.debug') ? $e->getMessage() : null
-            ], 500);
-        }
+                'status'          => 'success',
+                'message'         => 'Termini u rezervua dhe u konfirmua me sukses!',
+                'appointment_ids' => array_map(fn($a) => $a->id, $appointments),
+                'start_time'      => $startTime->format('Y-m-d H:i'),
+                'finish_time'     => $finishTime->format('Y-m-d H:i'),
+            ], 201);
+        });
+
+    } catch (\Exception $e) {
+        Log::error("❌ Appointment creation failed:", ['error' => $e->getMessage()]);
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Diçka shkoi keq gjatë krijimit të terminit.'
+        ], 500);
     }
+}
 
     public function getAppointmentDetails(Request $request, $id): JsonResponse
 {
@@ -299,34 +288,6 @@ public function getAvailableSlots(Request $request): JsonResponse
     ]);
 }
 
-public function confirmAppointment(Request $request, $id): \Illuminate\Http\RedirectResponse
-{
-    if (!$request->hasValidSignature()) {
-        return redirect(env('FRONTEND_URL') . '/appointment/invalid');
-    }
 
-    $appointment = Appointments::findOrFail($id);
-
-    if ($appointment->status === 'pending') {
-        $toConfirm = Appointments::where('client_email', $appointment->client_email)
-            ->where('business_id', $appointment->business_id)
-            ->where('employee_id', $appointment->employee_id)
-            ->where('status', 'pending')
-            ->whereBetween('start_time', [
-                Carbon::parse($appointment->start_time)->subMinutes(120),
-                Carbon::parse($appointment->start_time)->addMinutes(120),
-            ])
-            ->get();
-
-        Log::info('Appointments to confirm:', $toConfirm->pluck('id')->toArray());
-
-        $toConfirm->each->update(['status' => 'confirmed']);
-
-        Mail::to($appointment->client_email)
-            ->send(new \App\Mail\AppointmentConfirmedSuccess($appointment, ''));
-    }
-
-    return redirect(env('FRONTEND_URL') . '/appointment/confirmed?id=' . $id);
-}
 
 }

@@ -73,12 +73,25 @@ Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
             Route::post('/deactivate/{id}', [App\Http\Controllers\Admin\AdminBusinessController::class, 'deactivateBusiness']);
             Route::post('/activate/{id}', [App\Http\Controllers\Admin\AdminBusinessController::class, 'activateBusiness']);
             Route::post('/send-email', [App\Http\Controllers\Admin\AdminBusinessController::class, 'sendEmail']);
+            Route::put('/update/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'updateBusiness']);
+            Route::get('/details/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'getBusinessById']); // ADD THIS
 
+
+
+        });
+
+        Route::prefix('visits')->group(function () {
+            Route::get('/',          [App\Http\Controllers\Admin\AdminBusinessVisitController::class, 'index']);
+            Route::post('/create',   [App\Http\Controllers\Admin\AdminBusinessVisitController::class, 'store']);
+            Route::put('/{id}',      [App\Http\Controllers\Admin\AdminBusinessVisitController::class, 'update']);
+            Route::delete('/{id}',   [App\Http\Controllers\Admin\AdminBusinessVisitController::class, 'destroy']);
         });
         
         // Category Management
         Route::prefix('categories')->group(function () {
-            Route::post('/create', [App\Http\Controllers\Admin\AdminCategoryController::class, 'createCategory']);
+            Route::get('/all',        [App\Http\Controllers\Admin\AdminCategoryController::class, 'getCategories']);
+            Route::post('/create',    [App\Http\Controllers\Admin\AdminCategoryController::class, 'createCategory']);
+            Route::delete('/{id}',    [App\Http\Controllers\Admin\AdminCategoryController::class, 'deleteCategory']);
         });
         
         // User Management

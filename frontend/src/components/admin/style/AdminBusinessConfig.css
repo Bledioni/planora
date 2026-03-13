@@ -1,0 +1,217 @@
+/* AdminBusinessConfig.css */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* ── CONFIG FORM CARD ── */
+.config-form-card {
+  background: #ffffff;
+  border: 1px solid var(--p-border);
+  border-radius: 20px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+/* ── CONFIG SECTION TITLE ── */
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+  margin-bottom: 20px;
+}
+
+/* ── CONFIG FIELDS GRID ── */
+.config-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+/* ── CONFIG FIELD GROUP ── */
+.config-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* ── CONFIG LABEL ── */
+.config-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+}
+
+/* ── CONFIG INPUT ── */
+.config-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--p-border);
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--p-dark);
+  background: var(--p-gray);
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.config-input:focus {
+  border-color: var(--p-blue);
+  background: #ffffff;
+}
+
+.config-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* ── CONFIG TEXTAREA ── */
+.config-textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.6;
+}
+
+/* ── CONFIG DIVIDER ── */
+.config-divider {
+  border: none;
+  border-top: 1px solid var(--p-border);
+  margin: 24px 0;
+}
+
+/* ── CONFIG TOGGLE ROW ── */
+.config-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+  background: var(--p-gray);
+  border: 1px solid var(--p-border);
+  border-radius: 14px;
+}
+
+.config-toggle-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--p-dark);
+  margin: 0 0 4px;
+}
+
+.config-toggle-sub {
+  font-size: 0.8rem;
+  color: var(--p-text-muted);
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ── TOGGLE SWITCH ── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--p-border);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--p-blue);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+}
+
+/* ── CONFIG SAVE BUTTON ── */
+.config-save-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 24px;
+  padding: 15px;
+  background: var(--p-dark);
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.config-save-btn:hover:not(:disabled) {
+  background: var(--p-blue);
+}
+
+.config-save-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── RESPONSIVE ── */
+@media (min-width: 640px) {
+  .config-fields-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .config-form-card {
+    padding: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .config-form-card {
+    padding: 36px;
+  }
+
+  .config-input {
+    padding: 13px 16px;
+    font-size: 0.95rem;
+  }
+
+  .config-save-btn {
+    padding: 16px;
+    font-size: 0.95rem;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useNavigate } from "react-router-dom"; // Shto useNavigate
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { api } from "../../../index";
@@ -27,6 +27,7 @@ const getLocalDateString = (date) => {
 
 const BookingApp = () => {
   const { shopSlug } = useParams();
+  const navigate = useNavigate(); // Hook-u për navigim
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -114,12 +115,13 @@ const BookingApp = () => {
     }, 250);
   };
 
+  // LOGJIKA E RE E KONFIRMIMIT
   const handleFinalBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const dateStr = getLocalDateString(selectedDate);
-      await api.post("/public/appointments/create", {
+      const response = await api.post("/public/appointments/create", {
         business_id: selectedBusiness,
         employee_id: selectedBarber,
         service_ids: selectedServices,
@@ -128,7 +130,12 @@ const BookingApp = () => {
         client_email: userInfo.email,
         client_phone: userInfo.phone,
       });
-      setStep(4);
+
+      // Sapo konfirmohet, marrim ID e parë dhe ikim te faqja e detajeve
+      if (response.data.status === 'success') {
+        const appointmentId = response.data.appointment_ids[0];
+        navigate(`/appointment/${appointmentId}`); 
+      }
     } catch (err) {
       alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
     } finally {
@@ -150,7 +157,6 @@ const BookingApp = () => {
     (sum, s) => sum + parseFloat(s.service_price || s.price || 0), 0
   );
 
-  // ← Redirect happens here, after hooks, cleanly
   if (notFound) return <Navigate to="/404" replace />;
 
   return (
@@ -162,9 +168,9 @@ const BookingApp = () => {
           <h1>{details.shop_name || "Planora"}</h1>
           <div className="sidebar-info-item">📍 {details.address || "Kosovë"}</div>
 
-          {step > 2 && selectedServiceObjects.length > 0 && (
-            <div className="fade-in" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
-              <p className="summary-label">SHËRBIMET E ZGJEDHURA</p>
+          {step >= 1 && selectedServiceObjects.length > 0 && (
+            <div className="fade-in summary-container" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
+              <p className="summary-label">PËRMBLEDHJA</p>
               {selectedServiceObjects.map((s) => (
                 <div key={s.id} style={{ marginTop: "10px" }}>
                   <h3 style={{ margin: "0 0 3px 0", fontSize: "0.95rem" }}>{s.service_name || s.name}</h3>
@@ -200,7 +206,7 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 1 */}
+          {/* STEP 1: SERVICES */}
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
@@ -246,10 +252,10 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 2 */}
+          {/* STEP 2: SLOTS */}
           {step === 2 && (
             <div className="fade-in">
-              <h2 className="section-title">Zgjidhni Datën</h2>
+              <h2 className="section-title">Zgjidhni Datën & Orën</h2>
               <Calendar
                 onChange={handleDateChange}
                 value={selectedDate}
@@ -259,23 +265,12 @@ const BookingApp = () => {
                 maxDetail="month"
                 prev2Label={null}
                 next2Label={null}
-                formatShortWeekday={(locale, date) =>
-                  ["Di", "Hë", "Ma", "Më", "En", "Pr", "Sh"][date.getDay()]
-                }
-                formatMonthYear={(locale, date) => {
-                  const months = ["Janar","Shkurt","Mars","Prill","Maj","Qershor","Korrik","Gusht","Shtator","Tetor","Nëntor","Dhjetor"];
-                  return `${months[date.getMonth()]} ${date.getFullYear()}`;
-                }}
               />
               {selectedDate && (
                 <div style={{ marginTop: "40px" }}>
-                  <h3 className="section-title" style={{ fontSize: "1.1rem", marginBottom: "20px" }}>
-                    Oraret e disponueshme
-                  </h3>
+                  <h3 className="section-title" style={{ fontSize: "1.1rem" }}>Oraret e lira</h3>
                   {loading ? (
-                    <div className="loader-container">
-                      <div className="planora-loader-small"></div>
-                    </div>
+                    <div className="planora-loader-small"></div>
                   ) : (
                     <div className="slot-grid">
                       {slots.length > 0 ? (
@@ -289,74 +284,47 @@ const BookingApp = () => {
                           </button>
                         ))
                       ) : (
-                        <div className="no-slots-card">
-                          <div className="no-slots-icon">📅</div>
-                          <h4>Nuk ka termine të lira</h4>
-                          <p>Të gjitha oraret për këtë datë janë të rezervuara. Ju lutem zgjidhni një ditë tjetër.</p>
-                        </div>
+                        <p>Nuk ka orare të lira për këtë ditë.</p>
                       )}
                     </div>
                   )}
                 </div>
               )}
-              <button onClick={() => setStep(1)} className="secondary-button-back">
-                <span className="arrow">←</span> Mbrapa
-              </button>
+              <button onClick={() => setStep(1)} className="secondary-button-back">← Mbrapa</button>
             </div>
           )}
 
-          {/* STEP 3 */}
+          {/* STEP 3: USER INFO */}
           {step === 3 && (
             <div className="fade-in">
-              <h2 className="section-title">Shënoni të dhënat</h2>
+              <h2 className="section-title">Të dhënat tuaja</h2>
               <form onSubmit={handleFinalBooking}>
                 <input
                   className="booking-input"
-                  placeholder="Emri"
+                  placeholder="Emri i plotë"
                   required
+                  value={userInfo.name}
                   onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
                 />
                 <input
                   className="booking-input"
                   type="email"
-                  placeholder="Email"
+                  placeholder="Email adresa"
                   required
+                  value={userInfo.email}
                   onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
                 />
                 <PhoneInputField
                   value={userInfo.phone}
-                  onChange={(phoneValue) => setUserInfo({ ...userInfo, phone: phoneValue })}
+                  onChange={(val) => setUserInfo({ ...userInfo, phone: val })}
                 />
                 <button type="submit" className="primary-button" style={{ marginTop: "20px" }} disabled={loading}>
-                  {loading ? "Duke dërguar..." : "Konfirmo Rezervimin"}
+                  {loading ? "Duke u rezervuar..." : "Konfirmo Termin"}
                 </button>
               </form>
-              <button onClick={() => setStep(2)} className="secondary-button-back">
-                <span className="arrow">←</span> Mbrapa
-              </button>
+              <button onClick={() => setStep(2)} className="secondary-button-back">← Mbrapa</button>
             </div>
           )}
-
-          {/* STEP 4 */}
-          {step === 4 && (
-            <div className="fade-in success-screen-compact">
-              <div className="compact-card">
-                <div className="check-badge">✓</div>
-                <h2>Rezervimi u dërgua!</h2>
-                <div className="compact-instruction">
-                  <p>Kemi dërguar një email konfirmimi.</p>
-                  <div className="critical-notice">
-                    <strong>VEPRIM I DETYRUESHËM:</strong>
-                    <span>Pa klikuar linkun në email, rezervimi mbetet i pavlefshëm.</span>
-                  </div>
-                </div>
-                <button className="primary-button" onClick={() => window.location.reload()}>
-                  Kthehu te Fillimi
-                </button>
-              </div>
-            </div>
-          )}
-
         </main>
       </div>
     </div>
