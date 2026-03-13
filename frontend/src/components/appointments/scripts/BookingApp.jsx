@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -38,12 +38,17 @@ const getSavedUserInfo = () => {
 
 const saveUserInfo = (info) => {
   try {
-    // Only save if at least one field has a value
     if (info.name || info.email || info.phone) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(info));
     }
-  } catch {
-    // localStorage not available
+  } catch {}
+};
+
+const scrollTo = (ref) => {
+  if (ref?.current) {
+    setTimeout(() => {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   }
 };
 
@@ -64,7 +69,10 @@ const BookingApp = () => {
   const [userInfo, setUserInfo] = useState(getSavedUserInfo);
   const [isAutofilled, setIsAutofilled] = useState(false);
 
-  // Check on mount if we have saved data
+  // Refs for scrolling
+  const servicesRef  = useRef(null);
+  const nextBtnRef   = useRef(null);
+
   useEffect(() => {
     const saved = getSavedUserInfo();
     if (saved.name || saved.email || saved.phone) {
@@ -87,9 +95,7 @@ const BookingApp = () => {
     }
   }, [shopSlug]);
 
-  useEffect(() => {
-    initApp();
-  }, [initApp]);
+  useEffect(() => { initApp(); }, [initApp]);
 
   const fetchSlots = useCallback(async () => {
     if (!selectedBarber || !selectedServices.length || !selectedBusiness || !selectedDate) return;
@@ -129,12 +135,26 @@ const BookingApp = () => {
     if (selectedDate && step === 2) fetchSlots();
   }, [selectedDate, fetchSlots, step]);
 
+  const handleBarberSelect = (empId) => {
+    setSelectedBarber(empId);
+    // Scroll to services section
+    scrollTo(servicesRef);
+  };
+
   const toggleService = (serviceId) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
+    setSelectedServices((prev) => {
+      const isSelected = prev.includes(serviceId);
+      const updated = isSelected
         ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId]
-    );
+        : [...prev, serviceId];
+
+      // If we just selected a service (added one), scroll to next button
+      if (!isSelected) {
+        scrollTo(nextBtnRef);
+      }
+
+      return updated;
+    });
   };
 
   const handleDateChange = (date) => {
@@ -155,7 +175,6 @@ const BookingApp = () => {
   const handleFinalBooking = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Save before submitting
     saveUserInfo(userInfo);
     try {
       const dateStr = getLocalDateString(selectedDate);
@@ -247,18 +266,22 @@ const BookingApp = () => {
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
+
+              {/* Barbers */}
               <div className="wide-grid">
                 {details.employees?.map((emp) => (
                   <div
                     key={emp.id}
                     className={`service-row ${selectedBarber === emp.id ? "active" : ""}`}
-                    onClick={() => setSelectedBarber(emp.id)}
+                    onClick={() => handleBarberSelect(emp.id)}
                   >
                     <strong>{emp.user?.name} {emp.user?.surname}</strong>
                   </div>
                 ))}
               </div>
-              <div style={{ display: "grid", gap: "12px", marginTop: "20px" }}>
+
+              {/* Services — scroll target */}
+              <div ref={servicesRef} style={{ display: "grid", gap: "12px", marginTop: "20px" }}>
                 {details.services?.map((s) => (
                   <div
                     key={s.id}
@@ -278,14 +301,18 @@ const BookingApp = () => {
                   </div>
                 ))}
               </div>
-              <button
-                className="primary-button"
-                style={{ marginTop: "30px" }}
-                disabled={!selectedBarber || !selectedServices.length}
-                onClick={() => setStep(2)}
-              >
-                Vazhdo te Oraret
-              </button>
+
+              {/* Next button — scroll target */}
+              <div ref={nextBtnRef}>
+                <button
+                  className="primary-button"
+                  style={{ marginTop: "30px" }}
+                  disabled={!selectedBarber || !selectedServices.length}
+                  onClick={() => setStep(2)}
+                >
+                  Vazhdo te Oraret
+                </button>
+              </div>
             </div>
           )}
 
