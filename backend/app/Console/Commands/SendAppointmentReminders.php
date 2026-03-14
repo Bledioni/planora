@@ -25,9 +25,11 @@ class SendAppointmentReminders extends Command
      */
     public function handle()
 {
+    $now = now()->utc();
+    
     $appointments = \App\Models\Appointments::where('is_notified', false)
-        ->where('start_time', '<=', now()->addHours(1))
-        ->where('start_time', '>', now())
+        ->where('start_time', '<=', $now->copy()->addHours(1))
+        ->where('start_time', '>', $now)
         ->get();
 
     foreach ($appointments as $appointment) {
@@ -38,5 +40,6 @@ class SendAppointmentReminders extends Command
     }
 
     $this->info('Emailet u dërguan me sukses!');
+
 }
 }
