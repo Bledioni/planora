@@ -30,7 +30,7 @@ class AppointmentReminder extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kujtesë për Terminin - PlanoraCo',
+            subject: 'Kujtesë për Terminin - PlanoraBook',
         );
     }
 

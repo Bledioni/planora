@@ -571,3 +571,147 @@
 .autofill-clear:hover {
   color: #ef4444;
 }
+/* ── SUPER SMALL DEVICES (< 400px) ── */
+@media (max-width: 400px) {
+    .booking-page-wrapper {
+        padding: 12px 10px;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    /* ── CALENDAR ── */
+    .react-calendar {
+        font-size: 0.78rem !important;
+    }
+
+    .react-calendar__navigation {
+        margin-bottom: 6px !important;
+    }
+
+    .react-calendar__navigation button {
+        font-size: 0.9rem !important;
+        min-width: 32px !important;
+        padding: 4px !important;
+    }
+
+    .react-calendar__month-view__weekdays__weekday abbr {
+        font-size: 0.65rem !important;
+    }
+
+    .react-calendar__tile {
+        padding: 10px 4px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .react-calendar__tile--active {
+        border-radius: 8px !important;
+    }
+
+    /* ── SLOTS ── */
+    .slot-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .slot-btn {
+        padding: 10px 6px;
+        font-size: 0.82rem;
+        border-radius: 8px;
+    }
+
+    /* ── STEP INDICATOR ── */
+    .step-indicator {
+        margin-bottom: 24px;
+        gap: 8px;
+    }
+
+    /* ── BUTTONS ── */
+    .primary-button {
+        padding: 15px;
+        font-size: 0.95rem;
+    }
+
+    .secondary-button-back {
+        padding: 10px 20px;
+        font-size: 0.88rem;
+        margin-top: 16px;
+    }
+
+    /* ── SERVICE ROWS ── */
+    .service-row {
+        padding: 14px 12px;
+    }
+
+    .wide-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* ── SIDEBAR ── */
+    .shop-sidebar {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .shop-sidebar h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ── SMALL DEVICES (400px - 640px) ── */
+@media (min-width: 400px) and (max-width: 640px) {
+    .booking-page-wrapper {
+        padding: 16px 12px;
+    }
+
+    .react-calendar__tile {
+        padding: 12px 6px !important;
+    }
+
+    .slot-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .slot-btn {
+        padding: 11px 8px;
+        font-size: 0.85rem;
+    }
+
+    .wide-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .react-calendar {
+        padding: 0 !important;
+    }
+
+    .react-calendar__viewContainer {
+        padding: 0 !important;
+    }
+
+    .react-calendar__month-view__days__day {
+        border-radius: 8px !important;
+    }
+
+    /* Remove extra whitespace from calendar wrapper */
+    .booking-main .react-calendar {
+        margin: 0 !important;
+    }
+
+    /* Tighten the slots section */
+    .slot-grid {
+        margin-top: 8px;
+    }
+
+    /* Section title smaller gap */
+    h3.section-title {
+        margin-bottom: 12px;
+    }
+}
