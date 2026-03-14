@@ -27,8 +27,9 @@ class SendAppointmentReminders extends Command
 {
     $now = now()->utc();
     
+    // Në vend të addHours(1)
     $appointments = \App\Models\Appointments::where('is_notified', false)
-        ->where('start_time', '<=', $now->copy()->addHours(1))
+        ->where('start_time', '<=', $now->copy()->addMinutes(65)) // Pak më shumë se 1 orë
         ->where('start_time', '>', $now)
         ->get();
 
