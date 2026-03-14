@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('appointments:cleanup')->everyMinute();
-        $schedule->command('app:send-reminders')->everyMinute();
+$schedule->command('app:send-reminders')->everyMinute()->appendOutputTo(storage_path('logs/reminders.log'));
         $schedule->command('backup:send-email')->dailyAt('3:00');
 
         // Add this line - runs every hour to auto-complete finished appointments
