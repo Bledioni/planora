@@ -23,24 +23,23 @@ class SendAppointmentReminders extends Command
     /**
      * Execute the console command.
      */
- 
 public function handle()
 {
     try {
-        $now = \Carbon\Carbon::now(); // Përdor Carbon ashtu si te komanda që punon
-        
+        $now = \Carbon\Carbon::now();
         $this->info("Checking for reminders at: " . $now->toDateTimeString());
 
-        // Kapim terminet që janë 1 deri 65 minuta larg
         $appointments = \App\Models\Appointments::where('is_notified', false)
-            ->where('status', 'confirmed') // Shtoje edhe këtë për siguri
+            ->where('status', 'confirmed')
             ->where('start_time', '<=', $now->copy()->addMinutes(65))
             ->where('start_time', '>', $now)
             ->get();
 
         if ($appointments->count() > 0) {
             foreach ($appointments as $appointment) {
-                \Illuminate\Support\Facades\Mail::to($appointment->client_email)
+                // FORCE: Përdorim mailer('resend') që të anashkalojmë portën 587
+                \Illuminate\Support\Facades\Mail::mailer('resend')
+                    ->to($appointment->client_email)
                     ->send(new \App\Mail\AppointmentReminder($appointment));
 
                 $appointment->is_notified = true;
@@ -54,7 +53,9 @@ public function handle()
 
         return 0;
     } catch (\Exception $e) {
+        // Kjo do të na tregojë error-in fiks në Railway Logs
         $this->error("❌ Error: " . $e->getMessage());
+        \Illuminate\Support\Facades\Log::error("Reminder Error: " . $e->getMessage());
         return 1;
     }
 }
