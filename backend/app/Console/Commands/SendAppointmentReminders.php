@@ -26,44 +26,48 @@ class SendAppointmentReminders extends Command
 public function handle()
 {
     try {
-        // Ora aktuale
         $now = \Carbon\Carbon::now();
-        
-        // Ora fiks pas 60 minutave
         $targetTime = $now->copy()->addHour();
+        
+        // DEBUG: Shkruajmë në log-e orën e serverit
+        $this->warn("SERVER TIME: " . $now->toDateTimeString());
+        $this->warn("LOOKING FOR: " . $targetTime->copy()->startOfMinute() . " - " . $targetTime->copy()->endOfMinute());
 
-        $this->info("Checking for appointments starting at: " . $targetTime->toDateTimeString());
-
-        // Kërkojmë terminët që fillojnë në këtë minutë (tolerancë 1 minutë)
         $appointments = \App\Models\Appointments::where('is_notified', false)
             ->where('status', 'confirmed')
-            ->whereBetween('start_time', [
-                $targetTime->copy()->startOfMinute(), 
-                $targetTime->copy()->endOfMinute()
-            ])
-            ->get();
+            ->get(); // I marrim të gjitha fillimisht për test
 
-        if ($appointments->count() > 0) {
-            foreach ($appointments as $appointment) {
-                // Përdorim direkt Resend API (porta 443) për të shmangur bllokimin e Railway
+        $this->info("TOTAL CONFIRMED & NOT NOTIFIED: " . $appointments->count());
+
+        $toNotify = $appointments->filter(function($app) use ($targetTime) {
+            $startTime = \Carbon\Carbon::parse($app->start_time);
+            return $startTime->between(
+                $targetTime->copy()->startOfMinute(),
+                $targetTime->copy()->endOfMinute()
+            );
+        });
+
+        if ($toNotify->count() > 0) {
+            foreach ($toNotify as $appointment) {
+                $this->info("Found appointment for: " . $appointment->client_email);
+                
                 \Resend\Laravel\Facades\Resend::emails()->send([
-                    'from'    => 'PlanoraBook <support@planorabook.com>',
+                    'from'    => 'Planora <support@planorabook.com>',
                     'to'      => [$appointment->client_email],
-                    'subject' => 'Kujtesë: Termini juaj pas 1 ore ✅',
-                    'html'    => (new \App\Mail\AppointmentReminder($appointment))->render(),
+                    'subject' => 'Reminder pas 1 ore',
+                    'html'    => "Përshëndetje, keni takim në " . $appointment->start_time,
                 ]);
 
                 $appointment->update(['is_notified' => true]);
-                $this->info("✅ Reminder dërguar për: " . $appointment->client_email);
+                $this->info("✅ Email sent!");
             }
         } else {
-            $this->info("ℹ️ Nuk u gjet asnjë termin që fillon fiks pas 1 ore.");
+            $this->error("❌ ZERO matches found for this specific minute.");
         }
 
-        return 0;
     } catch (\Exception $e) {
-        $this->error("❌ Error: " . $e->getMessage());
-        return 1;
+        $this->error("FATAL ERROR: " . $e->getMessage());
+        \Illuminate\Support\Facades\Log::error("REMINDER_FAIL: " . $e->getMessage());
     }
 }
 }
