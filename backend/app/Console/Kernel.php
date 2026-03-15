@@ -14,9 +14,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('appointments:cleanup')->everyMinute();
         $schedule->command('backup:send-email')->dailyAt('3:00');
-        $schedule->command('app:send-reminders')
-    ->everyMinute()
-    ->emailOutputTo('bledionmehmeti539@gmail.com');
+        $schedule->command('app:send-reminders')->everyMinute();
 
 
         // Add this line - runs every hour to auto-complete finished appointments
