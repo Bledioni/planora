@@ -175,7 +175,7 @@ $score = $recaptchaResponse->json()['score'] ?? 0;
 Log::info('reCAPTCHA score: ' . $score); // ADD THIS LINE
 
 
-if ($score < 0.5) {
+if (app()->environment('production') && $score < 0.5) {
     return response()->json([
         'status'  => 'error',
         'message' => 'Ju jeni identifikuar si bot. Ju lutemi provoni përsëri.'
