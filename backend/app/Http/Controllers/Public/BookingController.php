@@ -171,8 +171,10 @@ $recaptchaResponse = Http::post('https://www.google.com/recaptcha/api/siteverify
     'response' => $recaptchaToken,
 ]);
 
+
+Log::info('reCAPTCHA full response: ' . json_encode($recaptchaResponse->json()));
 $score = $recaptchaResponse->json()['score'] ?? 0;
-Log::info('reCAPTCHA score: ' . $score); // ADD THIS LINE
+Log::info('reCAPTCHA score: ' . $score);
 
 
 if (app()->environment('production') && $score < 0.5) {
