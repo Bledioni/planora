@@ -15,7 +15,9 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\BookingAttempt;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class BookingController extends Controller
 {
@@ -153,6 +155,33 @@ public function getAvailableSlots(Request $request): JsonResponse
 
 public function createAppointment(Request $request): JsonResponse
 {
+
+
+    $recaptchaToken = $request->recaptcha_token;
+
+if (!$recaptchaToken) {
+    return response()->json([
+        'status'  => 'error',
+        'message' => 'reCAPTCHA token mungon.'
+    ], 422);
+}
+
+$recaptchaResponse = Http::post('https://www.google.com/recaptcha/api/siteverify', [
+    'secret'   => env('RECAPTCHA_SECRET_KEY'),
+    'response' => $recaptchaToken,
+]);
+
+$score = $recaptchaResponse->json()['score'] ?? 0;
+Log::info('reCAPTCHA score: ' . $score); // ADD THIS LINE
+
+
+if ($score < 0.5) {
+    return response()->json([
+        'status'  => 'error',
+        'message' => 'Ju jeni identifikuar si bot. Ju lutemi provoni përsëri.'
+    ], 422);
+}
+
     // 1. Validimi i të dhënave
     $request->validate([
         'business_id'   => 'required|exists:businesses,id',
@@ -165,14 +194,36 @@ public function createAppointment(Request $request): JsonResponse
         'client_email'  => 'required|email',
     ]);
 
-    // 2. Kontrollo nëse biznesi është aktiv (Middleware-i yt ose funksioni privat)
+    // 2. Kontrollo nëse biznesi është aktiv
     $businessCheck = $this->checkBusinessActive($request->business_id);
     if ($businessCheck) return $businessCheck;
+
+    // 3. Rate Limiting
+    $clientIp = $request->ip();
+    $attempts = BookingAttempt::where('created_at', '>=', now()->subHours(24))
+        ->where(function ($query) use ($clientIp, $request) {
+            $query->where('client_ip', $clientIp)
+                  ->orWhere('client_phone', $request->client_phone);
+        })
+        ->count();
+
+    if ($attempts >= 2) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Nuk mund të bëni më shumë se 2 rezervime brenda 24 orëve.'
+        ], 429);
+    }
+
+    // 4. Ruaj tentativën
+    BookingAttempt::create([
+        'client_ip'    => $clientIp,
+        'client_phone' => $request->client_phone,
+    ]);
 
     try {
         return DB::transaction(function () use ($request) {
 
-            // 3. Merr shërbimet dhe llogarit kohëzgjatjen
+            // 5. Merr shërbimet dhe llogarit kohëzgjatjen
             $services = Services::whereIn('id', $request->service_ids)
                 ->where('business_id', $request->business_id)
                 ->get();
@@ -186,7 +237,7 @@ public function createAppointment(Request $request): JsonResponse
             $finishTime    = $startTime->copy()->addMinutes($totalDuration);
             $dayOfWeek     = $startTime->dayOfWeek;
 
-            // 4. Kontrolli i orarit të punës
+            // 6. Kontrolli i orarit të punës
             $schedule = Schedules::where('business_id', $request->business_id)
                 ->where('day_of_week', $dayOfWeek)
                 ->where(function ($query) use ($request) {
@@ -199,7 +250,7 @@ public function createAppointment(Request $request): JsonResponse
                 return response()->json(['status' => 'error', 'message' => 'Ky biznes ose punonjës nuk punon në këtë ditë.'], 422);
             }
 
-            // 5. Kontrolli i "Double Booking" (Këtu kontrollojmë vetëm për active/confirmed)
+            // 7. Kontrolli i "Double Booking"
             $isBusy = Appointments::where('employee_id', $request->employee_id)
                 ->whereIn('status', ['active', 'confirmed'])
                 ->where(function ($query) use ($startTime, $finishTime) {
@@ -213,7 +264,7 @@ public function createAppointment(Request $request): JsonResponse
                 return response()->json(['status' => 'error', 'message' => 'Ky termin sapo u zu nga dikush tjetër.'], 409);
             }
 
-            // 6. Krijimi i rezervimeve
+            // 8. Krijimi i rezervimeve
             $appointments = [];
             $serviceStart = $startTime->copy();
             $bookingId    = (string) Str::uuid();
@@ -231,14 +282,14 @@ public function createAppointment(Request $request): JsonResponse
                     'client_email' => $request->client_email,
                     'start_time'   => $serviceStart,
                     'finish_time'  => $serviceFinish,
-                    'status'       => 'confirmed', // Direkt Confirmed!
+                    'status'       => 'confirmed',
                     'booking_id'   => $bookingId,
                 ]);
 
                 $serviceStart = $serviceFinish->copy();
             }
 
-            // 7. Dërgimi i Email-it të Suksesit (me vetëm 1 argument)
+            // 9. Dërgimi i Email-it
             try {
                 Mail::to($request->client_email)
                     ->send(new \App\Mail\AppointmentConfirmedSuccess($appointments[0]));
@@ -246,7 +297,7 @@ public function createAppointment(Request $request): JsonResponse
                 Log::warning("Email failed but appointment was saved: " . $e->getMessage());
             }
 
-            // 8. Përgjigja për Frontend
+            // 10. Përgjigja për Frontend
             return response()->json([
                 'status'          => 'success',
                 'message'         => 'Termini u rezervua dhe u konfirmua me sukses!',

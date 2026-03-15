@@ -3,14 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import axios from 'axios';
+import { GoogleReCaptchaProvider } from 'react-google-recaptcha-v3';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'https://api.planorabook.';
 // const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
 
-// Konfigurimet Globale
 axios.defaults.withCredentials = true;
 
-// 1. Krijimi i instancës API
 export const api = axios.create({
   baseURL: `${BASE_URL}/api/`,
   withCredentials: true,
@@ -20,7 +19,6 @@ export const api = axios.create({
   }
 });
 
-// 2. Instanca për Backend (pa /api)
 export const backend = axios.create({
   baseURL: `${BASE_URL}/`,
   withCredentials: true
@@ -29,6 +27,8 @@ export const backend = axios.create({
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <GoogleReCaptchaProvider reCaptchaKey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}>
+      <App />
+    </GoogleReCaptchaProvider>
   </React.StrictMode>
 );
