@@ -41,15 +41,17 @@ $targetEnd = $now->copy()->addMinutes(65);
             ->get();
 
         foreach ($appointments as $appointment) {
-            Resend::emails()->send([
-                'from'    => 'Planora <support@planorabook.com>',
-                'to'      => [$appointment->client_email],
-                'subject' => 'Kujtesë: Termini juaj pas 1 ore ✅',
-                'html'    => "<h3>Përshëndetje!</h3><p>Termini juaj fillon në <strong>" . Carbon::parse($appointment->start_time)->format('H:i') . "</strong>.</p>",
-            ]);
+    $html = view('emails.reminder', ['appointment' => $appointment])->render();
+    
+    Resend::emails()->send([
+        'from'    => 'Planora <support@planorabook.com>',
+        'to'      => [$appointment->client_email],
+        'subject' => 'Kujtesë: Termini juaj pas 1 ore ⏰',
+        'html'    => $html,
+    ]);
 
-            $appointment->update(['is_notified' => true]);
-        }
+    $appointment->update(['is_notified' => true]);
+}
 
         return 0;
     } catch (\Exception $e) {
