@@ -25,33 +25,24 @@ class SendAppointmentReminders extends Command
      */
    public function handle()
 {
-    $now = now(); 
-    $this->info("1. Koha aktuale e serverit: " . $now->toDateTimeString());
+    // 1. Marrim VETËM NJË termin, cilindo që nuk është njoftuar ende
+    $appointment = \App\Models\Appointments::where('is_notified', false)->first();
 
-    // Marrim të gjitha terminet që nuk janë njoftuar, pa asnjë kusht kohe
-    $allPending = \App\Models\Appointments::where('is_notified', false)->get();
-    
-    $this->info("2. Në DB u gjetën " . $allPending->count() . " termine me is_notified = false.");
+    if (!$appointment) {
+        $this->error("Nuk u gjet asnjë termin me is_notified = false në të gjithë databazën!");
+        return;
+    }
 
-    foreach ($allPending as $appointment) {
-        $startTime = \Carbon\Carbon::parse($appointment->start_time);
-        $diff = $now->diffInMinutes($startTime, false); // Diferenca në minuta
+    $this->info("Duke provuar dërgimin te: " . $appointment->client_email);
 
-        $this->info("---");
-        $this->info("Termini ID: " . $appointment->id);
-        $this->info("Email: " . $appointment->client_email);
-        $this->info("Start Time në DB: " . $appointment->start_time);
-        $this->info("Diferenca (minuta): " . $diff);
+    try {
+        \Illuminate\Support\Facades\Mail::to($appointment->client_email)
+            ->send(new \App\Mail\AppointmentReminder($appointment));
 
-        // Kushti yt
-        if ($diff > 0 && $diff <= 65) {
-            $this->info("STATUS: Brenda dritares! Duke dërguar...");
-            \Illuminate\Support\Facades\Mail::to($appointment->client_email)
-                ->send(new \App\Mail\AppointmentReminder($appointment));
-            $appointment->update(['is_notified' => true]);
-        } else {
-            $this->info("STATUS: Jashtë dritares (Duhet të jetë mes 1 dhe 65).");
-        }
+        $appointment->update(['is_notified' => true]);
+        $this->info("SUKSES: Emaili u dërgua dhe is_notified u bë true.");
+    } catch (\Exception $e) {
+        $this->error("GABIM: " . $e->getMessage());
     }
 }
 }
