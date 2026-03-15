@@ -30,9 +30,10 @@ class SendAppointmentReminders extends Command
     public function handle()
 {
     try {
-        $now = Carbon::now('UTC');
-        $targetStart = $now->copy()->addMinutes(55);
-        $targetEnd = $now->copy()->addMinutes(65);
+
+        $now = Carbon::now('Europe/Tirane');
+$targetStart = $now->copy()->addMinutes(55);
+$targetEnd = $now->copy()->addMinutes(65);
 
         $appointments = Appointments::where('is_notified', false)
             ->where('status', 'confirmed')
