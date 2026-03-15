@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Models\BookingAttempt;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Http;
 
 class BookingController extends Controller
 {
@@ -155,35 +154,6 @@ public function getAvailableSlots(Request $request): JsonResponse
 
 public function createAppointment(Request $request): JsonResponse
 {
-
-
-    $recaptchaToken = $request->recaptcha_token;
-
-if (!$recaptchaToken) {
-    return response()->json([
-        'status'  => 'error',
-        'message' => 'reCAPTCHA token mungon.'
-    ], 422);
-}
-
-$recaptchaResponse = Http::post('https://www.google.com/recaptcha/api/siteverify', [
-    'secret'   => env('RECAPTCHA_SECRET_KEY'),
-    'response' => $recaptchaToken,
-]);
-
-
-Log::info('reCAPTCHA full response: ' . json_encode($recaptchaResponse->json()));
-$score = $recaptchaResponse->json()['score'] ?? 0;
-Log::info('reCAPTCHA score: ' . $score);
-
-
-if (app()->environment('production') && $score < 0.5) {
-    return response()->json([
-        'status'  => 'error',
-        'message' => 'Ju jeni identifikuar si bot. Ju lutemi provoni përsëri.'
-    ], 422);
-}
-
     // 1. Validimi i të dhënave
     $request->validate([
         'business_id'   => 'required|exists:businesses,id',
