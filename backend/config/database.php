@@ -44,7 +44,7 @@ return [
             'strict' => true,
             'engine' => null,
             // Kjo e mban orën dinamike për çdo lidhje
-            'timezone' => 'Europe/Tirane', 
+            'timezone' => env('DB_TIMEZONE', '+01:00'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
