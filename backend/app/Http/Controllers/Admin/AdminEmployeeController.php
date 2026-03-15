@@ -17,111 +17,121 @@ use Symfony\Component\HttpFoundation\Response;
 class AdminEmployeeController extends Controller
 {
     public function createEmployee(Request $request)
-    {
-        $isAddingSelf = $request->boolean('is_self');
+{
+    $isAddingSelf = $request->boolean('is_self');
+    $isReadding   = $request->boolean('is_readd');
 
-        // 1️⃣ Validimi (422 — Validation error)
-        try {
-            $rules = [
-                'business_id' => 'required|exists:businesses,id',
-                'is_self'     => 'boolean'
-            ];
+    try {
+        $rules = [
+            'business_id' => 'required|exists:businesses,id',
+            'is_self'     => 'boolean',
+            'is_readd'    => 'boolean',
+        ];
 
-            // Nëse nuk po shton veten, kërko të gjitha fushat përfshirë CONFIRMED
-            if (!$isAddingSelf) {
+        if (!$isAddingSelf) {
+            if ($isReadding) {
+                // Readding existing user — only need email
+                $rules['email'] = 'required|email|exists:users,email';
+            } else {
+                // New employee — need all fields
                 $rules = array_merge($rules, [
                     'name'         => 'required|string|max:255',
                     'surname'      => 'required|string|max:255',
                     'email'        => 'required|email|unique:users,email',
                     'phone_number' => 'required|string|max:20|unique:users,phone_number',
-                    'password'     => 'required|string|min:8|confirmed', // Mbetet confirmed këtu
+                    'password'     => 'required|string|min:8|confirmed',
                 ]);
             }
-
-            $validated = $request->validate($rules);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => 'validation_error',
-                'errors' => $e->errors(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        DB::beginTransaction();
+        $validated = $request->validate($rules);
 
-        try {
-            if ($isAddingSelf) {
-                $user = Auth::user();
-                
-                // Kontrollo ownership
-                $ownsBusiness = Business::where('id', $validated['business_id'])
-                                        ->where('user_id', $user->id)
-                                        ->exists();
-                
-                if (!$ownsBusiness) {
-                    return response()->json(['message' => 'Nuk keni autorizim për këtë biznes.'], 403);
-                }
-
-                $targetUserId = $user->id;
-            } else {
-                // Krijimi i përdoruesit të ri (vetëm nëse is_self është false)
-                // Get the business owner's status
-                    $business = Business::find($validated['business_id']);
-                    $ownerStatus = User::find($business->user_id)->status ?? 'pending';
-
-                    $user = User::create([
-                        'name'         => $validated['name'],
-                        'surname'      => $validated['surname'],
-                        'email'        => $validated['email'],
-                        'phone_number' => $validated['phone_number'],
-                        'password'     => Hash::make($validated['password']),
-                        'role'         => 'employee',
-                        'status'       => $ownerStatus, // inherits owner status
-                    ]);
-                $targetUserId = $user->id;
-            }
-
-            // 2️⃣ Create employee (Lidhja me biznesin)
-            // Përdorim updateOrCreate për të shmangur duplikimet
-
-            $employee = Employees::updateOrCreate(
-                ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
-                ['user_id' => $targetUserId, 'business_id' => $validated['business_id']] // ✅ Add business_id here
-            );
-            
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => $isAddingSelf ? 'U shtuat me sukses' : 'Employee created successfully',
-                'data' => [
-                    'user' => $user,
-                    'employee' => $employee,
-                ]
-            ], Response::HTTP_CREATED);
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-
-            if ($e->errorInfo[1] === 1062) {
-                return response()->json([
-                    'status' => 'conflict',
-                    'message' => 'Email or phone number already exists.',
-                ], Response::HTTP_CONFLICT);
-            }
-
-            return response()->json([
-                'status' => 'server_error',
-                'message' => 'Database error occurred.',
-                'debug' => config('app.debug') ? $e->getMessage() : null
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => 'server_error',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'status' => 'validation_error',
+            'errors' => $e->errors(),
+        ], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+
+    DB::beginTransaction();
+
+    try {
+        if ($isAddingSelf) {
+            $user = Auth::user();
+            $ownsBusiness = Business::where('id', $validated['business_id'])
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if (!$ownsBusiness) {
+                return response()->json(['message' => 'Nuk keni autorizim për këtë biznes.'], 403);
+            }
+
+            $targetUserId = $user->id;
+
+        } elseif ($isReadding) {
+            // Readd existing user
+            $user = User::where('email', $request->email)->first();
+            $user->status = 'active';
+            $user->role   = 'employee';
+            $user->save();
+            $targetUserId = $user->id;
+
+        } else {
+            // Create brand new employee
+            $business    = Business::find($validated['business_id']);
+            $ownerStatus = User::find($business->user_id)->status ?? 'pending';
+
+            $user = User::create([
+                'name'         => $validated['name'],
+                'surname'      => $validated['surname'],
+                'email'        => $validated['email'],
+                'phone_number' => $validated['phone_number'],
+                'password'     => Hash::make($validated['password']),
+                'role'         => 'employee',
+                'status'       => $ownerStatus,
+            ]);
+
+            $targetUserId = $user->id;
+        }
+
+        $employee = Employees::updateOrCreate(
+            ['user_id' => $targetUserId, 'business_id' => $validated['business_id']],
+            ['user_id' => $targetUserId, 'business_id' => $validated['business_id']]
+        );
+
+        DB::commit();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => $isAddingSelf ? 'U shtuat me sukses' : 'Employee created successfully',
+            'data'    => [
+                'user'     => $user,
+                'employee' => $employee,
+            ]
+        ], Response::HTTP_CREATED);
+
+    } catch (QueryException $e) {
+        DB::rollBack();
+        if ($e->errorInfo[1] === 1062) {
+            return response()->json([
+                'status'  => 'conflict',
+                'message' => 'Email or phone number already exists.',
+            ], Response::HTTP_CONFLICT);
+        }
+        return response()->json([
+            'status'  => 'server_error',
+            'message' => 'Database error occurred.',
+            'debug'   => config('app.debug') ? $e->getMessage() : null
+        ], Response::HTTP_INTERNAL_SERVER_ERROR);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status'  => 'server_error',
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+}
 
      public function registerOwnerAsEmployee(Request $request)
     {
@@ -206,7 +216,6 @@ class AdminEmployeeController extends Controller
 public function deleteEmployee($employeeId)
 {
     try {
-        // Find the employee
         $employee = Employees::find($employeeId);
         
         if (!$employee) {
@@ -216,22 +225,19 @@ public function deleteEmployee($employeeId)
             ], 404);
         }
 
-        // Get employee user data before deleting (for logging/response)
         $employeeName = $employee->user->name ?? 'Unknown';
         $employeeSurname = $employee->user->surname ?? '';
         $userId = $employee->user_id;
 
+        // Change user role to pending before deleting employee
+        $user = \App\Models\User::find($userId);
+        if ($user) {
+            $user->status = 'pending';
+            $user->save();
+        }
+
         // Delete the employee record
         $employee->delete();
-
-        // Optional: Also delete the user account if they were only an employee
-        // Uncomment if you want to delete the user too
-        /*
-        $user = User::find($userId);
-        if ($user && $user->role === 'employee') {
-            $user->delete();
-        }
-        */
 
         return response()->json([
             'status' => 'success',

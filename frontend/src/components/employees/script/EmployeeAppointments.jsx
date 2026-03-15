@@ -145,12 +145,6 @@ const EmployeeAppointments = () => {
                                             >
                                                 {updatingId === appt.id ? <RefreshCw className="spin" size={16} /> : '✓ U krye'}
                                             </button>
-                                            <button
-                                                onClick={() => updateStatus(appt.id, 'cancelled')}
-                                                style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}
-                                            >
-                                                ✕
-                                            </button>
                                         </div>
                                     )}
                                 </div>

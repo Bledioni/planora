@@ -1,32 +1,38 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, Clock, Banknote } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, Clock } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import '../style/MySchedule.css';
 
+const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const MySchedule = () => {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(() => getLocalDateString(new Date()));
     const [employeeId, setEmployeeId] = useState(null);
     const [cache, setCache] = useState({});
+    const [businessStatus, setBusinessStatus] = useState(null);
+    const [dayCounts, setDayCounts] = useState({});
 
     const calendarDays = useMemo(() => {
-    const days = [];
-    const start = new Date(selectedDate + 'T00:00:00');
-    start.setDate(start.getDate() - 3);
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
-        d.setDate(d.getDate() + i);
-        days.push({
-            full: d.toISOString().split('T')[0],
-            dayNum: d.getDate(),
-            dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
-        });
-    }
-    return days;
-}, [selectedDate]);
+        const days = [];
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        for (let i = -3; i <= 3; i++) {
+            const d = new Date(year, month - 1, day + i);
+            days.push({
+                full: getLocalDateString(d),
+                dayNum: d.getDate(),
+                dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
+            });
+        }
+        return days;
+    }, [selectedDate]);
 
     const sortedAppointments = useMemo(() => {
         const active = appointments
@@ -52,7 +58,46 @@ const MySchedule = () => {
             }
         };
         init();
+        fetchBusinessStatus();
     }, []);
+
+    useEffect(() => {
+        if (!employeeId) return;
+
+        const fetchCounts = async () => {
+            const counts = {};
+            await Promise.all(calendarDays.map(async (day) => {
+                const cacheKey = `count_${employeeId}_${day.full}`;
+                if (cache[cacheKey] !== undefined) {
+                    counts[day.full] = cache[cacheKey];
+                    return;
+                }
+                try {
+                    const res = await api.get('/owner/appointments/list', {
+                        params: { date: day.full, employee_id: employeeId }
+                    });
+                    const data = res.data.appointments || [];
+                    const count = data.filter(a => a.status !== 'canceled').length;
+                    counts[day.full] = count;
+                    setCache(prev => ({ ...prev, [cacheKey]: count }));
+                } catch {
+                    counts[day.full] = 0;
+                }
+            }));
+            setDayCounts(counts);
+        };
+
+        fetchCounts();
+    }, [calendarDays, employeeId]);
+
+    const fetchBusinessStatus = async () => {
+        try {
+            const res = await api.get('/owner/business/my-business');
+            setBusinessStatus(res.data.business?.user?.status);
+        } catch (err) {
+            console.error('Error fetching business status:', err);
+        }
+    };
 
     useEffect(() => {
         const fetchApts = async () => {
@@ -99,16 +144,18 @@ const MySchedule = () => {
     };
 
     const navigate = (dir) => {
-        const d = new Date(selectedDate);
-        d.setDate(d.getDate() + dir);
-        setSelectedDate(d.toISOString().split('T')[0]);
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        const d = new Date(year, month - 1, day + dir);
+        setSelectedDate(getLocalDateString(d));
     };
 
     const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
     const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString(new Date());
 
-    const formattedDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('sq-AL', {
+    const formattedDate = new Date(
+        ...selectedDate.split('-').map((v, i) => i === 1 ? Number(v) - 1 : Number(v))
+    ).toLocaleDateString('sq-AL', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     });
 
@@ -117,7 +164,25 @@ const MySchedule = () => {
             <OwnerSidebar />
             <main className="owner-main-content">
 
-                {/* Header */}
+                {businessStatus && businessStatus !== 'active' && (
+                    <div style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        marginBottom: '20px',
+                        color: '#ef4444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontWeight: '500',
+                        fontSize: '0.875rem'
+                    }}>
+                        <AlertCircle size={18} />
+                        <span>⚠️ Biznesi juaj është i çaktivizuar. Klientët nuk mund të bëjnë rezervime. Kontaktoni administratorin.</span>
+                    </div>
+                )}
+
                 <div className="schedule-header-big">
                     <div className="header-top-tag">
                         <CalendarDays size={13} />
@@ -129,9 +194,8 @@ const MySchedule = () => {
 
                 <div className="schedule-container-wide">
 
-                    {/* Calendar Strip */}
                     <div className="planora-calendar-big">
-                        <button className="nav-btn-big" onClick={() => navigate(-1)} aria-label="Dita e mëparshme">
+                        <button className="nav-btn-big" onClick={() => navigate(-1)}>
                             <ChevronLeft size={18} />
                         </button>
 
@@ -145,16 +209,20 @@ const MySchedule = () => {
                                     <span className="day-name-txt">{day.dayName}</span>
                                     <span className="day-num-txt">{day.dayNum}</span>
                                     {day.full === today && <div className="today-indicator" />}
+                                    {dayCounts[day.full] > 0 && (
+                                        <span className="day-count-badge">
+                                            {dayCounts[day.full]}
+                                        </span>
+                                    )}
                                 </div>
                             ))}
                         </div>
 
-                        <button className="nav-btn-big" onClick={() => navigate(1)} aria-label="Dita tjetër">
+                        <button className="nav-btn-big" onClick={() => navigate(1)}>
                             <ChevronRight size={18} />
                         </button>
                     </div>
 
-                    {/* Appointments */}
                     <div className="appointments-list-wrapper">
                         {loading ? (
                             <div className="planora-loader-big" />

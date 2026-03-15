@@ -522,3 +522,20 @@
         margin-bottom: 12px;
     }
 }
+
+.day-count-badge {
+    font-size: 0.55rem;
+    font-weight: 700;
+    background: var(--blue);
+    color: white;
+    border-radius: 100px;
+    padding: 1px 5px;
+    min-width: 14px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+}
+
+.day-box.active .day-count-badge {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}

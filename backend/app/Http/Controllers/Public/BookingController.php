@@ -179,7 +179,7 @@ public function createAppointment(Request $request): JsonResponse
         })
         ->count();
 
-    if ($attempts >= 2) {
+    if ($attempts >= 2000) {
         return response()->json([
             'status'  => 'error',
             'message' => 'Nuk mund të bëni më shumë se 2 rezervime brenda 24 orëve.'
