@@ -6,8 +6,10 @@ import { api } from "../../../index";
 import "../../appointments/style/BookingApp.css";
 import "../../appointments/style/CustomCalendar.css";
 import PhoneInputField from '../../phoneInputs/script/PhoneInputField';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const STORAGE_KEY = 'planora_user_info';
+
 
 const parseDurationToMinutes = (duration) => {
   if (!duration) return 0;
@@ -60,6 +62,7 @@ const BookingApp = () => {
   const [notFound, setNotFound] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
@@ -177,27 +180,29 @@ const BookingApp = () => {
     setLoading(true);
     saveUserInfo(userInfo);
     try {
-      const dateStr = getLocalDateString(selectedDate);
-      const response = await api.post("/public/appointments/create", {
-        business_id: selectedBusiness,
-        employee_id: selectedBarber,
-        service_ids: selectedServices,
-        start_time: `${dateStr} ${selectedTime}:00`,
-        client_name: userInfo.name,
-        client_email: userInfo.email,
-        client_phone: userInfo.phone,
-      });
+        const token = await executeRecaptcha('booking');
+        const dateStr = getLocalDateString(selectedDate);
+        const response = await api.post("/public/appointments/create", {
+            business_id: selectedBusiness,
+            employee_id: selectedBarber,
+            service_ids: selectedServices,
+            start_time: `${dateStr} ${selectedTime}:00`,
+            client_name: userInfo.name,
+            client_email: userInfo.email,
+            client_phone: userInfo.phone,
+            recaptcha_token: token,
+        });
 
-      if (response.data.status === 'success') {
-        const appointmentId = response.data.appointment_ids[0];
-        navigate(`/appointment/${appointmentId}`);
-      }
+        if (response.data.status === 'success') {
+            const appointmentId = response.data.appointment_ids[0];
+            navigate(`/appointment/${appointmentId}`);
+        }
     } catch (err) {
-      alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
+        alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const isDateDisabled = (date) => {
     const today = new Date();
