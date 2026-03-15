@@ -26,36 +26,43 @@ class SendAppointmentReminders extends Command
 public function handle()
 {
     try {
+        // Ora aktuale
         $now = \Carbon\Carbon::now();
-        $this->info("Checking for reminders at: " . $now->toDateTimeString());
+        
+        // Ora fiks pas 60 minutave
+        $targetTime = $now->copy()->addHour();
 
+        $this->info("Checking for appointments starting at: " . $targetTime->toDateTimeString());
+
+        // Kërkojmë terminët që fillojnë në këtë minutë (tolerancë 1 minutë)
         $appointments = \App\Models\Appointments::where('is_notified', false)
             ->where('status', 'confirmed')
-            ->where('start_time', '<=', $now->copy()->addMinutes(65))
-            ->where('start_time', '>', $now)
+            ->whereBetween('start_time', [
+                $targetTime->copy()->startOfMinute(), 
+                $targetTime->copy()->endOfMinute()
+            ])
             ->get();
 
         if ($appointments->count() > 0) {
             foreach ($appointments as $appointment) {
-                // FORCE: Përdorim mailer('resend') që të anashkalojmë portën 587
-                \Illuminate\Support\Facades\Mail::mailer('resend')
-                    ->to($appointment->client_email)
-                    ->send(new \App\Mail\AppointmentReminder($appointment));
+                // Përdorim direkt Resend API (porta 443) për të shmangur bllokimin e Railway
+                \Resend\Laravel\Facades\Resend::emails()->send([
+                    'from'    => 'PlanoraBook <support@planorabook.com>',
+                    'to'      => [$appointment->client_email],
+                    'subject' => 'Kujtesë: Termini juaj pas 1 ore ✅',
+                    'html'    => (new \App\Mail\AppointmentReminder($appointment))->render(),
+                ]);
 
-                $appointment->is_notified = true;
-                $appointment->save();
-                
-                $this->info("✅ Reminder sent to: {$appointment->client_email}");
+                $appointment->update(['is_notified' => true]);
+                $this->info("✅ Reminder dërguar për: " . $appointment->client_email);
             }
         } else {
-            $this->info("ℹ️ No reminders to send right now.");
+            $this->info("ℹ️ Nuk u gjet asnjë termin që fillon fiks pas 1 ore.");
         }
 
         return 0;
     } catch (\Exception $e) {
-        // Kjo do të na tregojë error-in fiks në Railway Logs
         $this->error("❌ Error: " . $e->getMessage());
-        \Illuminate\Support\Facades\Log::error("Reminder Error: " . $e->getMessage());
         return 1;
     }
 }
