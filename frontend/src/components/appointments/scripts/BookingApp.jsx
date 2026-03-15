@@ -6,10 +6,8 @@ import { api } from "../../../index";
 import "../../appointments/style/BookingApp.css";
 import "../../appointments/style/CustomCalendar.css";
 import PhoneInputField from '../../phoneInputs/script/PhoneInputField';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 const STORAGE_KEY = 'planora_user_info';
-
 
 const parseDurationToMinutes = (duration) => {
   if (!duration) return 0;
@@ -62,7 +60,6 @@ const BookingApp = () => {
   const [notFound, setNotFound] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
-  const { executeRecaptcha } = useGoogleReCaptcha();
 
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
@@ -72,9 +69,8 @@ const BookingApp = () => {
   const [userInfo, setUserInfo] = useState(getSavedUserInfo);
   const [isAutofilled, setIsAutofilled] = useState(false);
 
-  // Refs for scrolling
-  const servicesRef  = useRef(null);
-  const nextBtnRef   = useRef(null);
+  const servicesRef = useRef(null);
+  const nextBtnRef = useRef(null);
 
   useEffect(() => {
     const saved = getSavedUserInfo();
@@ -140,7 +136,6 @@ const BookingApp = () => {
 
   const handleBarberSelect = (empId) => {
     setSelectedBarber(empId);
-    // Scroll to services section
     scrollTo(servicesRef);
   };
 
@@ -150,12 +145,9 @@ const BookingApp = () => {
       const updated = isSelected
         ? prev.filter((id) => id !== serviceId)
         : [...prev, serviceId];
-
-      // If we just selected a service (added one), scroll to next button
       if (!isSelected) {
         scrollTo(nextBtnRef);
       }
-
       return updated;
     });
   };
@@ -180,29 +172,27 @@ const BookingApp = () => {
     setLoading(true);
     saveUserInfo(userInfo);
     try {
-        const token = await executeRecaptcha('booking');
-        const dateStr = getLocalDateString(selectedDate);
-        const response = await api.post("/public/appointments/create", {
-            business_id: selectedBusiness,
-            employee_id: selectedBarber,
-            service_ids: selectedServices,
-            start_time: `${dateStr} ${selectedTime}:00`,
-            client_name: userInfo.name,
-            client_email: userInfo.email,
-            client_phone: userInfo.phone,
-            recaptcha_token: token,
-        });
+      const dateStr = getLocalDateString(selectedDate);
+      const response = await api.post("/public/appointments/create", {
+        business_id: selectedBusiness,
+        employee_id: selectedBarber,
+        service_ids: selectedServices,
+        start_time: `${dateStr} ${selectedTime}:00`,
+        client_name: userInfo.name,
+        client_email: userInfo.email,
+        client_phone: userInfo.phone,
+      });
 
-        if (response.data.status === 'success') {
-            const appointmentId = response.data.appointment_ids[0];
-            navigate(`/appointment/${appointmentId}`);
-        }
+      if (response.data.status === 'success') {
+        const appointmentId = response.data.appointment_ids[0];
+        navigate(`/appointment/${appointmentId}`);
+      }
     } catch (err) {
-        alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
+      alert(err.response?.data?.message || "Gabim gjatë rezervimit.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const isDateDisabled = (date) => {
     const today = new Date();
@@ -223,12 +213,9 @@ const BookingApp = () => {
   return (
     <div className="booking-page-wrapper">
       <div className="booking-layout">
-
-        {/* SIDEBAR */}
         <aside className="shop-sidebar">
           <h1>{details.shop_name || "Planora"}</h1>
           <div className="sidebar-info-item">📍 {details.address || "Kosovë"}</div>
-
           {step >= 1 && selectedServiceObjects.length > 0 && (
             <div className="fade-in summary-container" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
               <p className="summary-label">PËRMBLEDHJA</p>
@@ -257,7 +244,6 @@ const BookingApp = () => {
           )}
         </aside>
 
-        {/* MAIN */}
         <main className="booking-main">
           {step < 4 && (
             <div className="step-indicator">
@@ -267,12 +253,9 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 1 */}
           {step === 1 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
-
-              {/* Barbers */}
               <div className="wide-grid">
                 {details.employees?.map((emp) => (
                   <div
@@ -284,8 +267,6 @@ const BookingApp = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Services — scroll target */}
               <div ref={servicesRef} style={{ display: "grid", gap: "12px", marginTop: "20px" }}>
                 {details.services?.map((s) => (
                   <div
@@ -306,8 +287,6 @@ const BookingApp = () => {
                   </div>
                 ))}
               </div>
-
-              {/* Next button — scroll target */}
               <div ref={nextBtnRef}>
                 <button
                   className="primary-button"
@@ -321,7 +300,6 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 2 */}
           {step === 2 && (
             <div className="fade-in">
               <h2 className="section-title">Zgjidhni Datën & Orën</h2>
@@ -363,11 +341,9 @@ const BookingApp = () => {
             </div>
           )}
 
-          {/* STEP 3 */}
           {step === 3 && (
             <div className="fade-in">
               <h2 className="section-title">Të dhënat tuaja</h2>
-
               {isAutofilled && (
                 <div className="autofill-notice">
                   <span>✓ Të dhënat u plotësuan automatikisht</span>
@@ -385,7 +361,6 @@ const BookingApp = () => {
                   </button>
                 </div>
               )}
-
               <form onSubmit={handleFinalBooking}>
                 <input
                   className="booking-input"
