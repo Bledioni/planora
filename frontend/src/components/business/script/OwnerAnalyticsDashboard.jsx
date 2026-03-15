@@ -20,23 +20,26 @@ const OwnerAnalyticsDashboard = () => {
 
     // 1. Mbështjellja me useCallback heq warning-un dhe parandalon infinite loops
     const fetchAllData = useCallback(async () => {
-        setLoading(true);
-        try {
-            const [bRes, eRes, oRes] = await Promise.all([
-                api.get('/owner/analytics/business-stats', { params: { filter, date: selectedDate } }),
-                api.get('/owner/analytics/employees-schedules'),
-                api.get('/owner/analytics/owner-schedule')
-            ]);
-            setBusinessStats(bRes.data.stats);
-            setEmployees(eRes.data.employees);
-            setOwnerSchedule(oRes.data);
-        } catch (err) {
-            console.error(err);
+    setLoading(true);
+    try {
+        const [bRes, eRes, oRes] = await Promise.all([
+            api.get('/owner/analytics/business-stats', { params: { filter, date: selectedDate } }),
+            api.get('/owner/analytics/employees-schedules'),
+            api.get('/owner/analytics/owner-schedule')
+        ]);
+        setBusinessStats(bRes.data.stats);
+        setEmployees(eRes.data.employees);
+        setOwnerSchedule(oRes.data);
+    } catch (err) {
+        console.error(err);
+        // Don't show Swal on 429 - it causes re-renders which cause more requests
+        if (err.response?.status !== 429) {
             Swal.fire('Gabim', 'Nuk u ngarkuan të dhënat.', 'error');
-        } finally {
-            setLoading(false);
         }
-    }, [filter, selectedDate]); // Funksioni "rilind" vetëm kur ndryshojnë këto dy vlera
+    } finally {
+        setLoading(false);
+    }
+}, [filter, selectedDate]);
 
     // 2. useEffect tani varet vetëm nga funksioni i ngrirë (stable function)
     useEffect(() => {

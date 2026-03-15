@@ -36,16 +36,19 @@ class OwnerBusinessController extends Controller
     });
 
     return response()->json([
-        'status' => 'success',
-        'business' => [
-            'id' => $business->id,
-            'name' => $business->name,
-            'shop_name' => $business->shop_name,
-            'slug' => $business->slug,
-            'employees' => $formattedEmployees,
-            'services' => $business->services
+    'status' => 'success',
+    'business' => [
+        'id' => $business->id,
+        'name' => $business->name,
+        'shop_name' => $business->shop_name,
+        'slug' => $business->slug,
+        'employees' => $formattedEmployees,
+        'services' => $business->services,
+        'user' => [
+            'status' => auth()->user()->status
         ]
-    ], 200);
+    ]
+], 200);
 }
 
 }

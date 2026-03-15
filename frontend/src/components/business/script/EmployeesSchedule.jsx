@@ -4,29 +4,35 @@ import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import '../style/EmployeesSchedule.css';
 
+const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const EmployeesSchedule = () => {
     const [employees, setEmployees] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(() => getLocalDateString(new Date()));
     const [cache, setCache] = useState({});
+    const [dayCounts, setDayCounts] = useState({});
 
     const calendarDays = useMemo(() => {
-    const days = [];
-    const start = new Date(selectedDate + 'T00:00:00');
-    start.setDate(start.getDate() - 3);
-    for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
-        d.setDate(d.getDate() + i);
-        days.push({
-            full: d.toISOString().split('T')[0],
-            dayNum: d.getDate(),
-            dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
-        });
-    }
-    return days;
-}, [selectedDate]);
+        const days = [];
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        for (let i = -3; i <= 3; i++) {
+            const d = new Date(year, month - 1, day + i);
+            days.push({
+                full: getLocalDateString(d),
+                dayNum: d.getDate(),
+                dayName: d.toLocaleDateString('sq-AL', { weekday: 'short' })
+            });
+        }
+        return days;
+    }, [selectedDate]);
 
     const sortedAppointments = useMemo(() => {
         const active = appointments
@@ -41,6 +47,33 @@ const EmployeesSchedule = () => {
     useEffect(() => {
         fetchEmployees();
     }, []);
+
+    useEffect(() => {
+        if (!selectedEmployee) return;
+
+        const fetchCounts = async () => {
+            const counts = {};
+            await Promise.all(calendarDays.map(async (day) => {
+                const cacheKey = `${selectedEmployee}_${day.full}`;
+                if (cache[cacheKey]) {
+                    counts[day.full] = cache[cacheKey].filter(a => a.status !== 'canceled').length;
+                    return;
+                }
+                try {
+                    const res = await api.get('/owner/appointments/list', {
+                        params: { date: day.full, employee_id: selectedEmployee }
+                    });
+                    const data = res.data.appointments || [];
+                    counts[day.full] = data.filter(a => a.status !== 'canceled').length;
+                } catch {
+                    counts[day.full] = 0;
+                }
+            }));
+            setDayCounts(counts);
+        };
+
+        fetchCounts();
+    }, [calendarDays, selectedEmployee]);
 
     useEffect(() => {
         if (!selectedEmployee) return;
@@ -106,9 +139,16 @@ const EmployeesSchedule = () => {
         }
     };
 
+    const navigate = (dir) => {
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        const d = new Date(year, month - 1, day + dir);
+        setSelectedDate(getLocalDateString(d));
+    };
+
     const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
     const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
+    const today = getLocalDateString(new Date());
 
     return (
         <div className="owner-layout">
@@ -137,11 +177,7 @@ const EmployeesSchedule = () => {
                     </div>
 
                     <div className="planora-calendar-big">
-                        <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate);
-                            d.setDate(d.getDate() - 1);
-                            setSelectedDate(d.toISOString().split('T')[0]);
-                        }}>
+                        <button className="nav-btn-big" onClick={() => navigate(-1)}>
                             <ChevronLeft size={24} />
                         </button>
 
@@ -154,18 +190,17 @@ const EmployeesSchedule = () => {
                                 >
                                     <span className="day-name-txt">{day.dayName}</span>
                                     <span className="day-num-txt">{day.dayNum}</span>
-                                    {day.full === new Date().toISOString().split('T')[0] && (
-                                        <div className="today-indicator"></div>
+                                    {day.full === today && <div className="today-indicator" />}
+                                    {dayCounts[day.full] > 0 && (
+                                        <span className="day-count-badge">
+                                            {dayCounts[day.full]}
+                                        </span>
                                     )}
                                 </div>
                             ))}
                         </div>
 
-                        <button className="nav-btn-big" onClick={() => {
-                            const d = new Date(selectedDate);
-                            d.setDate(d.getDate() + 1);
-                            setSelectedDate(d.toISOString().split('T')[0]);
-                        }}>
+                        <button className="nav-btn-big" onClick={() => navigate(1)}>
                             <ChevronRight size={24} />
                         </button>
                     </div>
@@ -220,16 +255,8 @@ const EmployeesSchedule = () => {
 
                                 {canceledApts.length > 0 && (
                                     <>
-                                        <div style={{
-                                            fontSize: '0.75rem',
-                                            fontWeight: '700',
-                                            color: '#ef4444',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.08em',
-                                            padding: '16px 0 8px',
-                                            borderTop: '1px dashed #fecaca',
-                                            marginTop: '8px'
-                                        }}>
+                                        <div className="canceled-section-label">
+                                            <AlertCircle size={13} />
                                             Terminet e Anuluara
                                         </div>
                                         {canceledApts.map(apt => (
@@ -254,7 +281,7 @@ const EmployeesSchedule = () => {
                                                             {Number(apt.total_price).toFixed(2)}€
                                                         </span>
                                                         <span className="status-pill cancelled">
-                                                            canceled
+                                                            anuluar
                                                         </span>
                                                     </div>
                                                 </div>

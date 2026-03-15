@@ -12,7 +12,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 });
 
-/*
+/*updateAppointmentStatus
 |--------------------------------------------------------------------------
 | PUBLIC BUSINESS BROWSING ROUTES - No authentication required
 |--------------------------------------------------------------------------
@@ -47,7 +47,7 @@ Route::middleware(['business.active'])->group(function () {
 | AUTHENTICATED ROUTES - Require Bearer Token
 |--------------------------------------------------------------------------
 */
-Route::middleware(['cookie.auth', 'auth:sanctum'])->group(function () {
+Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(function () {
     
     // Logout & Profile (All authenticated users)
     Route::prefix('auth')->group(function () {

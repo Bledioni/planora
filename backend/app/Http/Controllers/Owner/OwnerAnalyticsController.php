@@ -285,8 +285,12 @@ class OwnerAnalyticsController extends Controller
             $appointment->update(['status' => $request->status]);
 
             if ($request->status === 'canceled') {
-                Mail::to($appointment->client_email)
-                    ->send(new \App\Mail\AppointmentCancelledMail($appointment));
+                try {
+                    Mail::to($appointment->client_email)
+                        ->send(new \App\Mail\AppointmentCancelledMail($appointment));
+                } catch (\Exception $e) {
+                    Log::warning('Cancel email failed: ' . $e->getMessage());
+                }
             }
 
             return response()->json([

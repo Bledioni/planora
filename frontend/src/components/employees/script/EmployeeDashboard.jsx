@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, User, Phone, Scissors, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, Phone, Scissors, RefreshCw, CheckCircle } from 'lucide-react';
 import { api } from '../../../index';
 import EmployeeSidebar from '../script/EmployeeSidebar';
 import Swal from 'sweetalert2';
@@ -126,7 +126,6 @@ const EmployeeDashboard = () => {
                                         <p style={{ fontSize: '0.75rem', marginBottom: '12px', color: '#94a3b8' }}>
                                             {appt.service?.name || 'Shërbim i panjohur'}
                                         </p>
-
                                         <div className="emp-details-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
                                                 <Clock size={14} /> {formatTime(appt.start_time)} — {formatTime(appt.finish_time)}
@@ -150,9 +149,9 @@ const EmployeeDashboard = () => {
                                             </button>
                                             <button
                                                 onClick={() => handleNoShow(appt)}
-                                                style={{ background: '#fef9c3', color: '#ca8a04', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}
+                                                style={{ background: '#fef9c3', color: '#ca8a04', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', borderRadius: '10px' }}
                                             >
-                                                <XCircle size={16} />
+                                                Pa paraqitje
                                             </button>
                                         </div>
                                     )}
