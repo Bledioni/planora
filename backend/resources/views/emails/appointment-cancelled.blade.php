@@ -15,11 +15,14 @@
         .body { padding: 32px; }
         .greeting { font-size: 16px; color: #111827; font-weight: 600; margin-bottom: 12px; }
         .message { font-size: 14px; color: #6b7280; line-height: 1.7; margin-bottom: 24px; }
-        .detail-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px; }
+        .detail-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
         .detail-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
         .detail-row:last-child { margin-bottom: 0; }
         .detail-label { font-size: 12px; color: #9ca3af; min-width: 80px; }
         .detail-value { font-size: 13px; color: #111827; font-weight: 600; }
+        .reason-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+        .reason-label { font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+        .reason-value { font-size: 14px; color: #111827; font-weight: 600; line-height: 1.5; }
         .footer-msg { font-size: 13px; color: #6b7280; line-height: 1.6; }
         .footer { padding: 20px 32px; background: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center; }
         .footer p { font-size: 12px; color: #9ca3af; }
@@ -53,6 +56,13 @@
                         <span class="detail-value">{{ $appointment->business->shop_name ?? 'N/A' }}</span>
                     </div>
                 </div>
+
+                @if($reason)
+                <div class="reason-box">
+                    <p class="reason-label">📝 Arsyeja e anulimit</p>
+                    <p class="reason-value">{{ $reason }}</p>
+                </div>
+                @endif
 
                 <p class="footer-msg">
                     Ju lutemi kontaktoni biznesin për të bërë një rezervim të ri ose për më shumë informacion.
