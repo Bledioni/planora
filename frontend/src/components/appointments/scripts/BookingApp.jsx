@@ -135,9 +135,8 @@ const BookingApp = () => {
   }, [selectedDate, fetchSlots, step]);
 
   const handleBarberSelect = (empId) => {
-    setSelectedBarber(empId);
-    scrollTo(servicesRef);
-  };
+  setSelectedBarber(empId);
+};
 
   const toggleService = (serviceId) => {
     setSelectedServices((prev) => {
