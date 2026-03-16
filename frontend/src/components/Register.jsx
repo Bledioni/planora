@@ -35,19 +35,24 @@ const BusinessRegister = ({ isAdminCreator = false }) => {
 
         try {
             const response = await api.post('/auth/register', formData, config);
-            
+
             if (response.data.status === 'success') {
-                setSuccessMsg(response.data.message);
-                if (!isAdminCreator) {
-                    // Nëse regjistrohet vetë, e njoftojmë dhe e lëmë aty ose e dërgojmë te një faqe njoftimi
-                    setTimeout(() => navigate('/login'), 5000);
-                } else {
-                    alert("Përdoruesi u shtua me sukses!");
-                    window.location.reload();
-                }
-            }
+    setSuccessMsg(response.data.message || 'Regjistrimi u krye me sukses! Do të ridrejtoheni te hyrja...');
+    if (!isAdminCreator) {
+        setTimeout(() => navigate('/login'), 2000);
+    } else {
+        alert("Përdoruesi u shtua me sukses!");
+        window.location.reload();
+    }
+}
         } catch (err) {
-            setError(err.response?.data?.message || "Ndodhi një gabim gjatë regjistrimit.");
+            const data = err.response?.data;
+            if (data?.errors) {
+                const messages = Object.values(data.errors).flat().join(' ');
+                setError(messages);
+            } else {
+                setError(data?.message || "Ndodhi një gabim gjatë regjistrimit.");
+            }
         } finally {
             setLoading(false);
         }
@@ -63,7 +68,9 @@ const BusinessRegister = ({ isAdminCreator = false }) => {
                     </div>
                 )}
 
-{successMsg && <div className="success-alert">{successMsg}</div>}
+                {successMsg && <div className="success-alert">{successMsg}</div>}
+                {error && <div className="error-alert">{error}</div>}
+
                 <form onSubmit={handleSubmit}>
                     <div className="input-row">
                         <div className="input-field">

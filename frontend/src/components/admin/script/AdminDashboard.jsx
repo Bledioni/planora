@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../../../index'; 
 import AdminSidebar from '../script/AdminSidebar';
-import { Users, Mail, Phone, ArrowUpRight, Search } from 'lucide-react';
+import { Users, Mail, Phone, ArrowUpRight, Search, MapPin, Navigation } from 'lucide-react';
 import '../style/AdminDashboard.css';
 
 const AdminUsers = () => {
@@ -22,6 +22,11 @@ const AdminUsers = () => {
     const filteredUsers = users.filter(u => 
         `${u.name} ${u.surname}`.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const handleGetDirections = (location) => {
+        const encoded = encodeURIComponent(location);
+        window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, '_blank');
+    };
 
     return (
         <div className="owner-layout">
@@ -58,7 +63,6 @@ const AdminUsers = () => {
                         ) : filteredUsers.length > 0 ? (
                             filteredUsers.map(user => (
                                 <div key={user.id} className="timeline-row">
-                                    {/* Kolona e Kohës - E përdorim për Datën */}
                                     <div className="time-column">
                                         <div className="time-text" style={{fontSize: '0.9rem'}}>
                                             {new Date(user.created_at).toLocaleDateString('sq-AL')}
@@ -66,7 +70,6 @@ const AdminUsers = () => {
                                         <div className="vertical-line confirmed"></div>
                                     </div>
 
-                                    {/* Kartela e Përdoruesit */}
                                     <div className="appointment-card-large">
                                         <div className="client-section">
                                             <div className="avatar-circle">
@@ -75,8 +78,40 @@ const AdminUsers = () => {
                                             <div className="client-details">
                                                 <h3>{user.name} {user.surname}</h3>
                                                 <div className="service-txt" style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
-                                                    <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}><Mail size={14}/> {user.email}</span>
-                                                    <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}><Phone size={14}/> {user.phone_number}</span>
+                                                    <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                                        <Mail size={14}/> {user.email}
+                                                    </span>
+                                                    <span style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                                        <Phone size={14}/> {user.phone_number}
+                                                    </span>
+
+                                                    {/* 👇 Location row — admin only sees this since this whole page is admin-only */}
+                                                    {user.location && (
+                                                        <span style={{display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px'}}>
+                                                            <MapPin size={14} color="#2563eb" />
+                                                            <span style={{color: '#374151'}}>{user.location}</span>
+                                                            <button
+                                                                onClick={() => handleGetDirections(user.location)}
+                                                                style={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px',
+                                                                    marginLeft: '6px',
+                                                                    padding: '3px 10px',
+                                                                    background: '#2563eb',
+                                                                    color: 'white',
+                                                                    border: 'none',
+                                                                    borderRadius: '20px',
+                                                                    fontSize: '12px',
+                                                                    cursor: 'pointer',
+                                                                    fontWeight: '500',
+                                                                    whiteSpace: 'nowrap'
+                                                                }}
+                                                            >
+                                                                <Navigation size={12} /> Drejtimet
+                                                            </button>
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

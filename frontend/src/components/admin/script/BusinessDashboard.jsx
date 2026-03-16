@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { UserPlus, UserCheck, Users, Settings, ArrowLeft ,ArrowUpRight} from 'lucide-react';
+import { UserPlus, UserCheck, Users, Settings, ArrowLeft, ArrowUpRight, MapPin } from 'lucide-react';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
-import '../style/AdminDashboard.css'; // Përdorim këtë për të trashëguar stilin kryesor
+import '../style/AdminDashboard.css';
 import '../style/BusinessDashboard.css';
+
 const BusinessDashboard = () => {
     const { businessId } = useParams();
     const navigate = useNavigate();
     const [, setLoading] = useState(false);
+    const [locationLink, setLocationLink] = useState(null);
+
+    useEffect(() => {
+        const fetchBusiness = async () => {
+            try {
+                const res = await api.get(`/admin/businesses/details/${businessId}`);
+                setLocationLink(res.data?.location_link || null);         
+              } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchBusiness();
+    }, [businessId]);
 
     const handleRegisterOwner = async () => {
         const result = await Swal.fire({
@@ -73,6 +87,14 @@ const BusinessDashboard = () => {
             active: true,
             color: "dark"
         },
+        ...(locationLink ? [{
+            title: "Vendndodhja",
+            desc: "Shiko biznesin në Google Maps",
+            icon: <MapPin size={24} />,
+            onClick: () => window.open(locationLink, '_blank'),
+            active: true,
+            color: "blue"
+        }] : [])
     ];
 
     return (
@@ -82,7 +104,6 @@ const BusinessDashboard = () => {
             <main className="owner-main-content">
                 <div className="schedule-container-wide">
                     
-                    {/* Header Premium me butonin Back */}
                     <header className="schedule-header-big">
                         <button onClick={() => navigate('/admin/businesses')} className="header-top-tag" style={{cursor: 'pointer', border: 'none'}}>
                             <ArrowLeft size={14} />
@@ -92,7 +113,6 @@ const BusinessDashboard = () => {
                         <p>ID e Biznesit: <span className="price-tag">#{businessId}</span></p>
                     </header>
 
-                    {/* Quick Actions Grid - Ultra Responsive */}
                     <div className="actions-card-grid">
                         {actions.map((action, index) => (
                             <div 

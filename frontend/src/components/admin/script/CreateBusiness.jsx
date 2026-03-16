@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../../index'; 
 import Swal from 'sweetalert2';
 import AdminSidebar from './AdminSidebar';
-import { Building2, MapPin, Tag, Type, AlignLeft, Send } from 'lucide-react';
+import { Building2, MapPin, Tag, AlignLeft, Send, Link } from 'lucide-react';
 import '../style/CreateBusiness.css';
 
 const CreateBusiness = () => {
@@ -17,7 +17,7 @@ const CreateBusiness = () => {
         category_id: '',
         shop_name: '',
         address: '',
-        business_type: '',
+        location_link: '', // ✅ replaced business_type
         description: ''
     });
 
@@ -77,7 +77,8 @@ const CreateBusiness = () => {
 
                         <form className="modern-form" onSubmit={handleSubmit}>
                             <div className="form-grid-layout">
-                                {/* Emri i Dyqanit */}
+
+                                {/* Emri i Biznesit */}
                                 <div className="input-field-wrapper">
                                     <label><Building2 size={16} /> Emri i Biznesit</label>
                                     <input 
@@ -88,7 +89,7 @@ const CreateBusiness = () => {
                                     />
                                 </div>
 
-                                {/* Kategoritë */}
+                                {/* Kategoria */}
                                 <div className="input-field-wrapper">
                                     <label><Tag size={16} /> Kategoria</label>
                                     <select name="category_id" onChange={handleChange} required>
@@ -110,19 +111,20 @@ const CreateBusiness = () => {
                                     />
                                 </div>
 
-                                {/* Lloji i Biznesit */}
+                                {/* Location Link */}
                                 <div className="input-field-wrapper">
-                                    <label><Type size={16} /> Lloji i Shërbimit</label>
+                                    <label><Link size={16} /> Google Maps Link</label>
                                     <input 
-                                        name="business_type" 
-                                        placeholder="Psh. Parukeri, Palestër" 
-                                        onChange={handleChange} 
-                                        required 
+                                        name="location_link" 
+                                        placeholder="https://maps.google.com/..." 
+                                        onChange={handleChange}
+                                        type="url"
                                     />
                                 </div>
+
                             </div>
 
-                            {/* Pershkrimi */}
+                            {/* Përshkrimi */}
                             <div className="input-field-wrapper full-row">
                                 <label><AlignLeft size={16} /> Përshkrimi i Shkurtër</label>
                                 <textarea 
