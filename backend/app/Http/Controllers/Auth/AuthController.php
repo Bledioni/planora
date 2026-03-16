@@ -63,7 +63,11 @@ class AuthController extends Controller
         'business_id'  => $finalBusinessId,
     ]);
 
-    return response()->json(['status' => 'success', 'user' => $user], 201);
+    return response()->json([
+    'status'  => 'success',
+    'message' => 'Regjistrimi u krye me sukses! Do të ridrejtoheni te hyrja...',
+    'user'    => $user
+], 201);
 }
 
     /* ======================

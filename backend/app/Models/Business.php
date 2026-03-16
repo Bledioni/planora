@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Builder;
 class Business extends Model
 {
     protected $fillable = [
-        'user_id',
-        'slug',
-        'category_id',
-        'shop_name',
-        'address',
-        'business_type',
-        'description',
-    ];
+    'user_id',
+    'slug',
+    'category_id',
+    'shop_name',
+    'address',
+    'location_link',
+    'description',
+];
 
     /**
      * Scope to get only active businesses (with active owners)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Building2, MapPin, Phone, Tag, FileText, ToggleLeft } from 'lucide-react';
+import { ArrowLeft, Save, Building2, MapPin, Tag, FileText, ToggleLeft, Link, Mail, Phone } from 'lucide-react';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
@@ -11,24 +11,35 @@ const AdminBusinessConfig = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [categories, setCategories] = useState([]);
     const [form, setForm] = useState({
         shop_name:     '',
         address:       '',
-        phone:         '',
-        business_type: '',
+        location_link: '',
+        category_id:   '',
         description:   '',
+        is_active:     false,
+        email:         '',
+        phone_number:  '',
     });
 
     useEffect(() => {
+        api.get('/public/categories/all')
+            .then(res => setCategories(res.data.data || res.data))
+            .catch(() => {});
+
         api.get(`/admin/businesses/details/${businessId}`)
             .then(res => {
                 const b = res.data;
                 setForm({
-                    shop_name:     b.shop_name     || '',
-                    address:       b.address       || '',
-                    phone:         b.phone         || '',
-                    business_type: b.business_type || '',
-                    description:   b.description   || '',
+                    shop_name:     b.shop_name          || '',
+                    address:       b.address            || '',
+                    location_link: b.location_link      || '',
+                    category_id:   b.category_id        || '',
+                    description:   b.description        || '',
+                    is_active:     b.is_active          || false,
+                    email:         b.user?.email        || '',
+                    phone_number:  b.user?.phone_number || '',
                 });
             })
             .catch(() => {
@@ -68,13 +79,6 @@ const AdminBusinessConfig = () => {
         }
     };
 
-    const fields = [
-        { name: 'shop_name',     label: 'Emri i Biznesit', icon: <Building2 size={15} />, type: 'text',  placeholder: 'p.sh. Royal Cuts' },
-        { name: 'address',       label: 'Adresa',          icon: <MapPin    size={15} />, type: 'text',  placeholder: 'p.sh. Rr. Fehmi Agani, Prishtinë' },
-        { name: 'phone',         label: 'Telefoni',        icon: <Phone     size={15} />, type: 'text',  placeholder: 'p.sh. +383 44 000 000' },
-        { name: 'business_type', label: 'Lloji Biznesit',  icon: <Tag       size={15} />, type: 'text',  placeholder: 'p.sh. Barber, Salon, Spa' },
-    ];
-
     return (
         <div className="owner-layout">
             <AdminSidebar />
@@ -82,7 +86,6 @@ const AdminBusinessConfig = () => {
             <main className="owner-main-content">
                 <div className="schedule-container-wide">
 
-                    {/* Header */}
                     <header className="schedule-header-big">
                         <button
                             onClick={() => navigate(`/admin/business/${businessId}`)}
@@ -103,37 +106,80 @@ const AdminBusinessConfig = () => {
                     ) : (
                         <form onSubmit={handleSubmit} className="config-form-card">
 
-                            {/* Section title */}
+                            {/* Business Details Section */}
                             <div className="config-section-title">
                                 <Building2 size={16} />
                                 <span>Të dhënat e biznesit</span>
                             </div>
 
-                            {/* Fields grid */}
                             <div className="config-fields-grid">
-                                {fields.map(field => (
-                                    <div className="config-field-group" key={field.name}>
-                                        <label className="config-label">
-                                            {field.icon}
-                                            {field.label}
-                                        </label>
-                                        <input
-                                            type={field.type}
-                                            name={field.name}
-                                            value={form[field.name]}
-                                            onChange={handleChange}
-                                            className="config-input"
-                                            placeholder={field.placeholder}
-                                        />
-                                    </div>
-                                ))}
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <Building2 size={15} /> Emri i Biznesit
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="shop_name"
+                                        value={form.shop_name}
+                                        onChange={handleChange}
+                                        className="config-input"
+                                        placeholder="p.sh. Royal Cuts"
+                                    />
+                                </div>
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <Tag size={15} /> Kategoria
+                                    </label>
+                                    <select
+                                        name="category_id"
+                                        value={form.category_id}
+                                        onChange={handleChange}
+                                        className="config-input"
+                                    >
+                                        <option value="">Zgjidhni një kategori</option>
+                                        {categories.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.name || c.category_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <MapPin size={15} /> Adresa
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={form.address}
+                                        onChange={handleChange}
+                                        className="config-input"
+                                        placeholder="p.sh. Rr. Fehmi Agani, Prishtinë"
+                                    />
+                                </div>
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <Link size={15} /> Google Maps Link
+                                    </label>
+                                    <input
+                                        type="url"
+                                        name="location_link"
+                                        value={form.location_link}
+                                        onChange={handleChange}
+                                        className="config-input"
+                                        placeholder="https://maps.google.com/..."
+                                    />
+                                </div>
+
                             </div>
 
-                            {/* Description */}
                             <div className="config-field-group" style={{ marginTop: '16px' }}>
                                 <label className="config-label">
-                                    <FileText size={15} />
-                                    Përshkrimi
+                                    <FileText size={15} /> Përshkrimi
                                 </label>
                                 <textarea
                                     name="description"
@@ -145,48 +191,53 @@ const AdminBusinessConfig = () => {
                                 />
                             </div>
 
-                            {/* Divider */}
                             <div className="config-divider" />
 
-                            {/* Active toggle */}
-                            <div className="config-section-title" style={{ marginBottom: '12px' }}>
-                                <ToggleLeft size={16} />
-                                <span>Statusi</span>
+                            {/* Owner Details Section */}
+                            <div className="config-section-title">
+                                <Mail size={16} />
+                                <span>Të dhënat e pronarit</span>
                             </div>
 
-                            <div className="config-toggle-row">
-                                <div>
-                                    <p className="config-toggle-title">
-                                        {form.is_active ? '✅ Biznesi Aktiv' : '🔴 Biznesi Joaktiv'}
-                                    </p>
-                                    <p className="config-toggle-sub">
-                                        {form.is_active
-                                            ? 'Biznesi është i dukshëm dhe pranon rezervime.'
-                                            : 'Biznesi është i fshehur dhe nuk pranon rezervime.'}
-                                    </p>
-                                </div>
-                                <label className="toggle-switch">
+                            <div className="config-fields-grid">
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <Mail size={15} /> Email
+                                    </label>
                                     <input
-                                        type="checkbox"
-                                        name="is_active"
-                                        checked={form.is_active}
+                                        type="email"
+                                        name="email"
+                                        value={form.email}
                                         onChange={handleChange}
+                                        className="config-input"
+                                        placeholder="email@example.com"
                                     />
-                                    <span className="toggle-slider" />
-                                </label>
+                                </div>
+
+                                <div className="config-field-group">
+                                    <label className="config-label">
+                                        <Phone size={15} /> Telefoni
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="phone_number"
+                                        value={form.phone_number}
+                                        onChange={handleChange}
+                                        className="config-input"
+                                        placeholder="+383 44 000 000"
+                                    />
+                                </div>
+
                             </div>
 
-                            {/* Save button */}
-                            <button
-                                type="submit"
-                                className="config-save-btn"
-                                disabled={saving}
-                            >
+                            <div className="config-divider" />
+
+                
+
+                            <button type="submit" className="config-save-btn" disabled={saving}>
                                 {saving ? (
-                                    <div
-                                        className="planora-loader-small"
-                                        style={{ width: 18, height: 18, borderWidth: 2 }}
-                                    />
+                                    <div className="planora-loader-small" style={{ width: 18, height: 18, borderWidth: 2 }} />
                                 ) : (
                                     <>
                                         <Save size={16} />

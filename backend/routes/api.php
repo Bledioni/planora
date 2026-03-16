@@ -158,6 +158,12 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
             Route::get('/employee/{businessId}/{employeeId}', [App\Http\Controllers\Owner\OwnerScheduleController::class, 'getEmployeeSchedule']);
         });
 
+        Route::prefix('schedule-exceptions')->group(function () {
+            Route::post('/block',                         [App\Http\Controllers\Owner\OwnerScheduleExceptionController::class, 'blockDate']);
+            Route::get('/{businessId}/{employeeId}',      [App\Http\Controllers\Owner\OwnerScheduleExceptionController::class, 'getBlockedDates']);
+            Route::delete('/unblock/{id}',                [App\Http\Controllers\Owner\OwnerScheduleExceptionController::class, 'unblockDate']);
+        });
+
         // Appointments Management
         Route::prefix('appointments')->group(function () {
             Route::get('/list', [App\Http\Controllers\Owner\OwnerAnalyticsController::class, 'getAppointments']);

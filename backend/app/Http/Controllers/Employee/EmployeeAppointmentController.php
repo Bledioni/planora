@@ -16,15 +16,21 @@ class EmployeeAppointmentController extends Controller
     }
 
     public function getAppointments(Request $request)
-    {
-        $employee = $this->getEmployee($request);
-        if (!$employee) {
-            return response()->json(['message' => 'Employee profile not found.'], 404);
-        }
+{
+    $employee = $this->getEmployee($request);
+    if (!$employee) {
+        return response()->json(['message' => 'Employee profile not found.'], 404);
+    }
 
-        $filter = $request->query('filter', 'upcoming');
-        $query = Appointments::where('employee_id', $employee->id)->with(['service', 'business']);
+    $filter = $request->query('filter', 'upcoming');
+    $date   = $request->query('date');  // ✅ new param
 
+    $query = Appointments::where('employee_id', $employee->id)->with(['service', 'business']);
+
+    // ✅ If date is provided, filter by that specific date
+    if ($date) {
+        $query->whereDate('start_time', $date);
+    } else {
         switch ($filter) {
             case 'today':
                 $query->whereDate('start_time', Carbon::today());
@@ -40,17 +46,18 @@ class EmployeeAppointmentController extends Controller
                       ->where('status', '!=', 'cancelled');
                 break;
         }
-
-        $appointments = $query->orderBy('start_time', 'asc')->get();
-
-        return response()->json([
-            'employee_id'  => $employee->id,
-            'filter'       => $filter,
-            'total'        => $appointments->count(),
-            'appointments' => $appointments,
-        ]);
     }
 
+    $appointments = $query->orderBy('start_time', 'asc')->get();
+
+    return response()->json([
+        'employee_id'  => $employee->id,
+        'filter'       => $filter,
+        'total'        => $appointments->count(),
+        'appointments' => $appointments,
+    ]);
+}
+    
     public function updateStatus(Request $request, $appointmentId)
     {
         $employee = $this->getEmployee($request);

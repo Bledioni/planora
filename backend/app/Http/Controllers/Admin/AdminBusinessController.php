@@ -22,9 +22,6 @@ class AdminBusinessController extends Controller
         $this->middleware(['auth:sanctum', 'role:admin']);
     }
 
-    /**
-     * Get all businesses for admin panel
-     */
     public function GetBusinesses()
     {
         try {
@@ -49,14 +46,11 @@ class AdminBusinessController extends Controller
         }
     }
 
-    /**
-     * Get all business owners with their businesses
-     */
     public function GetBusinessOwners() 
     {
         try {
             $owners = User::where('role', 'business_owner')
-                ->with(['business:id,user_id,shop_name,address,business_type,created_at,updated_at'])
+                ->with(['business:id,user_id,shop_name,address,location_link,created_at,updated_at']) // ✅ removed business_type, added location_link
                 ->select('id', 'name', 'surname', 'email', 'phone_number', 'status', 'business_id', 'created_at', 'updated_at')
                 ->latest()
                 ->get();
@@ -75,51 +69,47 @@ class AdminBusinessController extends Controller
         }
     }
 
-    /**
-     * Create a new business
-     */
     public function createBusiness(Request $request)
     {
         Log::info("Business creation request data:", $request->all());
 
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
-            'category_id' => 'required|exists:categories,id',
-            'shop_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'business_type' => 'required|string',
-            'description' => 'nullable|string'
+            'user_id'       => 'required|exists:users,id',
+            'category_id'   => 'required|exists:categories,id',
+            'shop_name'     => 'required|string|max:255',
+            'address'       => 'required|string',
+            'location_link' => 'nullable|url',   // ✅ added
+            'description'   => 'nullable|string' // ✅ removed business_type
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors'  => $validator->errors()
             ], 422);
         }
 
         try {
             DB::beginTransaction();
 
-            // Create business using ONLY fields from your fillable array
             $business = Business::create([
-                'user_id' => $request->user_id,
-                'category_id' => $request->category_id,
-                'shop_name' => $request->shop_name,
-                'address' => $request->address,
-                'business_type' => $request->business_type,
-                'description' => $request->description,
-                'slug' => Str::slug($request->shop_name) . '-' . rand(100, 999)
+                'user_id'       => $request->user_id,
+                'category_id'   => $request->category_id,
+                'shop_name'     => $request->shop_name,
+                'address'       => $request->address,
+                'location_link' => $request->location_link, // ✅ added
+                'description'   => $request->description,
+                'slug'          => Str::slug($request->shop_name) . '-' . rand(100, 999)
+                // ✅ removed business_type
             ]);
 
-            // Update the owner user
             $user = User::find($request->user_id);
             if ($user) {
                 $user->update([
-                    'status' => 'active',
+                    'status'      => 'active',
                     'business_id' => $business->id,
-                    'role' => 'business_owner'
+                    'role'        => 'business_owner'
                 ]);
                 $user->touch();
             }
@@ -129,9 +119,9 @@ class AdminBusinessController extends Controller
             Log::info("Business created successfully with ID: {$business->id}");
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Biznesi u krijua dhe pronari u bë ACTIVE!',
-                'business' => $business,
+                'status'       => 'success',
+                'message'      => 'Biznesi u krijua dhe pronari u bë ACTIVE!',
+                'business'     => $business,
                 'user_updated' => $user ? true : false
             ], 201);
 
@@ -140,16 +130,13 @@ class AdminBusinessController extends Controller
             Log::error('Error creating business: ' . $e->getMessage());
             
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gabim gjatë krijimit të biznesit',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * List all businesses
-     */
     public function listAllBusinesses()
     {
         try {
@@ -161,23 +148,20 @@ class AdminBusinessController extends Controller
             ->get();
 
             return response()->json([
-                'status' => 'success',
+                'status'     => 'success',
                 'businesses' => $businesses
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error listing businesses: ' . $e->getMessage());
             
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gabim gjatë marrjes së bizneseve',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Deactivate business (block owner and all employees)
-     */
     public function deactivateBusiness($id)
     {
         try {
@@ -185,7 +169,6 @@ class AdminBusinessController extends Controller
 
             $business = Business::findOrFail($id);
 
-            // Update owner status
             if ($business->user_id) {
                 $owner = User::find($business->user_id);
                 if ($owner) {
@@ -194,7 +177,6 @@ class AdminBusinessController extends Controller
                 }
             }
 
-            // Deactivate all employees
             $employeeCount = 0;
             $employees = Employees::where('business_id', $id)->with('user')->get();
             
@@ -210,10 +192,8 @@ class AdminBusinessController extends Controller
 
             $totalAffected = 1 + $employeeCount;
 
-            Log::info("Business {$id} deactivated. Affected users: {$totalAffected}");
-
             return response()->json([
-                'status' => 'success', 
+                'status'  => 'success', 
                 'message' => "Aksesi u pezullua për {$totalAffected} përdorues (1 pronar + {$employeeCount} punonjës)."
             ], 200);
 
@@ -222,95 +202,81 @@ class AdminBusinessController extends Controller
             Log::error('Error deactivating business: ' . $e->getMessage());
             
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gabim gjatë çaktivizimit të biznesit',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Activate business (activate owner and all employees)
-     */
     public function activateBusiness(Request $request, $id)
-{
-    try {
-        DB::beginTransaction();
+    {
+        try {
+            DB::beginTransaction();
 
-        $business = Business::findOrFail($id);
+            $business = Business::findOrFail($id);
 
-        // 1. LOGJIKA E ABONIMIT (Subscription)
-        // Llogarisim datën e mbarimit
-        $startDate = now();
-        $endDate = null;
+            $startDate = now();
+            $endDate   = null;
 
-        if ($request->has('months')) {
-            $months = (int) $request->months;
-            $endDate = now()->addMonths($months);
-        } elseif ($request->has('end_date')) {
-            $endDate = $request->end_date;
-        } else {
-            // Default 1 muaj nëse harrohet diçka nga frontend
-            $endDate = now()->addMonth();
-        }
-
-        // Ruajmë ose përditësojmë abonimin
-        // Përdorim updateOrCreate që të mos kemi shumë rreshta për të njëjtin biznes
-        \App\Models\Subscription::updateOrCreate(
-            ['business_id' => $id],
-            [
-                'start_date' => $startDate,
-                'end_date'   => $endDate,
-                'months'     => $request->months ?? 0,
-                'status'     => 'active',
-            ]
-        );
-
-        // 2. AKTIVIZIMI I PRONARIT
-        if ($business->user_id) {
-            $owner = User::find($business->user_id);
-            if ($owner) {
-                $owner->update(['status' => 'active']);
-                $owner->touch();
+            if ($request->has('months')) {
+                $endDate = now()->addMonths((int) $request->months);
+            } elseif ($request->has('end_date')) {
+                $endDate = $request->end_date;
+            } else {
+                $endDate = now()->addMonth();
             }
-        }
 
-        // 3. AKTIVIZIMI I PUNONJËSVE
-        $employeeCount = 0;
-        $employees = Employees::where('business_id', $id)->with('user')->get();
-        
-        foreach ($employees as $employee) {
-            if ($employee->user) {
-                $employee->user->update(['status' => 'active']);
-                $employee->user->touch();
-                $employeeCount++;
+            \App\Models\Subscription::updateOrCreate(
+                ['business_id' => $id],
+                [
+                    'start_date' => $startDate,
+                    'end_date'   => $endDate,
+                    'months'     => $request->months ?? 0,
+                    'status'     => 'active',
+                ]
+            );
+
+            if ($business->user_id) {
+                $owner = User::find($business->user_id);
+                if ($owner) {
+                    $owner->update(['status' => 'active']);
+                    $owner->touch();
+                }
             }
+
+            $employeeCount = 0;
+            $employees = Employees::where('business_id', $id)->with('user')->get();
+            
+            foreach ($employees as $employee) {
+                if ($employee->user) {
+                    $employee->user->update(['status' => 'active']);
+                    $employee->user->touch();
+                    $employeeCount++;
+                }
+            }
+
+            DB::commit();
+
+            $formattedDate = \Carbon\Carbon::parse($endDate)->format('d/m/Y');
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => "Biznesi u aktivizua deri më {$formattedDate}! (1 pronar + {$employeeCount} punonjës)."
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error activating business: ' . $e->getMessage());
+            
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gabim gjatë aktivizimit të biznesit dhe abonimit',
+                'error'   => $e->getMessage()
+            ], 500);
         }
-
-        DB::commit();
-
-        $totalAffected = 1 + $employeeCount;
-        $formattedDate = \Carbon\Carbon::parse($endDate)->format('d/m/Y');
-
-        return response()->json([
-            'status' => 'success',
-            'message' => "Biznesi u aktivizua deri më {$formattedDate}! (1 pronar + {$employeeCount} punonjës)."
-        ], 200);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error activating business: ' . $e->getMessage());
-        
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gabim gjatë aktivizimit të biznesit dhe abonimit',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
-    /**
-     * Get single business details
-     */
+
     public function getBusinessDetails($id)
     {
         try {
@@ -321,7 +287,7 @@ class AdminBusinessController extends Controller
             ])->findOrFail($id);
 
             return response()->json([
-                'status' => 'success',
+                'status'   => 'success',
                 'business' => $business
             ], 200);
 
@@ -329,78 +295,77 @@ class AdminBusinessController extends Controller
             Log::error('Error fetching business details: ' . $e->getMessage());
             
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Biznesi nuk u gjet',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 404);
         }
     }
+
     public function sendEmail(Request $request)
-{
-    $request->validate([
-        'subject' => 'required|string|max:255',
-        'message' => 'required|string',
-        'business_id' => 'nullable|exists:businesses,id',
-        'send_to_all' => 'boolean'
-    ]);
+    {
+        $request->validate([
+            'subject'      => 'required|string|max:255',
+            'message'      => 'required|string',
+            'business_id'  => 'nullable|exists:businesses,id',
+            'send_to_all'  => 'boolean'
+        ]);
 
-    try {
-        if ($request->send_to_all) {
-            // Send to all business owners
-            $owners = User::where('role', 'business_owner')
-                ->where('status', 'active')
-                ->with('business')
-                ->get();
+        try {
+            if ($request->send_to_all) {
+                $owners = User::where('role', 'business_owner')
+                    ->where('status', 'active')
+                    ->with('business')
+                    ->get();
 
-            $count = 0;
-            foreach ($owners as $owner) {
-                \Mail::to($owner->email)->send(
+                $count = 0;
+                foreach ($owners as $owner) {
+                    \Mail::to($owner->email)->send(
+                        new \App\Mail\BusinessNotification(
+                            $request->subject,
+                            $request->message,
+                            $owner->business->shop_name ?? null
+                        )
+                    );
+                    $count++;
+                }
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => "Email u dërgua me sukses te {$count} biznese!"
+                ], 200);
+
+            } else {
+                $business = Business::with('user')->findOrFail($request->business_id);
+
+                if (!$business->user) {
+                    return response()->json([
+                        'status'  => 'error',
+                        'message' => 'Biznesi nuk ka pronar të regjistruar.'
+                    ], 404);
+                }
+
+                \Mail::to($business->user->email)->send(
                     new \App\Mail\BusinessNotification(
                         $request->subject,
                         $request->message,
-                        $owner->business->shop_name ?? $owner->business->name ?? null
+                        $business->shop_name
                     )
                 );
-                $count++;
-            }
 
-            return response()->json([
-                'status' => 'success',
-                'message' => "Email u dërgua me sukses te {$count} biznese!"
-            ], 200);
-
-        } else {
-            // Send to specific business
-            $business = Business::with('user')->findOrFail($request->business_id);
-
-            if (!$business->user) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Biznesi nuk ka pronar të regjistruar.'
-                ], 404);
+                    'status'  => 'success',
+                    'message' => "Email u dërgua me sukses te {$business->user->name}!"
+                ], 200);
             }
 
-            \Mail::to($business->user->email)->send(
-                new \App\Mail\BusinessNotification(
-                    $request->subject,
-                    $request->message,
-                    $business->shop_name ?? $business->name
-                )
-            );
-
+        } catch (\Exception $e) {
+            Log::error('Error sending email: ' . $e->getMessage());
             return response()->json([
-                'status' => 'success',
-                'message' => "Email u dërgua me sukses te {$business->user->name}!"
-            ], 200);
+                'status'  => 'error',
+                'message' => 'Gabim gjatë dërgimit të emailit',
+                'error'   => $e->getMessage()
+            ], 500);
         }
-
-    } catch (\Exception $e) {
-        Log::error('Error sending email: ' . $e->getMessage());
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gabim gjatë dërgimit të emailit',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 }

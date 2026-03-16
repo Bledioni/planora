@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Save, XCircle, CheckCircle } from 'lucide-react';
+import { Clock, Save, XCircle, CheckCircle, CalendarX, Trash2 } from 'lucide-react';
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import Swal from 'sweetalert2';
@@ -23,7 +23,6 @@ const DEFAULT_SCHEDULE = {
     is_off: false
 };
 
-// Generate time slots from 06:00 to 23:00
 const TIME_SLOTS = [];
 for (let h = 6; h <= 23; h++) {
     TIME_SLOTS.push(`${String(h).padStart(2, '0')}:00`);
@@ -65,10 +64,19 @@ const ManageSchedule = () => {
     const [activeDay, setActiveDay] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Block date state
+    const [blockDate, setBlockDate] = useState('');
+    const [blockReason, setBlockReason] = useState('');
+    const [blocking, setBlocking] = useState(false);
+    const [blockedDates, setBlockedDates] = useState([]);
+
     useEffect(() => { fetchData(); }, []);
 
     useEffect(() => {
-        if (selectedEmployee && business) fetchSchedules();
+        if (selectedEmployee && business) {
+            fetchSchedules();
+            fetchBlockedDates();
+        }
     }, [selectedEmployee]);
 
     const parseSchedules = (data) => {
@@ -105,6 +113,10 @@ const ManageSchedule = () => {
                 const bizId = biz.id || biz;
                 const schedRes = await api.get(`/owner/schedules/employee/${bizId}/${firstEmp}`);
                 parseSchedules(schedRes.data);
+
+                // Fetch blocked dates for first employee
+                const blockedRes = await api.get(`/owner/schedule-exceptions/${bizId}/${firstEmp}`);
+                setBlockedDates(blockedRes.data.data || []);
             }
         } catch (err) {
             Swal.fire('Gabim', 'Nuk u ngarkuan të dhënat.', 'error');
@@ -121,6 +133,87 @@ const ManageSchedule = () => {
             parseSchedules(res.data);
         } catch (err) {
             console.error(err);
+        }
+    };
+
+    const fetchBlockedDates = async () => {
+        if (!business || !selectedEmployee) return;
+        try {
+            const bizId = business.id || business;
+            const res = await api.get(`/owner/schedule-exceptions/${bizId}/${selectedEmployee}`);
+            setBlockedDates(res.data.data || []);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleBlockDate = async () => {
+        if (!blockDate) {
+            Swal.fire('Gabim', 'Zgjidhni një datë.', 'error');
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Blloko këtë datë?',
+            html: `Të gjithë terminet e <strong>${blockDate}</strong> do të anulohen dhe klientët do të njoftohen me email.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Po, blloko!',
+            cancelButtonText: 'Anulo',
+        });
+
+        if (!result.isConfirmed) return;
+
+        setBlocking(true);
+        try {
+            const bizId = business.id || business;
+            const res = await api.post('/owner/schedule-exceptions/block', {
+                business_id: bizId,
+                employee_id: selectedEmployee,
+                date:        blockDate,
+                reason:      blockReason || null,
+            });
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Sukses!',
+                text: res.data.message,
+                timer: 3000,
+                showConfirmButton: false,
+            });
+
+            setBlockDate('');
+            setBlockReason('');
+            fetchBlockedDates();
+        } catch (err) {
+            Swal.fire('Gabim', err.response?.data?.message || 'Ndodhi një gabim.', 'error');
+        } finally {
+            setBlocking(false);
+        }
+    };
+
+    const handleUnblock = async (id, date) => {
+        const result = await Swal.fire({
+            title: 'Çblloko datën?',
+            text: `Data ${date} do të jetë e lirë përsëri.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Po, çblloko!',
+            cancelButtonText: 'Anulo',
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await api.delete(`/owner/schedule-exceptions/unblock/${id}`);
+            Swal.fire({ icon: 'success', title: 'U çbllokua!', timer: 1500, showConfirmButton: false });
+            fetchBlockedDates();
+        } catch (err) {
+            Swal.fire('Gabim', err.response?.data?.message || 'Ndodhi një gabim.', 'error');
         }
     };
 
@@ -282,7 +375,6 @@ const ManageSchedule = () => {
 
                                     {!isOff ? (
                                         <>
-                                            {/* Selected time summary */}
                                             <div className="ms-time-summary">
                                                 <div className="ms-time-summary-item open">
                                                     <span className="ms-time-summary-label">Hapet</span>
@@ -298,7 +390,6 @@ const ManageSchedule = () => {
                                                 </button>
                                             </div>
 
-                                            {/* Time pickers */}
                                             <div className="ms-pickers-row">
                                                 <TimePicker
                                                     label="🟢 Koha e hapjes"
@@ -324,6 +415,128 @@ const ManageSchedule = () => {
                                 </div>
                             );
                         })()}
+
+                        {/* ✅ Block a Date Section */}
+                        <div className="ms-detail-panel" style={{ marginTop: '24px' }}>
+                            <div className="ms-detail-header">
+                                <div className="ms-detail-title">
+                                    <h2>Blloko një Datë</h2>
+                                    <span className="ms-badge ms-badge-off">Anulim Termini</span>
+                                </div>
+                            </div>
+
+                            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>
+                                Zgjidhni një datë specifike që punonjësi nuk do të punojë. Të gjithë terminet e asaj dite do të anulohen dhe klientët do të njoftohen me email.
+                            </p>
+
+                            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                <div>
+                                    <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '6px' }}>📅 Data</label>
+                                    <input
+                                        type="date"
+                                        value={blockDate}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        onChange={(e) => setBlockDate(e.target.value)}
+                                        style={{
+                                            padding: '9px 14px',
+                                            borderRadius: '10px',
+                                            border: '1.5px solid #e5e7eb',
+                                            fontSize: '14px',
+                                            outline: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1, minWidth: '160px' }}>
+                                    <label style={{ fontSize: '12px', color: '#6b7280', display: 'block', marginBottom: '6px' }}>📝 Arsyeja (opsionale)</label>
+                                    <input
+                                        type="text"
+                                        value={blockReason}
+                                        onChange={(e) => setBlockReason(e.target.value)}
+                                        placeholder="p.sh. Pushim personal"
+                                        style={{
+                                            width: '100%',
+                                            padding: '9px 14px',
+                                            borderRadius: '10px',
+                                            border: '1.5px solid #e5e7eb',
+                                            fontSize: '14px',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleBlockDate}
+                                    disabled={blocking}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '9px 20px',
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '10px',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        cursor: blocking ? 'not-allowed' : 'pointer',
+                                        opacity: blocking ? 0.7 : 1,
+                                    }}
+                                >
+                                    <CalendarX size={15} />
+                                    {blocking ? 'Duke bllokuar...' : 'Blloko Datën'}
+                                </button>
+                            </div>
+
+                            {/* Blocked dates list */}
+                            {blockedDates.length > 0 && (
+                                <div style={{ marginTop: '24px' }}>
+                                    <p style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>
+                                        📋 Datat e Bllokuara
+                                    </p>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {blockedDates.map(item => (
+                                            <div key={item.id} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                background: '#fef2f2',
+                                                border: '1px solid #fecaca',
+                                                borderRadius: '10px',
+                                                padding: '10px 14px',
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <CalendarX size={15} color="#ef4444" />
+                                                    <span style={{ fontSize: '14px', fontWeight: '600', color: '#111827' }}>
+                                                        {new Date(item.date).toLocaleDateString('sq-AL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                    </span>
+                                                    {item.reason && (
+                                                        <span style={{ fontSize: '12px', color: '#6b7280' }}>— {item.reason}</span>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => handleUnblock(item.id, item.date)}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        padding: '5px 12px',
+                                                        background: 'white',
+                                                        color: '#ef4444',
+                                                        border: '1px solid #fca5a5',
+                                                        borderRadius: '8px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '500',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    <Trash2 size={12} /> Çblloko
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </>
                 )}
             </main>
