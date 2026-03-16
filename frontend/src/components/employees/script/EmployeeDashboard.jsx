@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Phone, Scissors, RefreshCw, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Phone, Scissors, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { api } from '../../../index';
 import EmployeeSidebar from '../script/EmployeeSidebar';
 import Swal from 'sweetalert2';
@@ -66,7 +66,7 @@ const EmployeeDashboard = () => {
     };
 
     const getStatusClass = (status) => {
-        const map = { completed: 'active', cancelled: 'inactive', no_show: 'pending', confirmed: 'confirmed' };
+    const map = { completed: 'completed', cancelled: 'cancelled', no_show: 'pending', confirmed: 'confirmed' };
         return map[status] || 'pending';
     };
 
@@ -74,97 +74,120 @@ const EmployeeDashboard = () => {
         return new Date(datetime).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit' });
     };
 
+    const today = new Date().toLocaleDateString('sq-AL', { weekday: 'long', day: 'numeric', month: 'long' });
+
     return (
         <div className="owner-layout">
             <EmployeeSidebar />
             <main className="owner-main-content">
+
+                <div className="schedule-header-big">
+                    <div className="header-top-tag">
+                        <Calendar size={13} />
+                        <span>Terminet e Sotme</span>
+                    </div>
+                    <h1>Kryefaqja</h1>
+                    <p>Terminet tuaja për <strong>{today}</strong></p>
+                </div>
+
                 <div className="schedule-container-wide">
 
-                    <header className="schedule-header-big">
-                        <div className="header-top-tag">
-                            <Calendar size={14} />
-                            <span>Terminet e Sotme</span>
+                    {/* Stats */}
+                    <div className="ed-stats-row">
+                        <div className="ed-stat-card blue">
+                            <Calendar size={16} />
+                            <div>
+                                <span className="ed-stat-num">{appointments.length}</span>
+                                <span className="ed-stat-label">Sot</span>
+                            </div>
                         </div>
-                        <h1>Kryefaqja</h1>
-                        <p>Terminet tuaja për <strong>{new Date().toLocaleDateString('sq-AL', { weekday: 'long', day: 'numeric', month: 'long' })}</strong></p>
-                    </header>
-
-                    {/* Stats row */}
-                    <div className="stats-indicator-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-                        <div className="stat-pill-box total">
-                            <Calendar size={18} />
-                            <span><strong>{appointments.length}</strong> Sot</span>
+                        <div className="ed-stat-card green">
+                            <CheckCircle size={16} />
+                            <div>
+                                <span className="ed-stat-num">{appointments.filter(a => a.status === 'completed').length}</span>
+                                <span className="ed-stat-label">Kryer</span>
+                            </div>
                         </div>
-                        <div className="stat-pill-box active">
-                            <CheckCircle size={18} />
-                            <span><strong>{appointments.filter(a => a.status === 'completed').length}</strong> Kryer</span>
-                        </div>
-                        <div className="stat-pill-box pending">
-                            <Clock size={18} />
-                            <span><strong>{appointments.filter(a => a.status === 'confirmed').length}</strong> Mbetur</span>
+                        <div className="ed-stat-card amber">
+                            <Clock size={16} />
+                            <div>
+                                <span className="ed-stat-num">{appointments.filter(a => a.status === 'confirmed').length}</span>
+                                <span className="ed-stat-label">Mbetur</span>
+                            </div>
                         </div>
                     </div>
 
                     {/* Appointments */}
-                    <div className="actions-card-grid">
+                    <div className="timeline-container">
                         {loading ? (
-                            <div className="planora-loader-big"></div>
+                            <div className="planora-loader-big" />
                         ) : appointments.length > 0 ? (
-                            appointments.map((appt) => (
-                                <div key={appt.id} className="premium-action-card employee-card">
-                                    <div className="card-top-flex" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
-                                        <div className="avatar-circle" style={{ width: '50px', height: '50px', fontSize: '1.1rem' }}>
-                                            {appt.client_name?.[0]}
+                            appointments.map((appt, i) => (
+                                <div
+                                    key={appt.id}
+                                    className="timeline-row"
+                                    style={{ animationDelay: `${i * 0.04}s` }}
+                                >
+                                    <div className="appointment-card-large">
+                                        <div className="client-section">
+                                            <div className="avatar-circle">
+                                                {appt.client_name?.charAt(0)?.toUpperCase()}
+                                            </div>
+                                            <div className="client-details">
+                                                <h3>{appt.client_name}</h3>
+                                                <span className="service-txt">
+                                                    {appt.service?.service_name || 'Shërbim i panjohur'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className={`status-pill ${getStatusClass(appt.status)}`}>
-                                            {appt.status}
+
+                                        <div className="card-right-info">
+                                            <span className="apt-time-tag">
+                                                <Clock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {formatTime(appt.start_time)} — {formatTime(appt.finish_time)}
+                                            </span>
+                                            <span className="apt-time-tag">
+                                                <Phone size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {appt.client_phone || 'Pa numër'}
+                                            </span>
+                                            <span className="apt-time-tag">
+                                                <Scissors size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {appt.service?.service_duration || '—'} min
+                                            </span>
+                                            <span className={`status-pill ${getStatusClass(appt.status)}`}>
+                                                {appt.status}
+                                            </span>
+
+                                            {appt.status === 'confirmed' && (
+                                                <div className="ed-actions">
+                                                    <button
+                                                        onClick={() => handleComplete(appt)}
+                                                        className="ed-btn-complete"
+                                                    >
+                                                        {updatingId === appt.id
+                                                            ? <RefreshCw size={14} className="spin" />
+                                                            : <><CheckCircle size={14} /> U krye</>
+                                                        }
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleNoShow(appt)}
+                                                        className="ed-btn-noshow"
+                                                    >
+                                                        Pa paraqitje
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-
-                                    <div className="card-info" style={{ width: '100%' }}>
-                                        <h3 style={{ margin: '0' }}>{appt.client_name}</h3>
-                                        <p style={{ fontSize: '0.75rem', marginBottom: '12px', color: '#94a3b8' }}>
-                                            {appt.service?.name || 'Shërbim i panjohur'}
-                                        </p>
-                                        <div className="emp-details-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Clock size={14} /> {formatTime(appt.start_time)} — {formatTime(appt.finish_time)}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Phone size={14} /> {appt.client_phone || 'Pa numër'}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Scissors size={14} /> {appt.service?.duration_minutes || '—'} min
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {appt.status === 'confirmed' && (
-                                        <div className="card-footer-actions" style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                            <button
-                                                onClick={() => handleComplete(appt)}
-                                                style={{ flex: '1', background: '#dcfce7', color: '#16a34a', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: '600' }}
-                                            >
-                                                {updatingId === appt.id ? <RefreshCw className="spin" size={16} /> : <><CheckCircle size={16} /> U krye</>}
-                                            </button>
-                                            <button
-                                                onClick={() => handleNoShow(appt)}
-                                                style={{ background: '#fef9c3', color: '#ca8a04', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', borderRadius: '10px' }}
-                                            >
-                                                Pa paraqitje
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             ))
                         ) : (
-                            <div className="empty-schedule-card" style={{ gridColumn: '1/-1' }}>
-                                <Calendar size={40} style={{ opacity: 0.2, marginBottom: '10px' }} />
+                            <div className="empty-schedule-card">
+                                <Calendar size={40} />
                                 <p>Nuk keni termine për sot.</p>
                             </div>
                         )}
                     </div>
-
                 </div>
             </main>
         </div>
