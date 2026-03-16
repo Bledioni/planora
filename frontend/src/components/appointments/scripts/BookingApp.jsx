@@ -216,7 +216,7 @@ const BookingApp = () => {
         <aside className="shop-sidebar">
           <h1>{details.shop_name || "Planora"}</h1>
           <div className="sidebar-info-item">📍 {details.address || "Kosovë"}</div>
-          {step >= 1 && selectedServiceObjects.length > 0 && (
+          {step >= 3 && selectedServiceObjects.length > 0 && (
             <div className="fade-in summary-container" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
               <p className="summary-label">PËRMBLEDHJA</p>
               {selectedServiceObjects.map((s) => (

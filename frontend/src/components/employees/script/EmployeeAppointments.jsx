@@ -48,7 +48,7 @@ const EmployeeAppointments = () => {
     const filtered = appointments.filter(a =>
         a.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.client_phone?.includes(searchTerm) ||
-        a.service?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        a.service?.service_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const formatDateTime = (dt) => new Date(dt).toLocaleString('sq-AL', {
@@ -56,7 +56,7 @@ const EmployeeAppointments = () => {
     });
 
     const getStatusClass = (status) => {
-        const map = { completed: 'active', cancelled: 'inactive', no_show: 'pending', confirmed: 'confirmed' };
+        const map = { completed: 'completed', cancelled: 'cancelled', no_show: 'pending', confirmed: 'confirmed' };
         return map[status] || 'pending';
     };
 
@@ -64,25 +64,25 @@ const EmployeeAppointments = () => {
         <div className="owner-layout">
             <EmployeeSidebar />
             <main className="owner-main-content">
+
+                <div className="schedule-header-big">
+                    <div className="header-top-tag">
+                        <Clock size={13} />
+                        <span>Terminet</span>
+                    </div>
+                    <h1>Terminet e Mia</h1>
+                    <p>Shiko dhe menaxho të gjitha terminet tuaja</p>
+                </div>
+
                 <div className="schedule-container-wide">
 
-                    <header className="schedule-header-big">
-                        <div className="header-top-tag">
-                            <Clock size={14} />
-                            <span>Terminet</span>
-                        </div>
-                        <h1>Terminet e Mia</h1>
-                        <p>Shiko dhe menaxho të gjitha terminet tuaja</p>
-                    </header>
-
                     {/* Tabs */}
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <div className="ea-tabs">
                         {TABS.map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`status-pill ${activeTab === tab.key ? 'confirmed' : ''}`}
-                                style={{ border: 'none', cursor: 'pointer', padding: '10px 20px', borderRadius: '12px', fontWeight: activeTab === tab.key ? '700' : '500' }}
+                                className={`ea-tab ${activeTab === tab.key ? 'active' : ''}`}
                             >
                                 {tab.label}
                             </button>
@@ -90,73 +90,79 @@ const EmployeeAppointments = () => {
                     </div>
 
                     {/* Search */}
-                    <div className="planora-calendar-big" style={{ padding: '15px', marginBottom: '2rem' }}>
-                        <div style={{ background: 'white', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flex: '1' }}>
-                            <Search size={18} color="#2563eb" />
-                            <input
-                                type="text"
-                                placeholder="Kërko klient, shërbim..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', outline: 'none', width: '100%' }}
-                            />
-                        </div>
+                    <div className="ea-search">
+                        <Search size={16} />
+                        <input
+                            type="text"
+                            placeholder="Kërko klient, shërbim..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
 
-                    {/* Cards */}
-                    <div className="actions-card-grid">
+                    {/* List */}
+                    <div className="timeline-container">
                         {loading ? (
-                            <div className="planora-loader-big"></div>
+                            <div className="planora-loader-big" />
                         ) : filtered.length > 0 ? (
-                            filtered.map((appt) => (
-                                <div key={appt.id} className="premium-action-card employee-card">
-                                    <div className="card-top-flex" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '15px' }}>
-                                        <div className="avatar-circle" style={{ width: '50px', height: '50px', fontSize: '1.1rem' }}>
-                                            {appt.client_name?.[0]}
+                            filtered.map((appt, i) => (
+                                <div
+                                    key={appt.id}
+                                    className="timeline-row"
+                                    style={{ animationDelay: `${i * 0.04}s` }}
+                                >
+                                    <div className="appointment-card-large">
+                                        <div className="client-section">
+                                            <div className="avatar-circle">
+                                                {appt.client_name?.charAt(0)?.toUpperCase()}
+                                            </div>
+                                            <div className="client-details">
+                                                <h3>{appt.client_name}</h3>
+                                                <span className="service-txt">
+                                                    {appt.service?.service_name || 'Shërbim i panjohur'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className={`status-pill ${getStatusClass(appt.status)}`}>
-                                            {appt.status}
+
+                                        <div className="card-right-info">
+                                            <span className="apt-time-tag">
+                                                <Calendar size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {formatDateTime(appt.start_time)}
+                                            </span>
+                                            <span className="apt-time-tag">
+                                                <Phone size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {appt.client_phone || 'Pa numër'}
+                                            </span>
+                                            <span className="apt-time-tag">
+                                                <Scissors size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                                {appt.service?.service_duration || '—'} min
+                                            </span>
+                                            <span className={`status-pill ${getStatusClass(appt.status)}`}>
+                                                {appt.status}
+                                            </span>
+
+                                            {appt.status === 'confirmed' && activeTab !== 'past' && (
+                                                <button
+                                                    onClick={() => updateStatus(appt.id, 'completed')}
+                                                    className="ed-btn-complete"
+                                                >
+                                                    {updatingId === appt.id
+                                                        ? <RefreshCw size={14} className="spin" />
+                                                        : '✓ U krye'
+                                                    }
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
-
-                                    <div className="card-info" style={{ width: '100%' }}>
-                                        <h3 style={{ margin: '0' }}>{appt.client_name}</h3>
-                                        <p style={{ fontSize: '0.75rem', marginBottom: '12px', color: '#94a3b8' }}>
-                                            {appt.service?.name}
-                                        </p>
-                                        <div className="emp-details-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Calendar size={14} /> {formatDateTime(appt.start_time)}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Phone size={14} /> {appt.client_phone || 'Pa numër'}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
-                                                <Scissors size={14} /> {appt.service?.duration_minutes || '—'} min
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {appt.status === 'confirmed' && activeTab !== 'past' && (
-                                        <div className="card-footer-actions" style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '20px', borderTop: '1px solid #f1f5f9', paddingTop: '15px' }}>
-                                            <button
-                                                onClick={() => updateStatus(appt.id, 'completed')}
-                                                style={{ flex: '1', background: '#dcfce7', color: '#16a34a', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', fontWeight: '600' }}
-                                            >
-                                                {updatingId === appt.id ? <RefreshCw className="spin" size={16} /> : '✓ U krye'}
-                                            </button>
-                                        </div>
-                                    )}
                                 </div>
                             ))
                         ) : (
-                            <div className="empty-schedule-card" style={{ gridColumn: '1/-1' }}>
-                                <Clock size={40} style={{ opacity: 0.2, marginBottom: '10px' }} />
+                            <div className="empty-schedule-card">
+                                <Clock size={40} />
                                 <p>Nuk u gjetën termine.</p>
                             </div>
                         )}
                     </div>
-
                 </div>
             </main>
         </div>

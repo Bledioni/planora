@@ -16,8 +16,8 @@ const DAYS = [
 ];
 
 const DEFAULT_SCHEDULE = {
-    open_at: '09:00',
-    close_at: '18:00',
+    open_at: '06:00',
+    close_at: '00:00',
     break_start: '',
     break_end: '',
     is_off: false
