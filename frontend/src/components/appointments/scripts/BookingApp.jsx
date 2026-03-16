@@ -135,8 +135,9 @@ const BookingApp = () => {
   }, [selectedDate, fetchSlots, step]);
 
   const handleBarberSelect = (empId) => {
-  setSelectedBarber(empId);
-};
+    setSelectedBarber(empId);
+    scrollTo(servicesRef);
+  };
 
   const toggleService = (serviceId) => {
     setSelectedServices((prev) => {
@@ -254,7 +255,7 @@ const BookingApp = () => {
 
           {step === 1 && (
             <div className="fade-in">
-              <h2 className="section-title">Zgjidhni Barberin & Shërbimet</h2>
+              <h2 className="section-title">Zgjidhni Salonin & Shërbimet</h2>
               <div className="wide-grid">
                 {details.employees?.map((emp) => (
                   <div
