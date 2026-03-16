@@ -133,7 +133,7 @@
 }
 
 .step-dot.active {
-  background: var(--p-dark);
+  background: var(--p-blue);
 }
 
 /* ─── Typography ────────────────────────────── */
@@ -816,4 +816,9 @@
   .step-dot {
     height: 2.5px;
   }
+}
+
+.phone-field-fix,
+.phone-field-fix input {
+  font-size: 16px !important;
 }
