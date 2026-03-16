@@ -817,3 +817,8 @@
     height: 2.5px;
   }
 }
+
+.phone-field-fix,
+.phone-field-fix input {
+  font-size: 16px !important;
+}
