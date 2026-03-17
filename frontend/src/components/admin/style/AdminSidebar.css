@@ -207,6 +207,7 @@
 .owner-sidebar-footer {
   margin-top: auto;
   padding-top: 20px;
+  padding-bottom: env(safe-area-inset-bottom, 80px);
   border-top: 1px solid var(--p-border);
 }
 
@@ -249,5 +250,29 @@
 
   .owner-sidebar-header {
     padding: 28px 10px 24px 10px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .owner-sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;        /* dvh accounts for browser bar */
+    overflow: hidden;      /* sidebar itself does NOT scroll */
+  }
+
+  .owner-sidebar-nav {
+    flex: 1;
+    overflow-y: auto;      /* only the nav scrolls */
+    padding-bottom: 8px;
+  }
+
+  .owner-sidebar-footer {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background: #ffffff;
+    border-top: 1px solid var(--p-border);
   }
 }
