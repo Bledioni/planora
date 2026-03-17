@@ -18,30 +18,27 @@ const OwnerAnalyticsDashboard = () => {
     const [filter, setFilter] = useState('month');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 7));
 
-    // 1. Mbështjellja me useCallback heq warning-un dhe parandalon infinite loops
     const fetchAllData = useCallback(async () => {
-    setLoading(true);
-    try {
-        const [bRes, eRes, oRes] = await Promise.all([
-            api.get('/owner/analytics/business-stats', { params: { filter, date: selectedDate } }),
-            api.get('/owner/analytics/employees-schedules'),
-            api.get('/owner/analytics/owner-schedule')
-        ]);
-        setBusinessStats(bRes.data.stats);
-        setEmployees(eRes.data.employees);
-        setOwnerSchedule(oRes.data);
-    } catch (err) {
-        console.error(err);
-        // Don't show Swal on 429 - it causes re-renders which cause more requests
-        if (err.response?.status !== 429) {
-            Swal.fire('Gabim', 'Nuk u ngarkuan të dhënat.', 'error');
+        setLoading(true);
+        try {
+            const [bRes, eRes, oRes] = await Promise.all([
+                api.get('/owner/analytics/business-stats', { params: { filter, date: selectedDate } }),
+                api.get('/owner/analytics/employees-schedules'),
+                api.get('/owner/analytics/owner-schedule')
+            ]);
+            setBusinessStats(bRes.data.stats);
+            setEmployees(eRes.data.employees);
+            setOwnerSchedule(oRes.data);
+        } catch (err) {
+            console.error(err);
+            if (err.response?.status !== 429) {
+                Swal.fire('Gabim', 'Nuk u ngarkuan të dhënat.', 'error');
+            }
+        } finally {
+            setLoading(false);
         }
-    } finally {
-        setLoading(false);
-    }
-}, [filter, selectedDate]);
+    }, [filter, selectedDate]);
 
-    // 2. useEffect tani varet vetëm nga funksioni i ngrirë (stable function)
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
@@ -101,7 +98,6 @@ const OwnerAnalyticsDashboard = () => {
                 </header>
 
                 <div className="analytics-scroll-container">
-                    {/* Top KPIs */}
                     {businessStats && (
                         <div className="kpi-grid">
                             <div className="kpi-card blue">
@@ -129,14 +125,13 @@ const OwnerAnalyticsDashboard = () => {
                                 <div className="kpi-icon"><X /></div>
                                 <div className="kpi-info">
                                     <span className="kpi-label">Anuluara</span>
-                                    <h2 className="kpi-value">{businessStats.canceled}</h2>
+                                    <h2 className="kpi-value">{businessStats.cancelled}</h2>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     <div className="analytics-secondary-grid">
-                        {/* Charts Section */}
                         <section className="analytics-card-main">
                             <div className="card-header">
                                 <h3><BarChart3 size={20} /> Shërbimet më Popullore</h3>
@@ -163,7 +158,6 @@ const OwnerAnalyticsDashboard = () => {
                             </div>
                         </section>
 
-                        {/* Owner Personal Schedule */}
                         {ownerSchedule?.is_employee && (
                             <section className="analytics-card-main">
                                 <div className="card-header">
@@ -181,7 +175,6 @@ const OwnerAnalyticsDashboard = () => {
                         )}
                     </div>
 
-                    {/* Employee Management Section */}
                     <section className="employees-analytics-section">
                         <div className="section-title-area">
                             <h2><Users size={22} /> Performanca e Punonjësve</h2>
@@ -216,7 +209,7 @@ const OwnerAnalyticsDashboard = () => {
                                                 </div>
                                                 <div className="mini-box red">
                                                     <span className="label">Anuluar</span>
-                                                    <span className="val">{employeeStats.stats.canceled}</span>
+                                                    <span className="val">{employeeStats.stats.cancelled}</span>
                                                 </div>
                                             </div>
                                             <div className="emp-top-services">

@@ -66,7 +66,7 @@ class EmployeeAppointmentController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:completed,cancelled,no_show,confirmed',
+            'status' => 'required|in:completed,no_show,confirmed',
         ]);
 
         $appointment = Appointments::where('id', $appointmentId)

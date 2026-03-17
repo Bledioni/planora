@@ -57,3 +57,133 @@
         width: 100%;
     }
 }
+
+/* Status Colors for Employees */
+.status-pill.active { background: #d1fae5; color: #065f46; }
+.status-pill.pending { background: #fef3c7; color: #92400e; }
+.status-pill.inactive, .status-pill.suspended { background: #fee2e2; color: #991b1b; }
+
+/* Stat Pill Boxes */
+.stat-pill-box {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid #f1f5f9;
+}
+
+.stat-pill-box.total { border-left: 4px solid var(--planora-blue); }
+.stat-pill-box.active { border-left: 4px solid #10b981; }
+.stat-pill-box.pending { border-left: 4px solid #f59e0b; }
+
+.stat-pill-box span { font-size: 0.9rem; color: #64748b; }
+.stat-pill-box strong { color: #1e293b; font-size: 1.1rem; }
+
+/* Employee Card Specifics */
+.premium-action-card.employee-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+    box-shadow: var(--shadow-soft);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.card-top-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.card-info {
+    width: 100%;
+}
+
+.card-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.card-info p {
+    font-size: 0.75rem;
+    margin-bottom: 12px;
+    color: #94a3b8;
+}
+
+.emp-details-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.emp-details-list div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-footer-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 20px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 15px;
+    align-items: center;
+}
+
+.actions-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Spin Animation */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .actions-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-indicator-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .planora-calendar-big {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .modern-search-wrapper {
+        width: 100% !important;
+    }
+
+    .planora-submit-btn {
+        width: 100%;
+    }
+}
