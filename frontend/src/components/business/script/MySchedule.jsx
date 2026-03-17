@@ -36,12 +36,12 @@ const MySchedule = () => {
 
     const sortedAppointments = useMemo(() => {
         const active = appointments
-            .filter(a => a.status !== 'canceled')
+            .filter(a => a.status !== 'cancelled')
             .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
-        const canceled = appointments
-            .filter(a => a.status === 'canceled')
+        const cancelled = appointments
+            .filter(a => a.status === 'cancelled')
             .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
-        return [...active, ...canceled];
+        return [...active, ...cancelled];
     }, [appointments]);
 
     useEffect(() => {
@@ -61,8 +61,12 @@ const MySchedule = () => {
         fetchBusinessStatus();
     }, []);
 
+    // FIX 1: use selectedDate (primitive) not calendarDays (object ref)
+    // FIX 2: debounce + AbortController to cancel stale requests
     useEffect(() => {
         if (!employeeId) return;
+
+        const controller = new AbortController();
 
         const fetchCounts = async () => {
             const counts = {};
@@ -74,21 +78,31 @@ const MySchedule = () => {
                 }
                 try {
                     const res = await api.get('/owner/appointments/list', {
-                        params: { date: day.full, employee_id: employeeId }
+                        params: { date: day.full, employee_id: employeeId },
+                        signal: controller.signal
                     });
                     const data = res.data.appointments || [];
-                    const count = data.filter(a => a.status !== 'canceled').length;
+                    const count = data.filter(a => a.status !== 'cancelled').length;
                     counts[day.full] = count;
                     setCache(prev => ({ ...prev, [cacheKey]: count }));
-                } catch {
-                    counts[day.full] = 0;
+                } catch (err) {
+                    if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
+                        counts[day.full] = 0;
+                    }
                 }
             }));
-            setDayCounts(counts);
+            if (!controller.signal.aborted) {
+                setDayCounts(prev => ({ ...prev, ...counts }));
+            }
         };
 
-        fetchCounts();
-    }, [calendarDays, employeeId]);
+        const timer = setTimeout(fetchCounts, 300);
+
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [selectedDate, employeeId]); // <-- FIX: was [calendarDays, employeeId]
 
     const fetchBusinessStatus = async () => {
         try {
@@ -99,9 +113,13 @@ const MySchedule = () => {
         }
     };
 
+    // FIX 3: AbortController on appointments fetch too
     useEffect(() => {
+        if (!employeeId) return;
+
+        const controller = new AbortController();
+
         const fetchApts = async () => {
-            if (!employeeId) return;
             if (cache[selectedDate]) {
                 setAppointments(cache[selectedDate]);
                 return;
@@ -109,18 +127,28 @@ const MySchedule = () => {
             setLoading(true);
             try {
                 const res = await api.get('/owner/appointments/list', {
-                    params: { date: selectedDate, employee_id: employeeId }
+                    params: { date: selectedDate, employee_id: employeeId },
+                    signal: controller.signal
                 });
                 const data = res.data.appointments || [];
-                setCache(prev => ({ ...prev, [selectedDate]: data }));
-                setAppointments(data);
+                if (!controller.signal.aborted) {
+                    setCache(prev => ({ ...prev, [selectedDate]: data }));
+                    setAppointments(data);
+                }
             } catch (err) {
-                console.error("Error fetching appointments:", err);
+                if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
+                    console.error('Error fetching appointments:', err);
+                }
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         };
+
         fetchApts();
+
+        return () => controller.abort();
     }, [selectedDate, employeeId]);
 
     const handleCancel = async (apt) => {
@@ -128,12 +156,12 @@ const MySchedule = () => {
         try {
             await Promise.all(
                 apt.ids.map(id =>
-                    api.put(`/owner/appointments/update-status/${id}`, { status: 'canceled' })
+                    api.put(`/owner/appointments/update-status/${id}`, { status: 'cancelled' })
                 )
             );
             const updated = appointments.map(a =>
                 JSON.stringify(a.ids) === JSON.stringify(apt.ids)
-                    ? { ...a, status: 'canceled' }
+                    ? { ...a, status: 'cancelled' }
                     : a
             );
             setAppointments(updated);
@@ -149,8 +177,8 @@ const MySchedule = () => {
         setSelectedDate(getLocalDateString(d));
     };
 
-    const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
-    const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
+    const activeApts = sortedAppointments.filter(a => a.status !== 'cancelled');
+    const cancelledApts = sortedAppointments.filter(a => a.status === 'cancelled');
     const today = getLocalDateString(new Date());
 
     const formattedDate = new Date(
@@ -275,13 +303,13 @@ const MySchedule = () => {
                                     </div>
                                 ))}
 
-                                {canceledApts.length > 0 && (
+                                {cancelledApts.length > 0 && (
                                     <>
-                                        <div className="canceled-section-label">
+                                        <div className="cancelled-section-label">
                                             <AlertCircle size={13} />
                                             Terminet e Anuluara
                                         </div>
-                                        {canceledApts.map((apt) => (
+                                        {cancelledApts.map((apt) => (
                                             <div key={apt.ids.join('-')} className="timeline-row">
                                                 <div className="appointment-card-large is-cancelled">
                                                     <div className="client-section">
@@ -303,7 +331,7 @@ const MySchedule = () => {
                                                         <span className="price-tag">
                                                             {Number(apt.total_price).toFixed(2)}€
                                                         </span>
-                                                        <span className="status-pill canceled">
+                                                        <span className="status-pill cancelled">
                                                             anuluar
                                                         </span>
                                                     </div>

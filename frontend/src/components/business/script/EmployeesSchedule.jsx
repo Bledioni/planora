@@ -36,12 +36,12 @@ const EmployeesSchedule = () => {
 
     const sortedAppointments = useMemo(() => {
         const active = appointments
-            .filter(a => a.status !== 'canceled')
+            .filter(a => a.status !== 'cancelled')
             .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
-        const canceled = appointments
-            .filter(a => a.status === 'canceled')
+        const cancelled = appointments
+            .filter(a => a.status === 'cancelled')
             .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
-        return [...active, ...canceled];
+        return [...active, ...cancelled];
     }, [appointments]);
 
     useEffect(() => {
@@ -56,7 +56,7 @@ const EmployeesSchedule = () => {
             await Promise.all(calendarDays.map(async (day) => {
                 const cacheKey = `${selectedEmployee}_${day.full}`;
                 if (cache[cacheKey]) {
-                    counts[day.full] = cache[cacheKey].filter(a => a.status !== 'canceled').length;
+                    counts[day.full] = cache[cacheKey].filter(a => a.status !== 'cancelled').length;
                     return;
                 }
                 try {
@@ -64,7 +64,7 @@ const EmployeesSchedule = () => {
                         params: { date: day.full, employee_id: selectedEmployee }
                     });
                     const data = res.data.appointments || [];
-                    counts[day.full] = data.filter(a => a.status !== 'canceled').length;
+                    counts[day.full] = data.filter(a => a.status !== 'cancelled').length;
                 } catch {
                     counts[day.full] = 0;
                 }
@@ -123,12 +123,12 @@ const EmployeesSchedule = () => {
         try {
             await Promise.all(
                 apt.ids.map(id =>
-                    api.put(`/owner/appointments/update-status/${id}`, { status: 'canceled' })
+                    api.put(`/owner/appointments/update-status/${id}`, { status: 'cancelled' })
                 )
             );
             const updated = appointments.map(a =>
                 JSON.stringify(a.ids) === JSON.stringify(apt.ids)
-                    ? { ...a, status: 'canceled' }
+                    ? { ...a, status: 'cancelled' }
                     : a
             );
             setAppointments(updated);
@@ -145,8 +145,8 @@ const EmployeesSchedule = () => {
         setSelectedDate(getLocalDateString(d));
     };
 
-    const activeApts = sortedAppointments.filter(a => a.status !== 'canceled');
-    const canceledApts = sortedAppointments.filter(a => a.status === 'canceled');
+    const activeApts = sortedAppointments.filter(a => a.status !== 'cancelled');
+    const cancelledApts = sortedAppointments.filter(a => a.status === 'cancelled');
     const selectedEmp = employees.find(e => e.id === selectedEmployee);
     const today = getLocalDateString(new Date());
 
@@ -253,13 +253,13 @@ const EmployeesSchedule = () => {
                                     </div>
                                 ))}
 
-                                {canceledApts.length > 0 && (
+                                {cancelledApts.length > 0 && (
                                     <>
-                                        <div className="canceled-section-label">
+                                        <div className="cancelled-section-label">
                                             <AlertCircle size={13} />
                                             Terminet e Anuluara
                                         </div>
-                                        {canceledApts.map(apt => (
+                                        {cancelledApts.map(apt => (
                                             <div key={apt.ids.join('-')} className="timeline-row">
                                                 <div className="appointment-card-large is-cancelled">
                                                     <div className="client-section">

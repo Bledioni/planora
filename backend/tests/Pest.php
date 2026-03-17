@@ -11,10 +11,20 @@
 |
 */
 
+
 uses(
     Tests\TestCase::class,
-    // Illuminate\Foundation\Testing\RefreshDatabase::class,
+    Illuminate\Foundation\Testing\RefreshDatabase::class,
 )->in('Feature');
+
+afterEach(function () {
+    \Illuminate\Support\Facades\Auth::forgetGuards();
+    app()->forgetInstance('auth');
+});
+
+expect()->extend('toBeOne', function () {
+    return $this->toBe(1);
+});
 
 /*
 |--------------------------------------------------------------------------

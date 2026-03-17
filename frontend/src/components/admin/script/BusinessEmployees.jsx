@@ -8,7 +8,7 @@ import {
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
-import '../style/AdminDashboard.css';
+import '../style/BusinessEmployees.css';
 
 const BusinessEmployees = () => {
     const { businessId } = useParams();

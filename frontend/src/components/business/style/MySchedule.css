@@ -86,30 +86,13 @@
 
 /* ── Calendar Strip ── */
 .planora-calendar-big {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+    flex-direction: row !important;
+    align-items: center !important;
 }
 
 .nav-btn-big {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--muted);
-  flex-shrink: 0;
-  transition: all 0.15s ease;
+    align-self: center !important;
+    flex-shrink: 0 !important;
 }
 
 .nav-btn-big:hover {

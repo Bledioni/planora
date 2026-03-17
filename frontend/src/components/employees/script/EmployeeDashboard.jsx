@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Calendar, Clock, Phone, Scissors, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Phone, Scissors, RefreshCw, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { api } from '../../../index';
 import EmployeeSidebar from '../script/EmployeeSidebar';
 import Swal from 'sweetalert2';
@@ -65,8 +65,21 @@ const EmployeeDashboard = () => {
         if (result.isConfirmed) updateStatus(appt.id, 'no_show');
     };
 
+    const handleCancel = async (appt) => {
+        const result = await Swal.fire({
+            title: 'Anulo Terminin?',
+            text: `Termini i ${appt.client_name} do të anulohet.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Po, Anulo',
+            cancelButtonText: 'Mbyll'
+        });
+        if (result.isConfirmed) updateStatus(appt.id, 'cancelled');
+    };
+
     const getStatusClass = (status) => {
-    const map = { completed: 'completed', cancelled: 'cancelled', no_show: 'pending', confirmed: 'confirmed' };
+        const map = { completed: 'completed', cancelled: 'cancelled', no_show: 'pending', confirmed: 'confirmed' };
         return map[status] || 'pending';
     };
 
@@ -92,7 +105,6 @@ const EmployeeDashboard = () => {
 
                 <div className="schedule-container-wide">
 
-                    {/* Stats */}
                     <div className="ed-stats-row">
                         <div className="ed-stat-card blue">
                             <Calendar size={16} />
@@ -117,7 +129,6 @@ const EmployeeDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Appointments */}
                     <div className="timeline-container">
                         {loading ? (
                             <div className="planora-loader-big" />
@@ -174,6 +185,15 @@ const EmployeeDashboard = () => {
                                                         className="ed-btn-noshow"
                                                     >
                                                         Pa paraqitje
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleCancel(appt)}
+                                                        className="ed-btn-cancel"
+                                                    >
+                                                        {updatingId === appt.id
+                                                            ? <RefreshCw size={14} className="spin" />
+                                                            : <><XCircle size={14} /> Anulo</>
+                                                        }
                                                     </button>
                                                 </div>
                                             )}
