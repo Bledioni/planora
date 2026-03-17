@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Building2, Store, MapPin,
-  LogOut, Menu, X, ChevronRight, ChevronDown ,Tag
+  LogOut, Menu, X, ChevronRight, ChevronDown, Tag
 } from 'lucide-react';
 import '../style/AdminSidebar.css';
 
@@ -29,9 +29,9 @@ const AdminSidebar = () => {
         { name: 'Vizitat',        path: '/admin/visits',            icon: MapPin },
       ]
     },
-    { name: 'Email',     path: '/admin/send-email',                 icon: LayoutDashboard },
-    { name: 'Analytics', path: '/admin/admin-analytics-dashboard',  icon: LayoutDashboard },
-    { name: 'Kategoritë', path: '/admin/categories', icon: Tag },
+    { name: 'Email',      path: '/admin/send-email',                icon: LayoutDashboard },
+    { name: 'Analytics',  path: '/admin/admin-analytics-dashboard', icon: LayoutDashboard },
+    { name: 'Kategoritë', path: '/admin/categories',                icon: Tag },
   ];
 
   return (
@@ -42,7 +42,15 @@ const AdminSidebar = () => {
 
       {isMobileOpen && <div className="sidebar-overlay" onClick={() => setIsMobileOpen(false)} />}
 
-      <aside className={`owner-sidebar ${isMobileOpen ? 'open' : ''}`}>
+      <aside
+        className={`owner-sidebar ${isMobileOpen ? 'open' : ''}`}
+        style={{
+          height: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
         <div className="owner-sidebar-header">
           <div className="logo-icon">P</div>
           <div className="header-text">
@@ -51,7 +59,10 @@ const AdminSidebar = () => {
           </div>
         </div>
 
-        <nav className="owner-sidebar-nav">
+        <nav
+          className="owner-sidebar-nav"
+          style={{ flex: 1, overflowY: 'auto', paddingBottom: '8px' }}
+        >
           {menuItems.map((item, index) => (
             <div key={index} className="nav-group">
               {!item.hasSubmenu ? (
@@ -93,7 +104,16 @@ const AdminSidebar = () => {
           ))}
         </nav>
 
-        <div className="owner-sidebar-footer">
+        <div
+          className="owner-sidebar-footer"
+          style={{
+            flexShrink: 0,
+            paddingTop: '16px',
+            paddingBottom: 'max(env(safe-area-inset-bottom), 80px)',
+            borderTop: '1px solid #e2e8f0',
+            background: '#ffffff',
+          }}
+        >
           <button onClick={handleLogout} className="logout-btn">
             <LogOut size={20} />
             <span>Logout</span>
