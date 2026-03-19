@@ -181,12 +181,14 @@ class BookingController extends Controller
         $fingerprint = $request->input('fingerprint');
 
         $attempts = BookingAttempt::where('created_at', '>=', now()->subHours(24))
-            ->where(function ($query) use ($clientIp, $request, $fingerprint) {
-                $query->where('client_ip', $clientIp)
-                    ->orWhere('client_phone', $request->client_phone)
-                    ->orWhere('fingerprint', $fingerprint);
-            })
-            ->count();
+        ->where(function ($query) use ($request, $fingerprint) {
+            $query->where('client_phone', $request->client_phone);
+
+            if (!empty($fingerprint)) {
+                $query->orWhere('fingerprint', $fingerprint);
+            }
+        })
+        ->count();
 
         if ($attempts >= 2) {
             return response()->json([
