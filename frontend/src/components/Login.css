@@ -171,7 +171,7 @@ body {
   border: 1.5px solid var(--border);
   border-radius: 12px;
   font-family: 'Manrope', sans-serif;
-  font-size: 0.925rem;
+  font-size: 16px;
   font-weight: 500;
   color: var(--dark);
   transition: all 0.15s ease;

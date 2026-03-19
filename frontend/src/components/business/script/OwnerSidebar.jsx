@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
     Calendar, Users, BarChart3, 
-    LogOut, Scissors, ClipboardList
+    LogOut, ClipboardList
 } from 'lucide-react';
 import { api } from '../../../index';
 import '../style/OwnerSidebar.css';
@@ -40,18 +40,28 @@ const OwnerSidebar = () => {
                 <div className="sidebar-overlay" onClick={closeMenu} />
             )}
 
-            <aside className={`owner-sidebar ${isOpen ? 'open' : ''}`}>
-
+            <aside
+                className={`owner-sidebar ${isOpen ? 'open' : ''}`}
+                style={{
+                    height: '100dvh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                }}
+            >
                 <div className="sidebar-logo">
                     <div className="sidebar-logo-icon">
-                        <img src={`${logo}`} alt="" style={{width: '20px', backgroundColor: 'none'}}/>
+                        <img src={logo} alt="" style={{ width: '20px' }} />
                     </div>
                     <div className="sidebar-logo-text">
                         <span>Planora</span><strong>Book</strong>
                     </div>
                 </div>
 
-                <nav className="owner-sidebar-nav">
+                <nav
+                    className="owner-sidebar-nav"
+                    style={{ flex: 1, overflowY: 'auto', paddingBottom: '8px' }}
+                >
                     <p className="sidebar-section-label">Kryefaqja</p>
                     <NavLink to="/owner/my-schedules" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
@@ -81,7 +91,16 @@ const OwnerSidebar = () => {
                     </NavLink>
                 </nav>
 
-                <div className="owner-sidebar-footer">
+                <div
+                    className="owner-sidebar-footer"
+                    style={{
+                        flexShrink: 0,
+                        paddingTop: '16px',
+                        paddingBottom: 'max(env(safe-area-inset-bottom), 80px)',
+                        borderTop: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                    }}
+                >
                     <button onClick={handleLogout} className="sidebar-logout-btn">
                         <LogOut size={16} /> Dil
                     </button>
