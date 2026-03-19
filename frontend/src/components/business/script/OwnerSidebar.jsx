@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
     Calendar, Users, BarChart3, 
-    LogOut, ClipboardList
+    LogOut, ClipboardList,Settings
 } from 'lucide-react';
 import { api } from '../../../index';
 import '../style/OwnerSidebar.css';
@@ -88,6 +88,11 @@ const OwnerSidebar = () => {
                     <NavLink to="/owner/manage-services" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <ClipboardList size={18} /> Shërbimet
+                    </NavLink>
+                    <p className="sidebar-section-label">Llogaria</p>
+                    <NavLink to="/settings" onClick={closeMenu}
+                        className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                        <Settings size={18} /> Cilësimet
                     </NavLink>
                 </nav>
 
