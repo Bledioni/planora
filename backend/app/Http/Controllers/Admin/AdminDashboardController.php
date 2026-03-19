@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\User;
 use App\Models\Subscription;
 use App\Models\Appointments;
+use App\Models\Employees;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -62,21 +63,22 @@ class AdminDashboardController extends Controller
                 ->whereBetween('end_date', [now(), now()->addDays(7)])
                 ->count();
 
-            // 7. Total Revenue (if you track payments)
-            // $totalRevenue = Payment::sum('amount'); // Uncomment when you add payments
+            // 7. Total Employees
+            $totalEmployees = Employees::count();
 
             return response()->json([
                 'status' => 'success',
                 'stats' => [
-                    'total_businesses' => $totalBusinesses,
-                    'growth_rate' => $growthRate,
+                    'total_businesses'     => $totalBusinesses,
+                    'growth_rate'          => $growthRate,
                     'businesses_this_week' => $businessesThisWeek,
                     'businesses_last_week' => $businessesLastWeek,
-                    'appointments_today' => $appointmentsToday,
-                    'popular_categories' => $popularCategories,
-                    'active_businesses' => $activeBusinesses,
-                    'pending_businesses' => $pendingBusinesses,
-                    'expiring_soon' => $expiringSoon,
+                    'appointments_today'   => $appointmentsToday,
+                    'popular_categories'   => $popularCategories,
+                    'active_businesses'    => $activeBusinesses,
+                    'pending_businesses'   => $pendingBusinesses,
+                    'expiring_soon'        => $expiringSoon,
+                    'total_employees'      => $totalEmployees, // 👈 added
                 ]
             ], 200);
 
