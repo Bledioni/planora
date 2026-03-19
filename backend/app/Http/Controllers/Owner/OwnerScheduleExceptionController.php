@@ -48,7 +48,7 @@ class OwnerScheduleExceptionController extends Controller
             $cancelledCount = 0;
 
             foreach ($appointments as $appointment) {
-                $appointment->update(['status' => 'canceled']);
+                $appointment->update(['status' => 'cancelled']);
 
                 try {
                     Mail::to($appointment->client_email)
