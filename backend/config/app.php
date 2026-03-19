@@ -59,6 +59,9 @@ return [
 
     'asset_url' => env('ASSET_URL'),
 
+    'frontend_url' => 'https://planorabook.com', // ← add this
+
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
