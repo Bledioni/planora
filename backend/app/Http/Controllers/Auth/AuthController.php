@@ -192,4 +192,22 @@ public function resetPassword(Request $request)
 
     return response()->json(['message' => 'Token i pavlefshëm ose i skaduar.'], 422);
 }
+
+public function changePassword(Request $request)
+{
+    $request->validate([
+        'current_password' => 'required',
+        'password'         => 'required|min:8|confirmed',
+    ]);
+
+    if (!Hash::check($request->current_password, $request->user()->password)) {
+        return response()->json(['message' => 'Fjalëkalimi aktual është i gabuar.'], 422);
+    }
+
+    $request->user()->update([
+        'password' => Hash::make($request->password),
+    ]);
+
+    return response()->json(['message' => 'Fjalëkalimi u ndryshua me sukses.']);
+}
 }

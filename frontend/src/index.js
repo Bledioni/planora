@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import axios from 'axios';
+import { UserProvider } from './context/UserContext';
+import { User } from 'lucide-react';
+
+
+
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'https://api.planorabook.com';
 // const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
@@ -26,5 +31,8 @@ export const backend = axios.create({
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   
-    <App />
+    <UserProvider>
+          <App />
+
+    </UserProvider>
 );

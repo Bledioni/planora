@@ -6,6 +6,7 @@ import { api } from "../../../index";
 import "../../appointments/style/BookingApp.css";
 import "../../appointments/style/CustomCalendar.css";
 import PhoneInputField from '../../phoneInputs/script/PhoneInputField';
+import { useFingerprint } from '../../../hooks/useFingerprint';
 
 const STORAGE_KEY = 'planora_user_info';
 
@@ -55,11 +56,14 @@ const scrollTo = (ref) => {
 const BookingApp = () => {
   const { shopSlug } = useParams();
   const navigate = useNavigate();
+  const fingerprint = useFingerprint();
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
+  const [blockedDates, setBlockedDates] = useState([]); // 👈 added
 
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
@@ -130,9 +134,46 @@ const BookingApp = () => {
     }
   }, [selectedBusiness, selectedBarber, selectedServices, selectedDate]);
 
+  // 👈 added - fetch blocked dates for a given month
+  const fetchBlockedDates = useCallback(async (year, month) => {
+    if (!selectedBarber || !selectedServices.length || !selectedBusiness) return;
+    try {
+      const res = await api.get(`/public/business/${selectedBarber}/blocked-dates`, {
+        params: {
+          employee_id: selectedBarber,
+          service_ids: selectedServices,
+          year,
+          month,
+        },
+        paramsSerializer: (params) => {
+          const searchParams = new URLSearchParams();
+          Object.entries(params).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              value.forEach((v) => searchParams.append(`${key}[]`, v));
+            } else {
+              searchParams.append(key, value);
+            }
+          });
+          return searchParams.toString();
+        },
+      });
+      setBlockedDates(res.data);
+    } catch {
+      setBlockedDates([]);
+    }
+  }, [selectedBarber, selectedServices, selectedBusiness]);
+
   useEffect(() => {
     if (selectedDate && step === 2) fetchSlots();
   }, [selectedDate, fetchSlots, step]);
+
+  // 👈 added - fetch blocked dates when entering step 2
+  useEffect(() => {
+    if (step === 2) {
+      const now = new Date();
+      fetchBlockedDates(now.getFullYear(), now.getMonth() + 1);
+    }
+  }, [step, fetchBlockedDates]);
 
   const handleBarberSelect = (empId) => {
     setSelectedBarber(empId);
@@ -181,6 +222,7 @@ const BookingApp = () => {
         client_name: userInfo.name,
         client_email: userInfo.email,
         client_phone: userInfo.phone,
+        fingerprint: fingerprint,
       });
 
       if (response.data.status === 'success') {
@@ -197,7 +239,9 @@ const BookingApp = () => {
   const isDateDisabled = (date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date < today;
+    if (date < today) return true;
+    const dateStr = getLocalDateString(date);
+    return blockedDates.includes(dateStr); // 👈 added
   };
 
   const selectedServiceObjects = details.services?.filter((s) => selectedServices.includes(s.id)) || [];
@@ -308,6 +352,16 @@ const BookingApp = () => {
                 value={selectedDate}
                 minDate={new Date()}
                 tileDisabled={({ date }) => isDateDisabled(date)}
+                tileClassName={({ date }) => {
+                  const dateStr = getLocalDateString(date);
+                  return blockedDates.includes(dateStr) ? 'date-blocked' : null;
+                }}
+                onActiveStartDateChange={({ activeStartDate }) => {
+                  fetchBlockedDates(
+                    activeStartDate.getFullYear(),
+                    activeStartDate.getMonth() + 1
+                  );
+                }}
                 locale="sq-AL"
                 maxDetail="month"
                 prev2Label={null}

@@ -34,6 +34,7 @@ Route::middleware(['business.active'])->group(function () {
     Route::get('/business/{businessId}/{employeeId}/available-slots', [App\Http\Controllers\Public\BookingController::class, 'getAvailableSlots']);
     Route::get('/businesses/all', [App\Http\Controllers\Public\PublicBusinessController::class, 'getAllBusinesses']);
     Route::get('/businesses/details/{slug}', [App\Http\Controllers\Public\PublicBusinessController::class, 'getBusinessBySlug']);
+    Route::get('/business/{employeeId}/blocked-dates', [App\Http\Controllers\Public\BookingController::class, 'getBlockedDates']);
 });
     
     // Wishlist
@@ -53,6 +54,8 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [App\Http\Controllers\Auth\AuthController::class, 'logout']);
         Route::get('/profile', [App\Http\Controllers\Auth\AuthController::class, 'getUserProfile']);
+        Route::post('/change-password', [App\Http\Controllers\Auth\AuthController::class, 'changePassword']); // ← add this
+
     });
 
     /*

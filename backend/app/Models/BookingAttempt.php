@@ -9,5 +9,5 @@ class BookingAttempt extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['client_ip', 'client_phone'];
+    protected $fillable = ['client_ip', 'client_phone', 'fingerprint'];
 }

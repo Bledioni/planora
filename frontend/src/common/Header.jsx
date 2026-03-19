@@ -40,6 +40,7 @@ import AppointmentConfirmed from "../components/appointments/scripts/Appointment
 import AdminBusinessConfig from "../components/admin/script/AdminBusinessConfig";
 import AdminBusinessVisits from "../components/admin/script/AdminBusinessVisits";
 import AdminCreateCategory from "../components/admin/script/AdminCreateCategory";
+import Settings from "../components/settings/Settings";
 
 
 
@@ -47,6 +48,11 @@ function Header() {
   return (
     <Router>
       <Routes>
+
+
+      <Route element={<ProtectedRoute allowedRoles={["user", "admin", "business_owner", "employee"]} />}>
+          <Route path="/settings" element={<Settings />} />
+      </Route>
 
         {/* --- PUBLIC --- */}
         <Route path="/" element={<PlanoraLanding />} />
@@ -78,6 +84,7 @@ function Header() {
           <Route path="/admin/visits" element={<AdminBusinessVisits />} />
           <Route path="/admin/categories" element={<AdminCreateCategory />} />
         </Route>
+        
 
         {/* --- PROTECTED: BUSINESS OWNER --- */}
         <Route element={<ProtectedRoute allowedRoles={["business_owner", "admin"]} />}>

@@ -177,15 +177,18 @@ class BookingController extends Controller
         $businessCheck = $this->checkBusinessActive($request->business_id);
         if ($businessCheck) return $businessCheck;
 
-        $clientIp = $request->ip();
+        $clientIp    = $request->ip();
+        $fingerprint = $request->input('fingerprint');
+
         $attempts = BookingAttempt::where('created_at', '>=', now()->subHours(24))
-            ->where(function ($query) use ($clientIp, $request) {
+            ->where(function ($query) use ($clientIp, $request, $fingerprint) {
                 $query->where('client_ip', $clientIp)
-                      ->orWhere('client_phone', $request->client_phone);
+                    ->orWhere('client_phone', $request->client_phone)
+                    ->orWhere('fingerprint', $fingerprint);
             })
             ->count();
 
-        if ($attempts >= 2000) {
+        if ($attempts >= 2) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Nuk mund të bëni më shumë se 2 rezervime brenda 24 orëve.'
@@ -195,6 +198,7 @@ class BookingController extends Controller
         BookingAttempt::create([
             'client_ip'    => $clientIp,
             'client_phone' => $request->client_phone,
+            'fingerprint'  => $fingerprint, // ← just add this line
         ]);
 
         try {
@@ -322,4 +326,116 @@ class BookingController extends Controller
             ]
         ]);
     }
+
+    public function getBlockedDates(Request $request): JsonResponse
+{
+    $request->validate([
+        'employee_id'   => 'required|exists:employees,id',
+        'service_ids'   => 'required|array|min:1',
+        'service_ids.*' => 'exists:services,id',
+        'year'          => 'required|integer',
+        'month'         => 'required|integer|min:1|max:12',
+    ]);
+
+    $services = Services::whereIn('id', $request->service_ids)->get();
+    $businessId = $services->pluck('business_id')->unique()->first();
+    $totalDuration = $this->sumDurations($services);
+
+    // Get all days in the given month
+    $startOfMonth = Carbon::createFromDate($request->year, $request->month, 1)->startOfMonth();
+    $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+    $blockedDates = [];
+    $current = $startOfMonth->copy();
+
+    while ($current <= $endOfMonth) {
+        $date      = $current->toDateString();
+        $dayOfWeek = $current->dayOfWeek;
+
+        // Check if business works this day
+        $schedule = Schedules::where('business_id', $businessId)
+            ->where('day_of_week', $dayOfWeek)
+            ->where(function ($q) use ($request) {
+                $q->where('employee_id', $request->employee_id)->orWhereNull('employee_id');
+            })
+            ->orderBy('employee_id', 'desc')
+            ->first();
+
+        if (!$schedule || $schedule->is_off) {
+            $blockedDates[] = $date;
+            $current->addDay();
+            continue;
+        }
+
+        // Check if date is a schedule exception (day off)
+        $isException = ScheduleException::where('employee_id', $request->employee_id)
+            ->where('business_id', $businessId)
+            ->where('date', $date)
+            ->exists();
+
+        if ($isException) {
+            $blockedDates[] = $date;
+            $current->addDay();
+            continue;
+        }
+
+        // Check if there are any available slots
+        $bookings = Appointments::where('employee_id', $request->employee_id)
+            ->whereDate('start_time', $date)
+            ->whereIn('status', ['active', 'pending', 'confirmed'])
+            ->get()
+            ->sortBy('start_time')
+            ->values();
+
+        $openTime = Carbon::parse($date . ' ' . $schedule->open_at);
+        $endTime  = Carbon::parse($date . ' ' . $schedule->close_at);
+
+        $hasSlot = false;
+        $pointer = $openTime->copy();
+
+        while ($pointer->copy()->addMinutes($totalDuration) <= $endTime) {
+            $blockingBooking = $bookings->first(function ($booking) use ($pointer) {
+                return $pointer >= Carbon::parse($booking->start_time)
+                    && $pointer < Carbon::parse($booking->finish_time);
+            });
+
+            if ($blockingBooking) {
+                $pointer = Carbon::parse($blockingBooking->finish_time);
+                continue;
+            }
+
+            $slotStart = $pointer->copy();
+            $slotEnd   = $pointer->copy()->addMinutes($totalDuration);
+
+            if ($schedule->break_start && $schedule->break_end) {
+                $breakStart = Carbon::parse($date . ' ' . $schedule->break_start);
+                $breakEnd   = Carbon::parse($date . ' ' . $schedule->break_end);
+                if ($slotStart < $breakEnd && $slotEnd > $breakStart) {
+                    $pointer = $breakEnd->copy();
+                    continue;
+                }
+            }
+
+            $overlapBooking = $bookings->contains(function ($booking) use ($slotStart, $slotEnd) {
+                return $slotStart < Carbon::parse($booking->finish_time)
+                    && $slotEnd > Carbon::parse($booking->start_time);
+            });
+
+            if (!$overlapBooking && !$slotStart->isPast()) {
+                $hasSlot = true;
+                break;
+            }
+
+            $pointer->addMinutes($totalDuration);
+        }
+
+        if (!$hasSlot) {
+            $blockedDates[] = $date;
+        }
+
+        $current->addDay();
+    }
+
+    return response()->json($blockedDates);
+}
 }
