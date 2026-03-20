@@ -27,7 +27,8 @@ const ChangePasswordSection = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); setSuccess('');
+        setError('');
+        setSuccess('');
 
         if (newPassword !== confirmPassword) {
             setError('Fjalëkalimet e reja nuk përputhen.');
@@ -46,7 +47,9 @@ const ChangePasswordSection = () => {
                 password_confirmation: confirmPassword,
             });
             setSuccess('Fjalëkalimi u ndryshua me sukses!');
-            setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
         } catch (err) {
             if (err.response?.status === 422) {
                 setError(err.response?.data?.message || 'Fjalëkalimi aktual është i gabuar.');
@@ -69,24 +72,53 @@ const ChangePasswordSection = () => {
     );
 
     return (
-        <div style={{ background: '#ffffff', border: '1px solid #e4e9f2', borderRadius: '20px', padding: '28px', boxShadow: '0 4px 16px rgba(13,17,23,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #e4e9f2' }}>
-                <div style={{ width: '36px', height: '36px', background: '#eff6ff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+        <div style={{
+            background: '#ffffff', border: '1px solid #e4e9f2',
+            borderRadius: '20px', padding: '28px',
+            boxShadow: '0 4px 16px rgba(13,17,23,0.06)'
+        }}>
+            <div style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                marginBottom: '24px', paddingBottom: '16px',
+                borderBottom: '1px solid #e4e9f2'
+            }}>
+                <div style={{
+                    width: '36px', height: '36px', background: '#eff6ff',
+                    borderRadius: '10px', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', color: '#2563eb'
+                }}>
                     <Lock size={16} />
                 </div>
                 <div>
-                    <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1117', margin: 0 }}>Ndrysho Fjalëkalimin</h2>
-                    <p style={{ fontSize: '0.78rem', color: '#6b7a99', margin: 0 }}>Rekomandohet të përdorni një fjalëkalim të fortë</p>
+                    <h2 style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1117', margin: 0 }}>
+                        Ndrysho Fjalëkalimin
+                    </h2>
+                    <p style={{ fontSize: '0.78rem', color: '#6b7a99', margin: 0 }}>
+                        Rekomandohet të përdorni një fjalëkalim të fortë
+                    </p>
                 </div>
             </div>
 
             {error && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', padding: '12px 14px', color: '#ef4444', fontSize: '0.85rem', fontWeight: '500', marginBottom: '20px' }}>
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: '#fef2f2', border: '1px solid #fecaca',
+                    borderRadius: '10px', padding: '12px 14px',
+                    color: '#ef4444', fontSize: '0.85rem', fontWeight: '500',
+                    marginBottom: '20px'
+                }}>
                     <AlertCircle size={15} /> {error}
                 </div>
             )}
+
             {success && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '12px 14px', color: '#16a34a', fontSize: '0.85rem', fontWeight: '500', marginBottom: '20px' }}>
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: '#f0fdf4', border: '1px solid #bbf7d0',
+                    borderRadius: '10px', padding: '12px 14px',
+                    color: '#16a34a', fontSize: '0.85rem', fontWeight: '500',
+                    marginBottom: '20px'
+                }}>
                     <CheckCircle size={15} /> {success}
                 </div>
             )}
@@ -113,12 +145,18 @@ const ChangePasswordSection = () => {
                     </div>
                 ))}
 
-                <button type="submit" disabled={loading} style={{
-                    background: loading ? '#93c5fd' : '#2563eb', color: '#ffffff',
-                    border: 'none', borderRadius: '10px', padding: '12px',
-                    fontSize: '0.9rem', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit', marginTop: '4px', transition: 'background 0.2s ease'
-                }}>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                        background: loading ? '#93c5fd' : '#2563eb',
+                        color: '#ffffff', border: 'none', borderRadius: '10px',
+                        padding: '12px', fontSize: '0.9rem', fontWeight: '700',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit', marginTop: '4px',
+                        transition: 'background 0.2s ease'
+                    }}
+                >
                     {loading ? 'Duke ndryshuar...' : 'Ndrysho Fjalëkalimin'}
                 </button>
             </form>

@@ -23,32 +23,68 @@ const DEFAULT_SCHEDULE = {
     is_off: false
 };
 
-const TIME_SLOTS = [];
-for (let h = 6; h <= 23; h++) {
-    TIME_SLOTS.push(`${String(h).padStart(2, '0')}:00`);
-    if (h < 23) TIME_SLOTS.push(`${String(h).padStart(2, '0')}:30`);
-}
+const HOURS = Array.from({ length: 18 }, (_, i) => String(i + 6).padStart(2, '0'));
+const MINUTES = ['00', '30'];
 
 const TimePicker = ({ label, value, onChange, minTime }) => {
+    const [selectedHour, setSelectedHour] = useState(value?.split(':')[0] || '09');
+    const [selectedMin, setSelectedMin] = useState(value?.split(':')[1] || '00');
+
+    useEffect(() => {
+        if (value) {
+            setSelectedHour(value.split(':')[0]);
+            setSelectedMin(value.split(':')[1]);
+        }
+    }, [value]);
+
+    const handleChange = (hour, min) => {
+        const newTime = `${hour}:${min}`;
+        if (minTime && newTime <= minTime) return;
+        onChange(newTime);
+    };
+
     return (
         <div className="ms-timepicker">
             <p className="ms-timepicker-label">{label}</p>
-            <div className="ms-timepicker-grid">
-                {TIME_SLOTS.map(slot => {
-                    const isSelected = value === slot;
-                    const isDisabled = minTime && slot <= minTime;
-                    return (
-                        <button
-                            key={slot}
-                            type="button"
-                            disabled={isDisabled}
-                            className={`ms-slot ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                            onClick={() => onChange(slot)}
-                        >
-                            {slot}
-                        </button>
-                    );
-                })}
+            <div className="ms-wheel-picker">
+                <div className="ms-wheel-column">
+                    <div className="ms-wheel-scroll">
+                        {HOURS.map(h => (
+                            <div
+                                key={h}
+                                className={`ms-wheel-item ${selectedHour === h ? 'selected' : ''}`}
+                                onClick={() => {
+                                    setSelectedHour(h);
+                                    handleChange(h, selectedMin);
+                                }}
+                            >
+                                {h}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="ms-wheel-sep">:</div>
+
+                <div className="ms-wheel-column">
+                    <div className="ms-wheel-scroll">
+                        {MINUTES.map(m => (
+                            <div
+                                key={m}
+                                className={`ms-wheel-item ${selectedMin === m ? 'selected' : ''}`}
+                                onClick={() => {
+                                    setSelectedMin(m);
+                                    handleChange(selectedHour, m);
+                                }}
+                            >
+                                {m}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            <div className="ms-wheel-display">
+                {selectedHour}:{selectedMin}
             </div>
         </div>
     );
@@ -64,7 +100,6 @@ const ManageSchedule = () => {
     const [activeDay, setActiveDay] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Block date state
     const [blockDate, setBlockDate] = useState('');
     const [blockReason, setBlockReason] = useState('');
     const [blocking, setBlocking] = useState(false);
@@ -114,7 +149,6 @@ const ManageSchedule = () => {
                 const schedRes = await api.get(`/owner/schedules/employee/${bizId}/${firstEmp}`);
                 parseSchedules(schedRes.data);
 
-                // Fetch blocked dates for first employee
                 const blockedRes = await api.get(`/owner/schedule-exceptions/${bizId}/${firstEmp}`);
                 setBlockedDates(blockedRes.data.data || []);
             }
@@ -275,7 +309,6 @@ const ManageSchedule = () => {
             <OwnerSidebar />
             <main className="ms-main">
 
-                {/* Header */}
                 <div className="ms-header">
                     <div>
                         <div className="ms-tag">
@@ -308,7 +341,6 @@ const ManageSchedule = () => {
                     </div>
                 ) : (
                     <>
-                        {/* Week overview grid */}
                         <div className="ms-week-grid">
                             {DAYS.map(day => {
                                 const status = getDayStatus(day.id);
@@ -335,7 +367,6 @@ const ManageSchedule = () => {
                             })}
                         </div>
 
-                        {/* Detail panel */}
                         {activeDay !== null && (() => {
                             const day = DAYS.find(d => d.id === activeDay);
                             const daySchedule = schedules[activeDay] || DEFAULT_SCHEDULE;
@@ -416,7 +447,6 @@ const ManageSchedule = () => {
                             );
                         })()}
 
-                        {/* ✅ Block a Date Section */}
                         <div className="ms-detail-panel" style={{ marginTop: '24px' }}>
                             <div className="ms-detail-header">
                                 <div className="ms-detail-title">
@@ -487,7 +517,6 @@ const ManageSchedule = () => {
                                 </button>
                             </div>
 
-                            {/* Blocked dates list */}
                             {blockedDates.length > 0 && (
                                 <div style={{ marginTop: '24px' }}>
                                     <p style={{ fontSize: '13px', fontWeight: '600', color: '#374151', marginBottom: '10px' }}>

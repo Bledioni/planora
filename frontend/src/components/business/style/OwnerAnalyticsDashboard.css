@@ -644,3 +644,58 @@
   /* Section title */
   .section-title-area h2 { font-size: 0.95rem; }
 }
+
+@media (max-width: 768px) {
+  .analytics-premium-header {
+    text-align: center;
+    align-items: center;
+  }
+
+  .header-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .header-top-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 11px;
+    border-radius: 100px;
+    border: 1px solid var(--blue-mid);
+    margin-bottom: 10px;
+  }
+
+  .header-title h1 {
+    text-align: center;
+    font-size: 1.4rem;
+  }
+
+  .header-title p {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .control-group {
+    width: 100%;
+  }
+
+  .modern-select,
+  .modern-date-input {
+    width: 100%;
+    min-width: unset;
+  }
+}

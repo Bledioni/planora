@@ -40,8 +40,9 @@ import AppointmentConfirmed from "../components/appointments/scripts/Appointment
 import AdminBusinessConfig from "../components/admin/script/AdminBusinessConfig";
 import AdminBusinessVisits from "../components/admin/script/AdminBusinessVisits";
 import AdminCreateCategory from "../components/admin/script/AdminCreateCategory";
-import Settings from "../components/settings/Settings";
-
+import OwnerSettings from "../components/settings/OwnerSettings";
+import AdminSettings from "../components/settings/AdminSettings";
+import EmployeeSettings from "../components/settings/EmployeeSettings";
 
 
 function Header() {
@@ -50,9 +51,6 @@ function Header() {
       <Routes>
 
 
-      <Route element={<ProtectedRoute allowedRoles={["user", "admin", "business_owner", "employee"]} />}>
-          <Route path="/settings" element={<Settings />} />
-      </Route>
 
         {/* --- PUBLIC --- */}
         <Route path="/" element={<PlanoraLanding />} />
@@ -83,6 +81,7 @@ function Header() {
           <Route path="/admin/business/:businessId/config" element={<AdminBusinessConfig />} />
           <Route path="/admin/visits" element={<AdminBusinessVisits />} />
           <Route path="/admin/categories" element={<AdminCreateCategory />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
         </Route>
         
 
@@ -94,6 +93,7 @@ function Header() {
           <Route path="/owner/side-bar" element={<OwnerSidebar />} />
           <Route path="/owner/manage-schedule" element={<ManageSchedule />} />
           <Route path="/owner/manage-services" element={<ManageServices />} />
+          <Route path="/owner/settings" element={<OwnerSettings />} />
         </Route>
 
         {/* --- PROTECTED: EMPLOYEE --- */}
@@ -102,6 +102,7 @@ function Header() {
           <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
           <Route path="/employee/side-bar" element={<EmployeeSidebar />} />
           <Route path="/employee/stats" element={<EmployeeStats />} />
+          <Route path="/employee/settings" element={<EmployeeSettings />} />
         </Route>
 
         {/* /:shopSlug — must stay last among real routes */}

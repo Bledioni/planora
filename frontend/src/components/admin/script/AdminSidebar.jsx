@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Building2, Store, MapPin,
-  LogOut, Menu, X, ChevronRight, ChevronDown, Tag
+  LogOut, Menu, X, ChevronRight, ChevronDown, Tag, Settings
 } from 'lucide-react';
 import '../style/AdminSidebar.css';
 
@@ -32,6 +32,7 @@ const AdminSidebar = () => {
     { name: 'Email',      path: '/admin/send-email',                icon: LayoutDashboard },
     { name: 'Analytics',  path: '/admin/admin-analytics-dashboard', icon: LayoutDashboard },
     { name: 'Kategoritë', path: '/admin/categories',                icon: Tag },
+    { name: 'Cilësimet',  path: '/admin/settings',                        icon: Settings },
   ];
 
   return (
@@ -44,12 +45,7 @@ const AdminSidebar = () => {
 
       <aside
         className={`owner-sidebar ${isMobileOpen ? 'open' : ''}`}
-        style={{
-          height: '100dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
+        style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
       >
         <div className="owner-sidebar-header">
           <div className="logo-icon">P</div>
@@ -59,10 +55,7 @@ const AdminSidebar = () => {
           </div>
         </div>
 
-        <nav
-          className="owner-sidebar-nav"
-          style={{ flex: 1, overflowY: 'auto', paddingBottom: '8px' }}
-        >
+        <nav className="owner-sidebar-nav" style={{ flex: 1, overflowY: 'auto', paddingBottom: '8px' }}>
           {menuItems.map((item, index) => (
             <div key={index} className="nav-group">
               {!item.hasSubmenu ? (
@@ -106,13 +99,7 @@ const AdminSidebar = () => {
 
         <div
           className="owner-sidebar-footer"
-          style={{
-            flexShrink: 0,
-            paddingTop: '16px',
-            paddingBottom: 'max(env(safe-area-inset-bottom), 80px)',
-            borderTop: '1px solid #e2e8f0',
-            background: '#ffffff',
-          }}
+          style={{ flexShrink: 0, paddingTop: '16px', paddingBottom: 'max(env(safe-area-inset-bottom), 80px)', borderTop: '1px solid #e2e8f0', background: '#ffffff' }}
         >
           <button onClick={handleLogout} className="logout-btn">
             <LogOut size={20} />
