@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
     Search, RefreshCw, ShieldAlert, ShieldCheck, 
-    Calendar as CalIcon 
+    Calendar as CalIcon, Copy, Check
 } from 'lucide-react';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
@@ -19,12 +19,12 @@ const AdminOwnerList = () => {
     const [subStartDate, setSubStartDate] = useState(null);
     const [subEndDate, setSubEndDate] = useState(null);
     const [subStatus, setSubStatus] = useState("");
+    const [copiedEmail, setCopiedEmail] = useState(null);
 
     const fetchOwners = async () => {
         setLoading(true);
         try {
             const res = await api.get('/admin/users/business-owners');
-            // FIX: Added a fallback empty array to prevent .filter() errors
             setOwners(res.data.business_owners || res.data || []);
         } catch (err) {
             Swal.fire({ icon: 'error', title: 'Gabim', text: 'Nuk u ngarkua lista.' });
@@ -34,6 +34,12 @@ const AdminOwnerList = () => {
     };
 
     useEffect(() => { fetchOwners(); }, []);
+
+    const handleCopyEmail = (email) => {
+        navigator.clipboard.writeText(email);
+        setCopiedEmail(email);
+        setTimeout(() => setCopiedEmail(null), 2000);
+    };
 
     const toLocalISO = (dateStr) => {
         if (!dateStr) return null;
@@ -206,7 +212,25 @@ const AdminOwnerList = () => {
                                                 <div className="avatar-circle">{owner.name?.[0]}</div>
                                                 <div className="profile-info">
                                                     <span className="main-text">{owner.name} {owner.surname}</span>
-                                                    <span className="sub-text email-text">{owner.email}</span>
+                                                    <span className="sub-text email-text" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        {owner.email}
+                                                        <button
+                                                            onClick={() => handleCopyEmail(owner.email)}
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                padding: '2px',
+                                                                color: copiedEmail === owner.email ? '#16a34a' : '#9aa5be',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                transition: 'color 0.2s'
+                                                            }}
+                                                            title="Kopjo emailin"
+                                                        >
+                                                            {copiedEmail === owner.email ? <Check size={13} /> : <Copy size={13} />}
+                                                        </button>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </td>
