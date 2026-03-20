@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { UserPlus, UserCheck, Users, Settings, ArrowLeft, ArrowUpRight, MapPin } from 'lucide-react';
+import { UserPlus, UserCheck, Users, Settings, ArrowLeft, ArrowUpRight, MapPin, Phone } from 'lucide-react';
 import { api } from '../../../index';
 import AdminSidebar from '../script/AdminSidebar';
 import Swal from 'sweetalert2';
@@ -12,18 +12,26 @@ const BusinessDashboard = () => {
     const navigate = useNavigate();
     const [, setLoading] = useState(false);
     const [locationLink, setLocationLink] = useState(null);
+    const [ownerPhone, setOwnerPhone] = useState(null);
 
     useEffect(() => {
         const fetchBusiness = async () => {
             try {
                 const res = await api.get(`/admin/businesses/details/${businessId}`);
-                setLocationLink(res.data?.location_link || null);         
-              } catch (err) {
+                setLocationLink(res.data?.location_link || null);
+                setOwnerPhone(res.data?.user?.phone_number || null);
+            } catch (err) {
                 console.error(err);
             }
         };
         fetchBusiness();
     }, [businessId]);
+
+    const handleWhatsApp = () => {
+        if (!ownerPhone) return;
+        const cleaned = ownerPhone.replace(/\D/g, '');
+        window.open(`https://wa.me/${cleaned}`, '_blank');
+    };
 
     const handleRegisterOwner = async () => {
         const result = await Swal.fire({
@@ -94,6 +102,14 @@ const BusinessDashboard = () => {
             onClick: () => window.open(locationLink, '_blank'),
             active: true,
             color: "blue"
+        }] : []),
+        ...(ownerPhone ? [{
+            title: "Kontakto Pronarin",
+            desc: `WhatsApp: ${ownerPhone}`,
+            icon: <Phone size={24} />,
+            onClick: handleWhatsApp,
+            active: true,
+            color: "gradient"
         }] : [])
     ];
 
