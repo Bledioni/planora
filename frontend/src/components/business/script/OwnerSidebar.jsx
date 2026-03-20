@@ -90,7 +90,7 @@ const OwnerSidebar = () => {
                         <ClipboardList size={18} /> Shërbimet
                     </NavLink>
                     <p className="sidebar-section-label">Llogaria</p>
-                    <NavLink to="/settings" onClick={closeMenu}
+                    <NavLink to="/owner/settings" onClick={closeMenu}
                         className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                         <Settings size={18} /> Cilësimet
                     </NavLink>

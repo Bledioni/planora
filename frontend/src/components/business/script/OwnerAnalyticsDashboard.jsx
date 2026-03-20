@@ -72,7 +72,11 @@ const OwnerAnalyticsDashboard = () => {
             <main className="owner-main-content">
                 <header className="analytics-premium-header">
                     <div className="header-title">
-                        <h1>Analytics <span>Dashboard</span></h1>
+                        <div className="header-top-tag">  {/* ← add this */}
+                            <BarChart3 size={11} /> Statistikat
+                        </div>
+                        <h1>Dashboardi <span>I Statistikave</span></h1>
+                        <p>Statistikat e biznesit tuaj</p>  {/* ← add this */}
                     </div>
                     
                     <div className="header-actions">

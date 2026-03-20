@@ -542,3 +542,113 @@
     .ms-time-summary { gap: 8px; }
     .ms-btn-save { width: 100%; justify-content: center; margin-top: 8px; }
 }
+
+@media (max-width: 768px) {
+  .ms-header {
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ms-header > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .ms-tag {
+    align-self: center;
+  }
+
+  .ms-header h1 {
+    text-align: center;
+  }
+
+  .ms-header p {
+    text-align: center;
+  }
+
+  .ms-select {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ── Wheel Picker ── */
+.ms-wheel-picker {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--ms-white);
+    border: 1.5px solid var(--ms-border);
+    border-radius: var(--ms-radius-sm);
+    padding: 8px;
+    justify-content: center;
+}
+
+.ms-wheel-column {
+    width: 52px;
+    height: 160px;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    border-radius: 8px;
+    background: var(--ms-bg);
+    border: 1px solid var(--ms-border);
+}
+
+.ms-wheel-column::-webkit-scrollbar { display: none; }
+
+.ms-wheel-scroll {
+    display: flex;
+    flex-direction: column;
+}
+
+.ms-wheel-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--ms-muted);
+    cursor: pointer;
+    scroll-snap-align: center;
+    transition: all 0.15s;
+    border-radius: 6px;
+    margin: 2px 4px;
+}
+
+.ms-wheel-item:hover {
+    background: var(--ms-blue-light);
+    color: var(--ms-blue);
+}
+
+.ms-wheel-item.selected {
+    background: var(--ms-blue);
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.ms-wheel-sep {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ms-dark);
+    padding: 0 4px;
+}
+
+.ms-wheel-display {
+    text-align: center;
+    margin-top: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--ms-dark);
+    background: var(--ms-bg);
+    border: 1.5px solid var(--ms-border);
+    border-radius: var(--ms-radius-sm);
+    padding: 8px;
+}
