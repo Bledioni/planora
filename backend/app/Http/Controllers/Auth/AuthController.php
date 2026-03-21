@@ -18,11 +18,16 @@ class AuthController extends Controller
     ====================== */
    public function register(Request $request)
 {
-    $validated = $request->validate([
-        'name'         => 'required|string',
-        'surname'      => 'required|string',
-        'email'        => 'required|email|unique:users,email',
-        'phone_number' => 'required|string|unique:users,phone_number',
+     $validated = $request->validate([
+        'name'         => 'required|string|max:100',
+        'surname'      => 'required|string|max:100',
+        'email'        => [
+            'required',
+            'email:rfc,dns', // ← validates domain actually exists
+            'unique:users,email',
+            'max:255',
+        ],
+        'phone_number' => 'required|string|unique:users,phone_number|min:9|max:20',
         'password'     => 'required|min:8|confirmed',
         'role'         => 'required|string|in:business_owner,employee',
         'business_id'  => 'nullable|integer' 

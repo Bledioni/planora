@@ -192,5 +192,9 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
         Route::get('/stats', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getStats']);
     });
 });
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok'], 200);
+});
+
 
 // Appointment confirmation - signed URL

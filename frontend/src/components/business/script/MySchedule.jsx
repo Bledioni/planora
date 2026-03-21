@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, AlertCircle, Clock } from 'luc
 import OwnerSidebar from './OwnerSidebar';
 import { api } from '../../../index';
 import '../style/MySchedule.css';
+import Swal from 'sweetalert2';
 
 const getLocalDateString = (date) => {
     const year = date.getFullYear();
@@ -152,24 +153,53 @@ const MySchedule = () => {
     }, [selectedDate, employeeId]);
 
     const handleCancel = async (apt) => {
-        if (!window.confirm('A jeni i sigurt që dëshironi të anuloni këtë termin?')) return;
-        try {
-            await Promise.all(
-                apt.ids.map(id =>
-                    api.put(`/owner/appointments/update-status/${id}`, { status: 'cancelled' })
-                )
-            );
-            const updated = appointments.map(a =>
-                JSON.stringify(a.ids) === JSON.stringify(apt.ids)
-                    ? { ...a, status: 'cancelled' }
-                    : a
-            );
-            setAppointments(updated);
-            setCache(prev => ({ ...prev, [selectedDate]: updated }));
-        } catch {
-            alert('Gabim gjatë anulimit të terminit.');
-        }
-    };
+    const result = await Swal.fire({
+        title: 'Anulo Terminin?',
+        html: `
+            <div style="text-align: left; padding: 8px 0;">
+                <p style="margin-bottom: 8px;"><strong>Klient:</strong> ${apt.client_name}</p>
+                <p style="margin-bottom: 8px;"><strong>Shërbimi:</strong> ${apt.services.map(s => s?.name).filter(Boolean).join(' + ')}</p>
+                <p style="margin-bottom: 8px;"><strong>Ora:</strong> ${apt.appointment_time?.slice(0, 5)}</p>
+                <p style="margin-bottom: 0; color: #ef4444;"><strong>⚠️ Klienti do të njoftohet me email!</strong></p>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Po, Anulo Terminin!',
+        cancelButtonText: 'Mbyll',
+        reverseButtons: true
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        await Promise.all(
+            apt.ids.map(id =>
+                api.put(`/owner/appointments/update-status/${id}`, { status: 'cancelled' })
+            )
+        );
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Termini u anulua!',
+            text: 'Klienti do të njoftohet me email.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+        const updated = appointments.map(a =>
+            JSON.stringify(a.ids) === JSON.stringify(apt.ids)
+                ? { ...a, status: 'cancelled' }
+                : a
+        );
+        setAppointments(updated);
+        setCache(prev => ({ ...prev, [selectedDate]: updated }));
+    } catch {
+        Swal.fire('Gabim', 'Ndodhi një gabim gjatë anulimit të terminit.', 'error');
+    }
+};
 
     const navigate = (dir) => {
         const [year, month, day] = selectedDate.split('-').map(Number);
