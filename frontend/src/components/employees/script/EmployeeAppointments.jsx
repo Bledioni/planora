@@ -57,8 +57,9 @@ const EmployeeAppointments = () => {
         fetchAppointments(selectedDate);
     }, [selectedDate]);
 
-    // Fetch counts for calendar badges
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchCounts = async () => {
             const counts = {};
             await Promise.all(calendarDays.map(async (day) => {
@@ -68,24 +69,39 @@ const EmployeeAppointments = () => {
                     return;
                 }
                 try {
-                    const res = await api.get(`/employee/appointments/list`, { params: { date: day.full } });
+                    const res = await api.get(`/employee/appointments/list`, {
+                        params: { date: day.full },
+                        signal: controller.signal
+                    });
                     const data = res.data.appointments || [];
                     const count = data.filter(a => a.status !== 'canceled' && a.status !== 'cancelled').length;
                     counts[day.full] = count;
                     setCache(prev => ({ ...prev, [cacheKey]: count }));
-                } catch {
-                    counts[day.full] = 0;
+                } catch (err) {
+                    if (err.name !== 'CanceledError') counts[day.full] = 0;
                 }
             }));
-            setDayCounts(counts);
+            if (!controller.signal.aborted) {
+                setDayCounts(prev => ({ ...prev, ...counts }));
+            }
         };
-        fetchCounts();
-    }, [calendarDays]);
 
-    const updateStatus = async (id, status) => {
-        setUpdatingId(id);
+        const timer = setTimeout(fetchCounts, 300);
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [selectedDate]);
+
+    const updateStatus = async (ids, status) => {
+        const firstId = Array.isArray(ids) ? ids[0] : ids;
+        setUpdatingId(firstId);
         try {
-            await api.put(`/employee/appointments/update-status/${id}`, { status });
+            await Promise.all(
+                (Array.isArray(ids) ? ids : [ids]).map(id =>
+                    api.put(`/employee/appointments/update-status/${id}`, { status })
+                )
+            );
             Swal.fire({ icon: 'success', title: 'Sukses', text: 'Statusi u përditësua.', timer: 1500, showConfirmButton: false });
             setCache(prev => {
                 const updated = { ...prev };
@@ -107,7 +123,7 @@ const EmployeeAppointments = () => {
     };
 
     const activeApts   = appointments.filter(a => a.status !== 'canceled' && a.status !== 'cancelled');
-    const canceledApts = appointments.filter(a => a.status === 'canceled'  || a.status === 'cancelled');
+    const canceledApts = appointments.filter(a => a.status === 'canceled' || a.status === 'cancelled');
     const today        = getLocalDateString(new Date());
 
     const formattedDate = new Date(
@@ -120,10 +136,6 @@ const EmployeeAppointments = () => {
         const map = { completed: 'completed', cancelled: 'cancelled', canceled: 'canceled', no_show: 'pending', confirmed: 'confirmed' };
         return map[status] || 'pending';
     };
-
-    const formatTime = (dt) => new Date(dt).toLocaleTimeString('sq-AL', {
-        hour: '2-digit', minute: '2-digit'
-    });
 
     return (
         <div className="owner-layout">
@@ -141,7 +153,6 @@ const EmployeeAppointments = () => {
 
                 <div className="schedule-container-wide">
 
-                    {/* Calendar Strip */}
                     <div className="planora-calendar-big">
                         <button className="nav-btn-big" onClick={() => navigate(-1)}>
                             <ChevronLeft size={18} />
@@ -171,7 +182,6 @@ const EmployeeAppointments = () => {
                         </button>
                     </div>
 
-                    {/* Appointments */}
                     <div className="timeline-container">
                         {loading ? (
                             <div className="planora-loader-big" />
@@ -184,7 +194,7 @@ const EmployeeAppointments = () => {
                             <>
                                 {activeApts.map((appt, i) => (
                                     <div
-                                        key={appt.id}
+                                        key={appt.booking_id || appt.ids?.[0]}
                                         className="timeline-row"
                                         style={{ animationDelay: `${i * 0.04}s` }}
                                     >
@@ -196,7 +206,7 @@ const EmployeeAppointments = () => {
                                                 <div className="client-details">
                                                     <h3>{appt.client_name}</h3>
                                                     <span className="service-txt">
-                                                        {appt.service?.service_name || 'Shërbim i panjohur'}
+                                                        {appt.services?.map(s => s.name).join(' + ') || 'Shërbim i panjohur'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -204,7 +214,7 @@ const EmployeeAppointments = () => {
                                             <div className="card-right-info">
                                                 <span className="apt-time-tag">
                                                     <Clock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-                                                    {formatTime(appt.start_time)}
+                                                    {appt.appointment_time} — {appt.finish_time}
                                                 </span>
                                                 <span className="apt-time-tag">
                                                     <Phone size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
@@ -212,17 +222,22 @@ const EmployeeAppointments = () => {
                                                 </span>
                                                 <span className="apt-time-tag">
                                                     <Scissors size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-                                                    {appt.service?.service_duration || '—'} min
+                                                    {appt.services?.reduce((acc, s) => {
+                                                        if (!s.duration) return acc;
+                                                        if (String(s.duration).includes(':')) {
+                                                            const [h, m] = String(s.duration).split(':');
+                                                            return acc + (parseInt(h) * 60) + parseInt(m);
+                                                        }
+                                                        return acc + parseInt(s.duration);
+                                                    }, 0) || '—'} min
                                                 </span>
-                                                <span className={`status-pill ${getStatusClass(appt.status)}`}>
-                                                    {appt.status}
-                                                </span>
+                                                
                                                 {appt.status === 'confirmed' && (
                                                     <button
-                                                        onClick={() => updateStatus(appt.id, 'completed')}
+                                                        onClick={() => updateStatus(appt.ids, 'completed')}
                                                         className="ed-btn-complete"
                                                     >
-                                                        {updatingId === appt.id
+                                                        {updatingId === appt.ids?.[0]
                                                             ? <RefreshCw size={14} className="spin" />
                                                             : '✓ U Konfirmua'
                                                         }
@@ -240,7 +255,7 @@ const EmployeeAppointments = () => {
                                             Terminet e Anuluara
                                         </div>
                                         {canceledApts.map((appt) => (
-                                            <div key={appt.id} className="timeline-row">
+                                            <div key={appt.booking_id || appt.ids?.[0]} className="timeline-row">
                                                 <div className="appointment-card-large is-cancelled">
                                                     <div className="client-section">
                                                         <div className="avatar-circle">
@@ -249,16 +264,16 @@ const EmployeeAppointments = () => {
                                                         <div className="client-details">
                                                             <h3>{appt.client_name}</h3>
                                                             <span className="service-txt">
-                                                                {appt.service?.service_name || 'Shërbim i panjohur'}
+                                                                {appt.services?.map(s => s.name).join(' + ') || 'Shërbim i panjohur'}
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div className="card-right-info">
                                                         <span className="apt-time-tag">
                                                             <Clock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-                                                            {formatTime(appt.start_time)}
+                                                            {appt.appointment_time}
                                                         </span>
-                                                        <span className="status-pill canceled">
+                                                        <span className="status-pill cancelled">
                                                             anuluar
                                                         </span>
                                                     </div>

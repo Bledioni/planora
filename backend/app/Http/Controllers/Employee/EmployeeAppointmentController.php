@@ -15,7 +15,7 @@ class EmployeeAppointmentController extends Controller
         return Employees::where('user_id', $request->user()->id)->first();
     }
 
-    public function getAppointments(Request $request)
+public function getAppointments(Request $request)
 {
     $employee = $this->getEmployee($request);
     if (!$employee) {
@@ -23,11 +23,11 @@ class EmployeeAppointmentController extends Controller
     }
 
     $filter = $request->query('filter', 'upcoming');
-    $date   = $request->query('date');  // ✅ new param
+    $date   = $request->query('date');
 
-    $query = Appointments::where('employee_id', $employee->id)->with(['service', 'business']);
+    $query = Appointments::where('employee_id', $employee->id)
+        ->with(['service:id,service_name,service_price,service_duration', 'business:id,shop_name']);
 
-    // ✅ If date is provided, filter by that specific date
     if ($date) {
         $query->whereDate('start_time', $date);
     } else {
@@ -48,13 +48,60 @@ class EmployeeAppointmentController extends Controller
         }
     }
 
-    $appointments = $query->orderBy('start_time', 'asc')->get();
+    $appointments = $query->orderBy('start_time', 'asc')
+        ->get()
+        ->map(function($apt) {
+            $startTime = Carbon::parse($apt->start_time);
+            $finishTime = Carbon::parse($apt->finish_time);
+            return [
+                'id'               => $apt->id,
+                'booking_id'       => $apt->booking_id,
+                'appointment_date' => $startTime->format('Y-m-d'),
+                'appointment_time' => $startTime->format('H:i'),
+                'finish_time'      => $finishTime->format('H:i'),
+                'client_name'      => $apt->client_name,
+                'client_email'     => $apt->client_email,
+                'client_phone'     => $apt->client_phone,
+                'status'           => $apt->status,
+                'service' => [
+                    'id'       => $apt->service->id ?? null,
+                    'name'     => $apt->service->service_name ?? 'N/A',
+                    'price'    => $apt->service->service_price ?? 0,
+                    'duration' => $apt->service->service_duration ?? 0,
+                ],
+                'business' => [
+                    'id'   => $apt->business->id ?? null,
+                    'name' => $apt->business->shop_name ?? 'N/A',
+                ]
+            ];
+        });
+
+    // Group by booking_id so multiple services show as one appointment
+    $grouped = $appointments->groupBy(fn($apt) => $apt['booking_id'] ?? $apt['id'])
+        ->map(function($group) {
+            $first = $group->first();
+            $last  = $group->last();
+            return [
+                'ids'              => $group->pluck('id')->toArray(),
+                'booking_id'       => $first['booking_id'],
+                'appointment_date' => $first['appointment_date'],
+                'appointment_time' => $first['appointment_time'],  // start of first service
+                'finish_time'      => $last['finish_time'],         // end of last service
+                'client_name'      => $first['client_name'],
+                'client_email'     => $first['client_email'],
+                'client_phone'     => $first['client_phone'],
+                'status'           => $first['status'],
+                'business'         => $first['business'],
+                'services'         => $group->map(fn($a) => $a['service'])->values(),
+                'total_price'      => $group->sum(fn($a) => $a['service']['price']),
+            ];
+        })->values();
 
     return response()->json([
         'employee_id'  => $employee->id,
         'filter'       => $filter,
-        'total'        => $appointments->count(),
-        'appointments' => $appointments,
+        'total'        => $grouped->count(),
+        'appointments' => $grouped,
     ]);
 }
     
