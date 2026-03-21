@@ -10,15 +10,19 @@ use Illuminate\Http\Request;
 class AdminBusinessConfigController extends Controller
 {
     public function getBusinessById($id)
-    {
-        $business = Business::with(['user', 'employees', 'category'])->find($id);
+{
+    $business = Business::with([
+        'user:id,name,surname,email,phone_number,status',
+        'employees.user:id,name,surname,email,phone_number,status',
+        'category:id,name'
+    ])->find($id);
 
-        if (!$business) {
-            return response()->json(['message' => 'Biznesi nuk u gjet.'], 404);
-        }
-
-        return response()->json($business);
+    if (!$business) {
+        return response()->json(['message' => 'Biznesi nuk u gjet.'], 404);
     }
+
+    return response()->json($business);
+}
 
     public function updateBusiness(Request $request, $id)
     {
@@ -60,7 +64,11 @@ class AdminBusinessConfigController extends Controller
 
         return response()->json([
             'message'  => 'Biznesi u përditësua me sukses!',
-            'business' => $business->fresh(['user', 'employees', 'category'])
+            'business' => $business->fresh([
+                'user:id,name,surname,email,phone_number,status',
+                'employees.user:id,name,surname,email,phone_number,status',
+                'category:id,name'
+            ])
         ]);
     }
 }

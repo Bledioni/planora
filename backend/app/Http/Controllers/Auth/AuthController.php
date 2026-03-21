@@ -117,8 +117,8 @@ class AuthController extends Controller
                 1440,
                 '/',
                 null,
-                false,      // ← changed from app()->isProduction()
-                true,       // httpOnly ← JS cannot read this
+                app()->isProduction(), 
+                true,
                 false,
                 'Lax'
             )

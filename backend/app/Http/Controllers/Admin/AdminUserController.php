@@ -48,9 +48,10 @@ class AdminUserController extends Controller
     try {
         $owners = \App\Models\User::has('business')
             ->with([
-                'business',
-                'business.subscription'
+                'business:id,user_id,shop_name,address,slug',
+                'business.subscription:id,business_id,start_date,end_date,status'
             ])
+            ->select('id', 'name', 'surname', 'email', 'phone_number', 'status', 'created_at')
             ->latest()
             ->get();
 
@@ -59,7 +60,10 @@ class AdminUserController extends Controller
             'business_owners' => $owners
         ]);
     } catch (\Exception $e) {
-        return response()->json(['error' => $e->getMessage()], 500);
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gabim gjatë marrjes së pronarëve.'
+        ], 500);
     }
 }
 }

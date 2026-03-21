@@ -85,25 +85,71 @@ const BusinessEmployees = () => {
     );
 
     const handleDeleteEmployee = async (employee) => {
-        const result = await Swal.fire({
+        // Step 1 — fetch appointment count
+        let appointmentCount = 0;
+        try {
+            const res = await api.get(`/admin/employees/${employee.id}/appointment-count`);
+            appointmentCount = res.data.count || 0;
+        } catch {
+            appointmentCount = 0;
+        }
+
+        // Step 2 — First confirmation with appointment info
+        const firstConfirm = await Swal.fire({
             title: 'Fshi Punonjësin?',
-            text: `A jeni i sigurt për fshirjen e ${employee.name}?`,
+            html: `
+                <p>Jeni duke fshirë <strong>${employee.name} ${employee.surname}</strong>.</p>
+                ${appointmentCount > 0 
+                    ? `<div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px; margin-top:12px;">
+                        <p style="color:#ef4444; font-weight:700; margin:0;">⚠️ Ky punonjës ka <strong>${appointmentCount}</strong> termin${appointmentCount === 1 ? '' : 'e'} aktive!</p>
+                        <p style="color:#6b7280; font-size:13px; margin:6px 0 0;">Të gjitha terminet do të anulohen dhe klientët do të njoftohen me email.</p>
+                       </div>`
+                    : `<p style="color:#16a34a; margin-top:8px;">✅ Ky punonjës nuk ka termine aktive.</p>`
+                }
+            `,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
-            confirmButtonText: 'Po, Fshije!',
+            confirmButtonText: 'Vazhdo',
             cancelButtonText: 'Anulo'
         });
 
-        if (result.isConfirmed) {
-            setDeletingId(employee.id);
-            try {
-                await api.delete(`/admin/employees/delete/${employee.id}`);
-                Swal.fire('Sukses', 'Punonjësi u fshi.', 'success');
-                fetchEmployees();
-            } catch (err) {
-                Swal.fire('Gabim', 'Fshirja dështoi.', 'error');
-            } finally { setDeletingId(null); }
+        if (!firstConfirm.isConfirmed) return;
+
+        // Step 3 — Second confirmation
+        const secondConfirm = await Swal.fire({
+            title: 'Jeni absolutisht i sigurt?',
+            html: `
+                <p>Ky veprim <strong>nuk mund të kthehet mbrapsht</strong>.</p>
+                ${appointmentCount > 0 
+                    ? `<p style="color:#ef4444;">🚨 <strong>${appointmentCount}</strong> termin${appointmentCount === 1 ? '' : 'e'} do të anulohen dhe klientët do të marrin email njoftimi.</p>`
+                    : ''
+                }
+            `,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Po, Fshije Tani!',
+            cancelButtonText: 'Anulo'
+        });
+
+        if (!secondConfirm.isConfirmed) return;
+
+        // Step 4 — Delete
+        setDeletingId(employee.id);
+        try {
+            const res = await api.delete(`/admin/employees/delete/${employee.id}`);
+            const cancelled = res.data.cancelled_appointments || 0;
+            Swal.fire(
+                'Sukses!',
+                `Punonjësi u fshi.${cancelled > 0 ? ` ${cancelled} termin${cancelled === 1 ? '' : 'e'} u anuluan dhe klientët u njoftuan.` : ''}`,
+                'success'
+            );
+            fetchEmployees();
+        } catch (err) {
+            Swal.fire('Gabim', 'Fshirja dështoi.', 'error');
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -192,6 +238,7 @@ const BusinessEmployees = () => {
                                         </button>
                                         <button 
                                             onClick={() => handleDeleteEmployee(employee)}
+                                            disabled={deletingId === employee.id}
                                             style={{background:'#fee2e2', color:'#ef4444', border:'none', padding:'10px', borderRadius:'10px', cursor:'pointer'}}
                                         >
                                             {deletingId === employee.id ? <RefreshCw className="spin" size={16}/> : <Trash2 size={16}/>}

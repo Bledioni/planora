@@ -116,6 +116,9 @@ class BookingController extends Controller
 
         $openTime = Carbon::parse($date . ' ' . $schedule->open_at);
         $endTime  = Carbon::parse($date . ' ' . $schedule->close_at);
+        if ($schedule->close_at === '00:00:00' || $schedule->close_at === '00:00') {
+            $endTime = Carbon::parse($date . ' 23:59:59');
+        }
 
         $availableSlots = [];
         $pointer        = $openTime->copy();
@@ -180,28 +183,32 @@ class BookingController extends Controller
         $clientIp    = $request->ip();
         $fingerprint = $request->input('fingerprint');
 
+        $isOwner = $request->client_phone === env('OWNER_PHONE');
+
         $attempts = BookingAttempt::where('created_at', '>=', now()->subHours(24))
-        ->where(function ($query) use ($request, $fingerprint) {
-            $query->where('client_phone', $request->client_phone);
+            ->where(function ($query) use ($request, $fingerprint) {
+                $query->where('client_phone', $request->client_phone);
 
-            if (!empty($fingerprint)) {
-                $query->orWhere('fingerprint', $fingerprint);
-            }
-        })
-        ->count();
+                if (!empty($fingerprint)) {
+                    $query->orWhere('fingerprint', $fingerprint);
+                }
+            })
+            ->count();
 
-        if ($attempts >= 2) {
+        if (!$isOwner && $attempts >= 2) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Nuk mund të bëni më shumë se 2 rezervime brenda 24 orëve.'
             ], 429);
         }
 
-        BookingAttempt::create([
-            'client_ip'    => $clientIp,
-            'client_phone' => $request->client_phone,
-            'fingerprint'  => $fingerprint, // ← just add this line
-        ]);
+        if (!$isOwner) {
+            BookingAttempt::create([
+                'client_ip'    => $clientIp,
+                'client_phone' => $request->client_phone,
+                'fingerprint'  => $fingerprint,
+            ]);
+        }
 
         try {
             return DB::transaction(function () use ($request) {
@@ -343,6 +350,9 @@ class BookingController extends Controller
     $businessId = $services->pluck('business_id')->unique()->first();
     $totalDuration = $this->sumDurations($services);
 
+    $businessCheck = $this->checkBusinessActive($businessId);
+    if ($businessCheck) return $businessCheck;
+
     // Get all days in the given month
     $startOfMonth = Carbon::createFromDate($request->year, $request->month, 1)->startOfMonth();
     $endOfMonth   = $startOfMonth->copy()->endOfMonth();
@@ -388,9 +398,13 @@ class BookingController extends Controller
             ->get()
             ->sortBy('start_time')
             ->values();
-
-        $openTime = Carbon::parse($date . ' ' . $schedule->open_at);
+        
+            $openTime = Carbon::parse($date . ' ' . $schedule->open_at);
         $endTime  = Carbon::parse($date . ' ' . $schedule->close_at);
+        if ($schedule->close_at === '00:00:00' || $schedule->close_at === '00:00') {
+            $endTime = Carbon::parse($date . ' 23:59:59');
+        }
+        
 
         $hasSlot = false;
         $pointer = $openTime->copy();
