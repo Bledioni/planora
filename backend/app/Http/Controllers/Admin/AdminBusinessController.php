@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class AdminBusinessController extends Controller
@@ -40,8 +41,7 @@ class AdminBusinessController extends Controller
             Log::error('Error fetching businesses: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gabim gjatë marrjes së bizneseve',
-                'error' => $e->getMessage()
+                'message' => 'Gabim gjatë marrjes së bizneseve'
             ], 500);
         }
     }
@@ -50,8 +50,11 @@ class AdminBusinessController extends Controller
     {
         try {
             $owners = User::where('role', 'business_owner')
-                ->with(['business:id,user_id,shop_name,address,location_link,created_at,updated_at']) // ✅ removed business_type, added location_link
-                ->select('id', 'name', 'surname', 'email', 'phone_number', 'status', 'business_id', 'created_at', 'updated_at')
+                ->with([
+                    'business:id,user_id,shop_name,address,slug',
+                    'business.subscription:id,business_id,start_date,end_date,status'
+                ])
+                ->select('id', 'name', 'surname', 'email', 'phone_number', 'status', 'created_at')
                 ->latest()
                 ->get();
 
@@ -63,8 +66,7 @@ class AdminBusinessController extends Controller
             Log::error('Error fetching business owners: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gabim gjatë marrjes së pronarëve',
-                'error' => $e->getMessage()
+                'message' => 'Gabim gjatë marrjes së pronarëve'
             ], 500);
         }
     }
@@ -78,8 +80,8 @@ class AdminBusinessController extends Controller
             'category_id'   => 'required|exists:categories,id',
             'shop_name'     => 'required|string|max:255',
             'address'       => 'required|string',
-            'location_link' => 'nullable|url',   // ✅ added
-            'description'   => 'nullable|string' // ✅ removed business_type
+            'location_link' => 'nullable|url',
+            'description'   => 'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -98,10 +100,9 @@ class AdminBusinessController extends Controller
                 'category_id'   => $request->category_id,
                 'shop_name'     => $request->shop_name,
                 'address'       => $request->address,
-                'location_link' => $request->location_link, // ✅ added
+                'location_link' => $request->location_link,
                 'description'   => $request->description,
                 'slug'          => Str::slug($request->shop_name) . '-' . rand(100, 999)
-                // ✅ removed business_type
             ]);
 
             $user = User::find($request->user_id);
@@ -116,8 +117,6 @@ class AdminBusinessController extends Controller
 
             DB::commit();
 
-            Log::info("Business created successfully with ID: {$business->id}");
-
             return response()->json([
                 'status'       => 'success',
                 'message'      => 'Biznesi u krijua dhe pronari u bë ACTIVE!',
@@ -131,8 +130,7 @@ class AdminBusinessController extends Controller
             
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gabim gjatë krijimit të biznesit',
-                'error'   => $e->getMessage()
+                'message' => 'Gabim gjatë krijimit të biznesit'
             ], 500);
         }
     }
@@ -156,8 +154,7 @@ class AdminBusinessController extends Controller
             
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gabim gjatë marrjes së bizneseve',
-                'error'   => $e->getMessage()
+                'message' => 'Gabim gjatë marrjes së bizneseve'
             ], 500);
         }
     }
@@ -203,8 +200,7 @@ class AdminBusinessController extends Controller
             
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gabim gjatë çaktivizimit të biznesit',
-                'error'   => $e->getMessage()
+                'message' => 'Gabim gjatë çaktivizimit të biznesit'
             ], 500);
         }
     }
@@ -271,8 +267,7 @@ class AdminBusinessController extends Controller
             
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gabim gjatë aktivizimit të biznesit dhe abonimit',
-                'error'   => $e->getMessage()
+                'message' => 'Gabim gjatë aktivizimit të biznesit dhe abonimit'
             ], 500);
         }
     }
@@ -296,14 +291,23 @@ class AdminBusinessController extends Controller
             
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Biznesi nuk u gjet',
-                'error'   => $e->getMessage()
+                'message' => 'Biznesi nuk u gjet'
             ], 404);
         }
     }
 
     public function sendEmail(Request $request)
     {
+        // Rate limit — max 3 bulk sends per hour per admin
+        $key = 'send-email:' . auth()->id();
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Ju keni dërguar shumë email. Prisni një orë.'
+            ], 429);
+        }
+        RateLimiter::hit($key, 3600);
+
         $request->validate([
             'subject'      => 'required|string|max:255',
             'message'      => 'required|string',
@@ -363,8 +367,7 @@ class AdminBusinessController extends Controller
             Log::error('Error sending email: ' . $e->getMessage());
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gabim gjatë dërgimit të emailit',
-                'error'   => $e->getMessage()
+                'message' => 'Gabim gjatë dërgimit të emailit'
             ], 500);
         }
     }

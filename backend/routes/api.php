@@ -78,7 +78,7 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
             Route::post('/send-email', [App\Http\Controllers\Admin\AdminBusinessController::class, 'sendEmail']);
             Route::put('/update/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'updateBusiness']);
             Route::get('/details/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'getBusinessById']); // ADD THIS
-
+            
 
 
         });
@@ -111,6 +111,7 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
             Route::get('/{businessId}/employees', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'getBusinessEmployees']);
             Route::delete('/delete/{employeeId}', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'deleteEmployee']);
             Route::put('/update/{employeeId}', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'updateEmployee']);
+                Route::get('/{employeeId}/appointment-count', [App\Http\Controllers\Admin\AdminEmployeeController::class, 'getEmployeeAppointmentCount']); // ← move here
 
         });
     });

@@ -11,76 +11,88 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\Business;
 
 class OwnerScheduleExceptionController extends Controller
 {
     public function blockDate(Request $request)
-    {
-        $validated = $request->validate([
-            'business_id' => 'required|exists:businesses,id',
-            'employee_id' => 'required|exists:employees,id',
-            'date'        => 'required|date|after_or_equal:today',
-            'reason'      => 'nullable|string|max:255',
-        ]);
+{
+    $validated = $request->validate([
+        'business_id' => 'required|exists:businesses,id',
+        'employee_id' => 'required|exists:employees,id',
+        'date'        => 'required|date|after_or_equal:today',
+        'reason'      => 'nullable|string|max:255',
+    ]);
 
-        $alreadyBlocked = ScheduleException::where('employee_id', $validated['employee_id'])
-            ->where('date', $validated['date'])
-            ->exists();
+    // Verify this business belongs to the logged-in owner
+    $business = Business::where('id', $validated['business_id'])
+        ->where('user_id', auth()->id())
+        ->first();
 
-        if ($alreadyBlocked) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Kjo datë është tashmë e bllokuar.'
-            ], 422);
-        }
+    if (!$business) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Unauthorized'
+        ], 403);
+    }
 
-        try {
-            DB::beginTransaction();
+    $alreadyBlocked = ScheduleException::where('employee_id', $validated['employee_id'])
+        ->where('date', $validated['date'])
+        ->exists();
 
-            ScheduleException::create($validated);
+    if ($alreadyBlocked) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Kjo datë është tashmë e bllokuar.'
+        ], 422);
+    }
 
-            $appointments = Appointments::where('employee_id', $validated['employee_id'])
-                ->where('business_id', $validated['business_id'])
-                ->whereDate('start_time', $validated['date'])
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->get();
+    try {
+        DB::beginTransaction();
 
-            $cancelledCount = 0;
+        ScheduleException::create($validated);
 
-            foreach ($appointments as $appointment) {
-                $appointment->update(['status' => 'cancelled']);
+        $appointments = Appointments::where('employee_id', $validated['employee_id'])
+            ->where('business_id', $validated['business_id'])
+            ->whereDate('start_time', $validated['date'])
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->get();
 
-                try {
-                    Mail::to($appointment->client_email)
-                        ->send(new AppointmentCancelledMail(
-                            $appointment,
-                            $validated['reason'] ?? null  // ✅ pass reason
-                        ));
-                } catch (\Exception $mailErr) {
-                    Log::error('Failed to send cancellation email: ' . $mailErr->getMessage());
-                }
+        $cancelledCount = 0;
 
-                $cancelledCount++;
+        foreach ($appointments as $appointment) {
+            $appointment->update(['status' => 'cancelled']);
+
+            try {
+                Mail::to($appointment->client_email)
+                    ->send(new AppointmentCancelledMail(
+                        $appointment,
+                        $validated['reason'] ?? null
+                    ));
+            } catch (\Exception $mailErr) {
+                Log::error('Failed to send cancellation email: ' . $mailErr->getMessage());
             }
 
-            DB::commit();
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => "Data u bllokua. {$cancelledCount} termin(e) u anuluan dhe klientët u njoftuan me email.",
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error blocking date: ' . $e->getMessage());
-
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Ndodhi një gabim gjatë bllokimit të datës.',
-                'error'   => $e->getMessage()
-            ], 500);
+            $cancelledCount++;
         }
+
+        DB::commit();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => "Data u bllokua. {$cancelledCount} termin(e) u anuluan dhe klientët u njoftuan me email.",
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error blocking date: ' . $e->getMessage());
+
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Ndodhi një gabim gjatë bllokimit të datës.'
+        ], 500);
     }
+}
 
     public function getBlockedDates($businessId, $employeeId)
     {
@@ -97,21 +109,31 @@ class OwnerScheduleExceptionController extends Controller
     }
 
     public function unblockDate($id)
-    {
-        $exception = ScheduleException::find($id);
+{
+    $exception = ScheduleException::find($id);
 
-        if (!$exception) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Data e bllokuar nuk u gjet.'
-            ], 404);
-        }
-
-        $exception->delete();
-
+    if (!$exception) {
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Data u çbllokua me sukses.'
-        ], 200);
+            'status'  => 'error',
+            'message' => 'Data e bllokuar nuk u gjet.'
+        ], 404);
     }
+
+    // Verify this exception belongs to the logged-in owner's business
+    $business = Business::where('user_id', auth()->id())->first();
+
+    if (!$business || $exception->business_id !== $business->id) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Unauthorized'
+        ], 403);
+    }
+
+    $exception->delete();
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Data u çbllokua me sukses.'
+    ], 200);
+}
 }

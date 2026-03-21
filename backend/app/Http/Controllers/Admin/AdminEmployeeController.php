@@ -30,10 +30,8 @@ class AdminEmployeeController extends Controller
 
         if (!$isAddingSelf) {
             if ($isReadding) {
-                // Readding existing user — only need email
                 $rules['email'] = 'required|email|exists:users,email';
             } else {
-                // New employee — need all fields
                 $rules = array_merge($rules, [
                     'name'         => 'required|string|max:255',
                     'surname'      => 'required|string|max:255',
@@ -69,15 +67,15 @@ class AdminEmployeeController extends Controller
             $targetUserId = $user->id;
 
         } elseif ($isReadding) {
-            // Readd existing user
             $user = User::where('email', $request->email)->first();
             $user->status = 'active';
-            $user->role   = 'employee';
+            // Only change role if user is not a business_owner
+            if ($user->role !== 'business_owner') {
+                $user->role = 'employee';
+            }
             $user->save();
             $targetUserId = $user->id;
-
-        } else {
-            // Create brand new employee
+        }else {
             $business    = Business::find($validated['business_id']);
             $ownerStatus = User::find($business->user_id)->status ?? 'pending';
 
@@ -133,7 +131,7 @@ class AdminEmployeeController extends Controller
     }
 }
 
-     public function registerOwnerAsEmployee(Request $request)
+    public function registerOwnerAsEmployee(Request $request)
     {
         if (auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Pa autorizim.'], 403);
@@ -160,7 +158,6 @@ class AdminEmployeeController extends Controller
     public function getBusinessEmployees($businessId)
     {
         try {
-            // Verify business exists
             $business = Business::find($businessId);
             
             if (!$business) {
@@ -170,12 +167,10 @@ class AdminEmployeeController extends Controller
                 ], 404);
             }
 
-            // Get employees with their user data
             $employees = Employees::where('business_id', $businessId)
                 ->with(['user:id,name,surname,email,phone_number,status'])
                 ->get();
 
-            // Format the response
             $formattedEmployees = $employees->map(function ($employee) {
                 return [
                     'id' => $employee->id,
@@ -209,14 +204,10 @@ class AdminEmployeeController extends Controller
             ], 500);
         }
     }
-
-    /**
- * Delete an employee
- */
 public function deleteEmployee($employeeId)
 {
     try {
-        $employee = Employees::find($employeeId);
+        $employee = Employees::with('user')->find($employeeId);
         
         if (!$employee) {
             return response()->json([
@@ -227,13 +218,53 @@ public function deleteEmployee($employeeId)
 
         $employeeName = $employee->user->name ?? 'Unknown';
         $employeeSurname = $employee->user->surname ?? '';
-        $userId = $employee->user_id;
 
-        // Change user role to pending before deleting employee
-        $user = \App\Models\User::find($userId);
+        // Cancel upcoming appointments and notify clients
+        $appointments = \App\Models\Appointments::where('employee_id', $employeeId)
+            ->whereIn('status', ['confirmed', 'pending'])
+            ->where('start_time', '>=', now())
+            ->get();
+
+        $appointmentCount = $appointments->count();
+
+        foreach ($appointments as $appointment) {
+            $appointment->status = 'cancelled';
+            $appointment->save();
+
+            if ($appointment->client_email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::send(
+                        [], [],
+                        function ($message) use ($appointment, $employeeName, $employeeSurname) {
+                            $date = \Carbon\Carbon::parse($appointment->start_time)->format('d/m/Y');
+                            $time = \Carbon\Carbon::parse($appointment->start_time)->format('H:i');
+                            $message->to($appointment->client_email)
+                                ->subject('Termini juaj u anulua')
+                                ->html("
+                                    <div style='font-family: sans-serif; padding: 20px; max-width: 600px;'>
+                                        <h2 style='color: #ef4444;'>Termini juaj u anulua</h2>
+                                        <p>Përshëndetje <strong>{$appointment->client_name}</strong>,</p>
+                                        <p>Na vjen keq t'ju njoftojmë se termini juaj me 
+                                        <strong>{$employeeName} {$employeeSurname}</strong> 
+                                        më datë <strong>{$date}</strong> 
+                                        në orën <strong>{$time}</strong> 
+                                        u anulua.</p>
+                                        <p>Ju lutemi kontaktoni biznesin për të bërë një rezervim të ri.</p>
+                                        <p style='color: #6b7280; font-size: 14px;'>Me respekt,<br>Ekipi i Planora Book</p>
+                                    </div>
+                                ");
+                        }
+                    );
+                } catch (\Exception $mailError) {
+                    \Illuminate\Support\Facades\Log::error('Mail failed: ' . $mailError->getMessage());
+                }
+            }
+        }
+
+        // Revoke all tokens — forces re-login
+        $user = \App\Models\User::find($employee->user_id);
         if ($user) {
-            $user->status = 'pending';
-            $user->save();
+            $user->tokens()->delete();
         }
 
         // Delete the employee record
@@ -241,44 +272,62 @@ public function deleteEmployee($employeeId)
 
         return response()->json([
             'status' => 'success',
-            'message' => "Punonjësi $employeeName $employeeSurname u fshi me sukses."
+            'message' => "Punonjësi $employeeName $employeeSurname u fshi me sukses.",
+            'cancelled_appointments' => $appointmentCount
         ], 200);
 
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Ndodhi një gabim gjatë fshirjes.',
-            'error' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'line' => $e->getLine(),
+            'file' => basename($e->getFile())
         ], 500);
     }
 }
+    public function getEmployeeAppointmentCount($employeeId)
+    {
+        $employee = Employees::with('user')->find($employeeId);
+        if (!$employee) {
+            return response()->json(['count' => 0, 'name' => '']);
+        }
 
-public function updateEmployee(Request $request, $employeeId)
-{
-    try {
-        $employee = Employees::findOrFail($employeeId);
-        $user = User::findOrFail($employee->user_id);
-
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'surname'      => 'required|string|max:255',
-            'email'        => 'required|email|unique:users,email,' . $user->id,
-            'phone_number' => 'required|string|max:20|unique:users,phone_number,' . $user->id,
-            'status'       => 'required|in:active,pending,inactive,suspended',
-        ]);
-
-        $user->update($validated);
+        $count = \App\Models\Appointments::where('employee_id', $employeeId)
+            ->whereIn('status', ['confirmed', 'pending'])
+            ->where('start_time', '>=', now())
+            ->count();
 
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Punonjësi u përditësua me sukses.',
+            'count' => $count,
+            'name' => $employee->user->name . ' ' . $employee->user->surname
         ]);
-
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        return response()->json(['status' => 'validation_error', 'errors' => $e->errors()], 422);
-    } catch (\Exception $e) {
-        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
-}
 
+    public function updateEmployee(Request $request, $employeeId)
+    {
+        try {
+            $employee = Employees::findOrFail($employeeId);
+            $user = User::findOrFail($employee->user_id);
+
+            $validated = $request->validate([
+                'name'         => 'required|string|max:255',
+                'surname'      => 'required|string|max:255',
+                'email'        => 'required|email|unique:users,email,' . $user->id,
+                'phone_number' => 'required|string|max:20|unique:users,phone_number,' . $user->id,
+                'status'       => 'required|in:active,pending,inactive,suspended',
+            ]);
+
+            $user->update($validated);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'Punonjësi u përditësua me sukses.',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['status' => 'validation_error', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

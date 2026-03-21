@@ -16,26 +16,35 @@ use Illuminate\Support\Str;
 class OwnerServiceController extends Controller
 {
     public function createService(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'business_id' => 'required|exists:businesses,id',
-            'service_name' => 'required|string',
-            'service_price' => 'required|numeric',
-            'service_duration' => 'required|integer',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'business_id'      => 'required|exists:businesses,id',
+        'service_name'     => 'required|string',
+        'service_price'    => 'required|numeric',
+        'service_duration' => 'required|integer',
+    ]);
 
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+    if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
 
-        $service = Services::create([
-            'business_id' => $request->business_id,
-            'service_name' => $request->service_name,
-            'description' => $request->service_description,
-            'service_price' => $request->service_price,
-            'service_duration' => $request->service_duration,
-        ]);
+    // Verify this business belongs to the logged-in owner
+    $business = Business::where('id', $request->business_id)
+        ->where('user_id', auth()->id())
+        ->first();
 
-        return response()->json(['status' => 'success', 'service' => $service], 201);
+    if (!$business) {
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
+
+    $service = Services::create([
+        'business_id'      => $request->business_id,
+        'service_name'     => $request->service_name,
+        'description'      => $request->service_description,
+        'service_price'    => $request->service_price,
+        'service_duration' => $request->service_duration,
+    ]);
+
+    return response()->json(['status' => 'success', 'service' => $service], 201);
+}
 
     public function updateService(Request $request, $serviceId)
 {
