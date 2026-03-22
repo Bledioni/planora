@@ -108,26 +108,26 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token', [$user->role])->plainTextToken;
 
         return response()->json([
-            'status' => 'success',
-            'user'   => [
-                'id'     => $user->id,
-                'name'   => $user->name,
-                'role'   => $user->role,
-                'status' => $user->status
-            ]
-        ], 200)->withCookie(
-            cookie(
-                'auth_token',
-                $token,
-                1440,
-                '/',
-                null,
-                app()->isProduction(), 
-                true,
-                false,
-                'Lax'
-            )
-        );
+    'status' => 'success',
+    'user'   => [
+        'id'     => $user->id,
+        'name'   => $user->name,
+        'role'   => $user->role,
+        'status' => $user->status
+    ]
+], 200)->withCookie(
+    cookie(
+        'auth_token',
+        $token,
+        60 * 24 * 365, // 1 year
+        '/',
+        null,
+        app()->isProduction(), 
+        true,
+        false,
+        'Lax'
+    )
+);
     }
 
     /* ======================

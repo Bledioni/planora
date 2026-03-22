@@ -6,8 +6,6 @@ import {
   Scissors,
   RefreshCw,
   CheckCircle,
-  AlertCircle,
-  XCircle,
 } from "lucide-react";
 import { api } from "../../../index";
 import EmployeeSidebar from "../script/EmployeeSidebar";
@@ -22,7 +20,9 @@ const EmployeeDashboard = () => {
   const fetchToday = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/employee/appointments/list?filter=today");
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      const res = await api.get(`/employee/appointments/list`, { params: { date: dateStr } });
       if (res.data.appointments) {
         setAppointments(res.data.appointments);
       }
@@ -43,8 +43,8 @@ const EmployeeDashboard = () => {
     try {
       await Promise.all(
         (Array.isArray(ids) ? ids : [ids]).map((id) =>
-          api.put(`/employee/appointments/update-status/${id}`, { status }),
-        ),
+          api.put(`/employee/appointments/update-status/${id}`, { status })
+        )
       );
       Swal.fire("Sukses", "Statusi u përditësua.", "success");
       fetchToday();
@@ -79,29 +79,6 @@ const EmployeeDashboard = () => {
       cancelButtonText: "Anulo",
     });
     if (result.isConfirmed) updateStatus(appt.ids, "no_show");
-  };
-
-  const handleCancel = async (appt) => {
-    const result = await Swal.fire({
-      title: "Anulo Terminin?",
-      text: `Termini i ${appt.client_name} do të anulohet.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      confirmButtonText: "Po, Anulo",
-      cancelButtonText: "Mbyll",
-    });
-    if (result.isConfirmed) updateStatus(appt.ids, "cancelled");
-  };
-
-  const getStatusClass = (status) => {
-    const map = {
-      completed: "completed",
-      cancelled: "cancelled",
-      no_show: "pending",
-      confirmed: "confirmed",
-    };
-    return map[status] || "pending";
   };
 
   const today = new Date().toLocaleDateString("sq-AL", {
@@ -182,33 +159,21 @@ const EmployeeDashboard = () => {
                       <span className="apt-time-tag">
                         <Clock
                           size={11}
-                          style={{
-                            display: "inline",
-                            marginRight: 4,
-                            verticalAlign: "middle",
-                          }}
+                          style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }}
                         />
                         {appt.appointment_time} — {appt.finish_time}
                       </span>
                       <span className="apt-time-tag">
                         <Phone
                           size={11}
-                          style={{
-                            display: "inline",
-                            marginRight: 4,
-                            verticalAlign: "middle",
-                          }}
+                          style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }}
                         />
                         {appt.client_phone || "Pa numër"}
                       </span>
                       <span className="apt-time-tag">
                         <Scissors
                           size={11}
-                          style={{
-                            display: "inline",
-                            marginRight: 4,
-                            verticalAlign: "middle",
-                          }}
+                          style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }}
                         />
                         {appt.services?.reduce((acc, s) => {
                           if (!s.duration) return acc;
@@ -240,18 +205,6 @@ const EmployeeDashboard = () => {
                             className="ed-btn-noshow"
                           >
                             Pa paraqitje
-                          </button>
-                          <button
-                            onClick={() => handleCancel(appt)}
-                            className="ed-btn-cancel"
-                          >
-                            {updatingId === appt.ids?.[0] ? (
-                              <RefreshCw size={14} className="spin" />
-                            ) : (
-                              <>
-                                <XCircle size={14} /> Anulo
-                              </>
-                            )}
                           </button>
                         </div>
                       )}
