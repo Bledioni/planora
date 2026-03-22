@@ -5,10 +5,17 @@ import "react-calendar/dist/Calendar.css";
 import { api } from "../../../index";
 import "../../appointments/style/BookingApp.css";
 import "../../appointments/style/CustomCalendar.css";
-import PhoneInputField from '../../phoneInputs/script/PhoneInputField';
-import { useFingerprint } from '../../../hooks/useFingerprint';
+import PhoneInputField from "../../phoneInputs/script/PhoneInputField";
+import { useFingerprint } from "../../../hooks/useFingerprint";
 
-const STORAGE_KEY = 'planora_user_info';
+const STORAGE_KEY = "planora_user_info";
+
+const MUAJT = [
+  'Janar', 'Shkurt', 'Mars', 'Prill', 'Maj', 'Qershor',
+  'Korrik', 'Gusht', 'Shtator', 'Tetor', 'Nëntor', 'Dhjetor'
+];
+
+const DITET = ['Die', 'Hën', 'Mar', 'Mër', 'Enj', 'Pre', 'Sht'];
 
 const parseDurationToMinutes = (duration) => {
   if (!duration) return 0;
@@ -54,7 +61,7 @@ const scrollTo = (ref) => {
 };
 
 const BookingApp = () => {
-  const { shopSlug } = useParams();
+  const { shopSlug, employeeSlug } = useParams();
   const navigate = useNavigate();
   const fingerprint = useFingerprint();
 
@@ -63,7 +70,7 @@ const BookingApp = () => {
   const [notFound, setNotFound] = useState(false);
   const [details, setDetails] = useState({ employees: [], services: [] });
   const [slots, setSlots] = useState([]);
-  const [blockedDates, setBlockedDates] = useState([]); // 👈 added
+  const [blockedDates, setBlockedDates] = useState([]);
 
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [selectedBarber, setSelectedBarber] = useState(null);
@@ -72,9 +79,11 @@ const BookingApp = () => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [userInfo, setUserInfo] = useState(getSavedUserInfo);
   const [isAutofilled, setIsAutofilled] = useState(false);
+  const [autoSelectedEmployee, setAutoSelectedEmployee] = useState(null);
 
   const servicesRef = useRef(null);
   const nextBtnRef = useRef(null);
+  const slotsRef = useRef(null);
 
   useEffect(() => {
     const saved = getSavedUserInfo();
@@ -91,14 +100,26 @@ const BookingApp = () => {
       const businessData = res.data.business || res.data.data || res.data;
       setDetails(businessData);
       setSelectedBusiness(businessData.id);
+
+      // Auto-select employee if employeeSlug is in URL
+      if (employeeSlug && businessData.employees?.length > 0) {
+        const empId = parseInt(employeeSlug.split('-').pop());
+        const found = businessData.employees.find(e => e.id === empId);
+        if (found) {
+          setSelectedBarber(found.id);
+          setAutoSelectedEmployee(found);
+        }
+      }
     } catch (err) {
       setNotFound(true);
     } finally {
       setLoading(false);
     }
-  }, [shopSlug]);
+  }, [shopSlug, employeeSlug]);
 
-  useEffect(() => { initApp(); }, [initApp]);
+  useEffect(() => {
+    initApp();
+  }, [initApp]);
 
   const fetchSlots = useCallback(async () => {
     if (!selectedBarber || !selectedServices.length || !selectedBusiness || !selectedDate) return;
@@ -134,7 +155,6 @@ const BookingApp = () => {
     }
   }, [selectedBusiness, selectedBarber, selectedServices, selectedDate]);
 
-  // 👈 added - fetch blocked dates for a given month
   const fetchBlockedDates = useCallback(async (year, month) => {
     if (!selectedBarber || !selectedServices.length || !selectedBusiness) return;
     try {
@@ -167,7 +187,6 @@ const BookingApp = () => {
     if (selectedDate && step === 2) fetchSlots();
   }, [selectedDate, fetchSlots, step]);
 
-  // 👈 added - fetch blocked dates when entering step 2
   useEffect(() => {
     if (step === 2) {
       const now = new Date();
@@ -198,8 +217,10 @@ const BookingApp = () => {
     setSelectedTime(null);
     setSlots([]);
     setTimeout(() => {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
-    }, 250);
+      if (slotsRef?.current) {
+        slotsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 300);
   };
 
   const handleUserInfoChange = (field, value) => {
@@ -225,7 +246,7 @@ const BookingApp = () => {
         fingerprint: fingerprint,
       });
 
-      if (response.data.status === 'success') {
+      if (response.data.status === "success") {
         const appointmentId = response.data.appointment_ids[0];
         navigate(`/appointment/${appointmentId}`);
       }
@@ -241,10 +262,11 @@ const BookingApp = () => {
     today.setHours(0, 0, 0, 0);
     if (date < today) return true;
     const dateStr = getLocalDateString(date);
-    return blockedDates.includes(dateStr); // 👈 added
+    return blockedDates.includes(dateStr);
   };
 
-  const selectedServiceObjects = details.services?.filter((s) => selectedServices.includes(s.id)) || [];
+  const selectedServiceObjects =
+    details.services?.filter((s) => selectedServices.includes(s.id)) || [];
   const totalDuration = selectedServiceObjects.reduce(
     (sum, s) => sum + parseDurationToMinutes(s.service_duration || s.duration), 0
   );
@@ -259,18 +281,56 @@ const BookingApp = () => {
       <div className="booking-layout">
         <aside className="shop-sidebar">
           <h1>{details.shop_name || "Planora"}</h1>
-          <div className="sidebar-info-item">📍 {details.address || "Kosovë"}</div>
+          <div className="sidebar-info-item">
+            📍 {details.address || "Kosovë"}
+          </div>
+
+          {/* Show auto-selected employee badge */}
+          {autoSelectedEmployee && (
+            <div style={{
+              marginTop: '16px',
+              background: 'rgba(37, 99, 235, 0.08)',
+              border: '1px solid rgba(37, 99, 235, 0.2)',
+              borderRadius: '12px',
+              padding: '10px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                background: '#2563eb', color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: '700', fontSize: '0.9rem', flexShrink: 0
+              }}>
+                {autoSelectedEmployee.user?.name?.charAt(0)}
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#2563eb', fontWeight: '600' }}>
+                  Punonjësi juaj
+                </p>
+                <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: '700', color: '#1e293b' }}>
+                  {autoSelectedEmployee.user?.name} {autoSelectedEmployee.user?.surname}
+                </p>
+              </div>
+            </div>
+          )}
+
           {step >= 3 && selectedServiceObjects.length > 0 && (
             <div className="fade-in summary-container" style={{ marginTop: "40px", borderTop: "2px solid #e2e8f0", paddingTop: "20px" }}>
               <p className="summary-label">PËRMBLEDHJA</p>
               {selectedServiceObjects.map((s) => (
                 <div key={s.id} style={{ marginTop: "10px" }}>
-                  <h3 style={{ margin: "0 0 3px 0", fontSize: "0.95rem" }}>{s.service_name || s.name}</h3>
+                  <h3 style={{ margin: "0 0 3px 0", fontSize: "0.95rem" }}>
+                    {s.service_name || s.name}
+                  </h3>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
                     <span className="service-duration">
                       🕒 {parseDurationToMinutes(s.service_duration || s.duration)} min
                     </span>
-                    <span style={{ fontWeight: "700" }}>{s.service_price || s.price}€</span>
+                    <span style={{ fontWeight: "700" }}>
+                      {s.service_price || s.price}€
+                    </span>
                   </div>
                 </div>
               ))}
@@ -299,18 +359,61 @@ const BookingApp = () => {
 
           {step === 1 && (
             <div className="fade-in">
-              <h2 className="section-title">Zgjidhni punonjësin dhe shërbimet</h2>
-              <div className="wide-grid">
-                {details.employees?.map((emp) => (
-                  <div
-                    key={emp.id}
-                    className={`service-row ${selectedBarber === emp.id ? "active" : ""}`}
-                    onClick={() => handleBarberSelect(emp.id)}
-                  >
-                    <strong>{emp.user?.name} {emp.user?.surname}</strong>
+              <h2 className="section-title">
+                {autoSelectedEmployee
+                  ? `Zgjidhni shërbimet`
+                  : `Zgjidhni punonjësin dhe shërbimet`
+                }
+              </h2>
+
+              {/* Hide employee selection if auto-selected */}
+              {!autoSelectedEmployee && (
+                <div className="wide-grid">
+                  {details.employees?.map((emp) => (
+                    <div
+                      key={emp.id}
+                      className={`service-row ${selectedBarber === emp.id ? "active" : ""}`}
+                      onClick={() => handleBarberSelect(emp.id)}
+                    >
+                      <strong>
+                        {emp.user?.name} {emp.user?.surname}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Show selected employee info if auto-selected */}
+              {autoSelectedEmployee && (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1.5px solid #e2e8f0',
+                  borderRadius: '14px',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '20px'
+                }}>
+                  <div style={{
+                    width: '42px', height: '42px', borderRadius: '50%',
+                    background: '#2563eb', color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: '700', fontSize: '1rem', flexShrink: 0
+                  }}>
+                    {autoSelectedEmployee.user?.name?.charAt(0)}
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>
+                      Punonjësi i zgjedhur
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#1e293b' }}>
+                      {autoSelectedEmployee.user?.name} {autoSelectedEmployee.user?.surname}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div ref={servicesRef} style={{ display: "grid", gap: "12px", marginTop: "20px" }}>
                 {details.services?.map((s) => (
                   <div
@@ -326,7 +429,9 @@ const BookingApp = () => {
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <strong>{s.service_price || s.price}€</strong>
-                      <span style={{ fontSize: "18px" }}>{selectedServices.includes(s.id) ? "✅" : "⬜"}</span>
+                      <span style={{ fontSize: "18px" }}>
+                        {selectedServices.includes(s.id) ? "✅" : "⬜"}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -354,7 +459,7 @@ const BookingApp = () => {
                 tileDisabled={({ date }) => isDateDisabled(date)}
                 tileClassName={({ date }) => {
                   const dateStr = getLocalDateString(date);
-                  return blockedDates.includes(dateStr) ? 'date-blocked' : null;
+                  return blockedDates.includes(dateStr) ? "date-blocked" : null;
                 }}
                 onActiveStartDateChange={({ activeStartDate }) => {
                   fetchBlockedDates(
@@ -362,14 +467,21 @@ const BookingApp = () => {
                     activeStartDate.getMonth() + 1
                   );
                 }}
-                locale="sq-AL"
+                formatMonthYear={(locale, date) =>
+                  `${MUAJT[date.getMonth()]} ${date.getFullYear()}`
+                }
+                formatMonth={(locale, date) => MUAJT[date.getMonth()]}
+                formatShortWeekday={(locale, date) => DITET[date.getDay()]}
                 maxDetail="month"
                 prev2Label={null}
                 next2Label={null}
               />
+
               {selectedDate && (
-                <div style={{ marginTop: "40px" }}>
-                  <h3 className="section-title" style={{ fontSize: "1.1rem" }}>Oraret e lira</h3>
+                <div ref={slotsRef} style={{ marginTop: "40px" }}>
+                  <h3 className="section-title" style={{ fontSize: "1.1rem" }}>
+                    Oraret e lira
+                  </h3>
                   {loading ? (
                     <div className="planora-loader-small"></div>
                   ) : (
@@ -379,7 +491,10 @@ const BookingApp = () => {
                           <button
                             key={t}
                             className={`slot-btn ${selectedTime === t ? "selected" : ""}`}
-                            onClick={() => { setSelectedTime(t); setStep(3); }}
+                            onClick={() => {
+                              setSelectedTime(t);
+                              setStep(3);
+                            }}
                           >
                             {t}
                           </button>
@@ -391,7 +506,9 @@ const BookingApp = () => {
                   )}
                 </div>
               )}
-              <button onClick={() => setStep(1)} className="secondary-button-back">← Mbrapa</button>
+              <button onClick={() => setStep(1)} className="secondary-button-back">
+                ← Mbrapa
+              </button>
             </div>
           )}
 
@@ -421,7 +538,7 @@ const BookingApp = () => {
                   placeholder="Emri i plotë"
                   required
                   value={userInfo.name}
-                  onChange={(e) => handleUserInfoChange('name', e.target.value)}
+                  onChange={(e) => handleUserInfoChange("name", e.target.value)}
                 />
                 <input
                   className="booking-input"
@@ -429,11 +546,11 @@ const BookingApp = () => {
                   placeholder="Email adresa"
                   required
                   value={userInfo.email}
-                  onChange={(e) => handleUserInfoChange('email', e.target.value)}
+                  onChange={(e) => handleUserInfoChange("email", e.target.value)}
                 />
                 <PhoneInputField
                   value={userInfo.phone}
-                  onChange={(val) => handleUserInfoChange('phone', val)}
+                  onChange={(val) => handleUserInfoChange("phone", val)}
                 />
                 <button
                   type="submit"
@@ -444,7 +561,9 @@ const BookingApp = () => {
                   {loading ? "Duke u rezervuar..." : "Konfirmo Termin"}
                 </button>
               </form>
-              <button onClick={() => setStep(2)} className="secondary-button-back">← Mbrapa</button>
+              <button onClick={() => setStep(2)} className="secondary-button-back">
+                ← Mbrapa
+              </button>
             </div>
           )}
         </main>

@@ -102,7 +102,16 @@ class AdminBusinessController extends Controller
                 'address'       => $request->address,
                 'location_link' => $request->location_link,
                 'description'   => $request->description,
-                'slug'          => Str::slug($request->shop_name) . '-' . rand(100, 999)
+                'slug' => (function() use ($request) {
+                    $baseSlug = Str::slug($request->shop_name);
+                    $slug = $baseSlug;
+                    $count = 1;
+                    while (Business::where('slug', $slug)->exists()) {
+                        $slug = $baseSlug . '-' . $count;
+                        $count++;
+                    }
+                    return $slug;
+                })()
             ]);
 
             $user = User::find($request->user_id);

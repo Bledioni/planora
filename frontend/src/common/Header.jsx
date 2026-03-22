@@ -61,6 +61,8 @@ function Header() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/barberdiscovery" element={<BarberDiscovery />} />
         <Route path="/appointment/:id" element={<AppointmentConfirmed />} />
+        <Route path="/:shopSlug/:employeeSlug" element={<BookingApp />} />
+        <Route path="/:shopSlug" element={<BookingApp />} />
         {/* --- PROTECTED: USER --- */}
         <Route element={<ProtectedRoute allowedRoles={["user", "admin", "business_owner"]} />}>
           <Route path="/wishlist" element={<Wishlist />} />
