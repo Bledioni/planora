@@ -190,6 +190,9 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
 
         // Stats
         Route::get('/stats', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getStats']);
+
+        Route::get('/my-link', [App\Http\Controllers\Employee\EmployeeAppointmentController::class, 'getMyBookingLink']);
+
     });
 });
 Route::get('/health', function () {

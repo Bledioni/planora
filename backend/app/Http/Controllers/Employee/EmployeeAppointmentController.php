@@ -7,6 +7,7 @@ use App\Models\Appointments;
 use App\Models\Employees;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeAppointmentController extends Controller
 {
@@ -134,51 +135,90 @@ public function getAppointments(Request $request)
     }
 
     public function getStats(Request $request)
-    {
-        $employee = $this->getEmployee($request);
-        if (!$employee) {
-            return response()->json(['message' => 'Employee profile not found.'], 404);
-        }
-
-        $period = $request->query('period', 'week');
-
-        switch ($period) {
-            case 'month':
-                $from = Carbon::now()->startOfMonth();
-                $to   = Carbon::now()->endOfMonth();
-                break;
-            case 'year':
-                $from = Carbon::now()->startOfYear();
-                $to   = Carbon::now()->endOfYear();
-                break;
-            default:
-                $from = Carbon::now()->startOfWeek();
-                $to   = Carbon::now()->endOfWeek();
-                break;
-        }
-
-        $appointments = Appointments::where('employee_id', $employee->id)
-            ->whereBetween('start_time', [$from, $to])
-            ->with('service')
-            ->get();
-
-        $byDay = $appointments->groupBy(function ($a) {
-            return Carbon::parse($a->start_time)->format('Y-m-d');
-        })->map->count();
-
-        return response()->json([
-            'employee_id' => $employee->id,
-            'period'      => $period,
-            'from'        => $from->toDateString(),
-            'to'          => $to->toDateString(),
-            'stats' => [
-                'total'     => $appointments->count(),
-                'completed' => $appointments->where('status', 'completed')->count(),
-                'cancelled' => $appointments->where('status', 'cancelled')->count(),
-                'no_show'   => $appointments->where('status', 'no_show')->count(),
-                'upcoming'  => $appointments->where('status', 'confirmed')->count(),
-            ],
-            'chart' => $byDay,
-        ]);
+{
+    $employee = $this->getEmployee($request);
+    if (!$employee) {
+        return response()->json(['message' => 'Employee profile not found.'], 404);
     }
+
+    $filter = $request->query('filter', 'month');
+    $date   = $request->query('date', now()->format('Y-m'));
+
+    $query = Appointments::where('employee_id', $employee->id);
+
+    if ($filter === 'month') {
+        $parsed = \Carbon\Carbon::parse($date);
+        $query->whereYear('start_time', $parsed->year)
+              ->whereMonth('start_time', $parsed->month);
+        $from = $parsed->startOfMonth()->copy();
+        $to   = $parsed->copy()->endOfMonth();
+    } elseif ($filter === 'year') {
+        $parsed = \Carbon\Carbon::parse($date);
+        $query->whereYear('start_time', $parsed->year);
+        $from = $parsed->startOfYear()->copy();
+        $to   = $parsed->copy()->endOfYear();
+    } else {
+        $from = \Carbon\Carbon::now()->startOfWeek();
+        $to   = \Carbon\Carbon::now()->endOfWeek();
+        $query->whereBetween('start_time', [$from, $to]);
+    }
+
+    $appointments = (clone $query)->with('service')->get();
+
+    $topServices = (clone $query)
+        ->whereNotIn('status', ['cancelled'])
+        ->select('service_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+        ->with('service:id,service_name')
+        ->groupBy('service_id')
+        ->orderBy('total', 'desc')
+        ->limit(5)
+        ->get()
+        ->map(function($item) {
+            return [
+                'service_name' => $item->service->service_name ?? 'N/A',
+                'total'        => $item->total
+            ];
+        });
+
+    $byDay = $appointments->groupBy(function ($a) {
+        return \Carbon\Carbon::parse($a->start_time)->format('Y-m-d');
+    })->map->count();
+
+    return response()->json([
+        'employee_id' => $employee->id,
+        'filter'      => $filter,
+        'date'        => $date,
+        'from'        => $from->toDateString(),
+        'to'          => $to->toDateString(),
+        'stats' => [
+            'total'        => $appointments->whereNotIn('status', ['cancelled'])->count(),
+            'completed'    => $appointments->where('status', 'completed')->count(),
+            'cancelled'    => $appointments->where('status', 'cancelled')->count(),
+            'no_show'      => $appointments->where('status', 'no_show')->count(),
+            'upcoming'     => $appointments->where('status', 'confirmed')->count(),
+            'top_services' => $topServices,
+        ],
+        'chart' => $byDay,
+    ]);
+}
+
+public function getMyBookingLink(Request $request)
+{
+    $employee = $this->getEmployee($request);
+    if (!$employee) {
+        return response()->json(['message' => 'Employee not found.'], 404);
+    }
+
+    $business = \App\Models\Business::find($employee->business_id);
+    $user = $request->user();
+
+    $namePart = strtolower($user->name);
+    $link = "https://planorabook.com/{$business->slug}/{$namePart}-{$employee->id}";
+
+    return response()->json([
+        'link' => $link,
+        'employee_id' => $employee->id,
+        'business_slug' => $business->slug
+    ]);
+}
 }
