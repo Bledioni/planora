@@ -299,7 +299,7 @@ const BookingApp = () => {
 
           {step === 1 && (
             <div className="fade-in">
-              <h2 className="section-title">Zgjidhni Salonin & Shërbimet</h2>
+              <h2 className="section-title">Zgjidhni punonjësin dhe shërbimet</h2>
               <div className="wide-grid">
                 {details.employees?.map((emp) => (
                   <div
