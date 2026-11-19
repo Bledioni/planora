@@ -112,4 +112,7 @@ return [
 
     'password_timeout' => 10800,
 
+    // SameSite for the auth_token cookie: lax (same site) or none (frontend and API on different sites)
+    'cookie_same_site' => env('AUTH_COOKIE_SAMESITE', 'lax'),
+
 ];

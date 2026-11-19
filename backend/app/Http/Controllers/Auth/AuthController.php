@@ -116,19 +116,20 @@ class AuthController extends Controller
         'role'   => $user->role,
         'status' => $user->status
     ]
-], 200)->withCookie(
-    cookie(
-        'auth_token',
-        $token,
-        60 * 24 * 365, // 1 year
-        '/',
-        null,
-        app()->isProduction(), 
-        true,
-        false,
-        'Lax'
-    )
-);
+], 200)->withCookie($this->authCookie($token, 60 * 24 * 365)); // 1 year
+    }
+
+    /**
+     * Auth cookie. SameSite comes from AUTH_COOKIE_SAMESITE (default "lax").
+     * Use "none" when the frontend and API are on different sites
+     * (e.g. two *.up.railway.app subdomains); "none" requires Secure.
+     */
+    private function authCookie(?string $token, int $minutes)
+    {
+        $sameSite = strtolower((string) config('auth.cookie_same_site', 'lax'));
+        $secure   = app()->isProduction() || $sameSite === 'none';
+
+        return cookie('auth_token', $token, $minutes, '/', null, $secure, true, false, $sameSite);
     }
 
     /* ======================
@@ -141,9 +142,7 @@ class AuthController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'Logged out'
-        ])->withCookie(
-            cookie()->forget('auth_token')
-        );
+        ])->withCookie($this->authCookie(null, -2628000)); // expire it with matching attributes
     }
 
     public function getUserProfile(Request $request) {
