@@ -43,6 +43,7 @@ import AdminCreateCategory from "../components/admin/script/AdminCreateCategory"
 import OwnerSettings from "../components/settings/OwnerSettings";
 import AdminSettings from "../components/settings/AdminSettings";
 import EmployeeSettings from "../components/settings/EmployeeSettings";
+import AdminGlobalServices from "../components/admin/script/AdminGlobalServices";
 
 
 function Header() {
@@ -84,6 +85,7 @@ function Header() {
           <Route path="/admin/visits" element={<AdminBusinessVisits />} />
           <Route path="/admin/categories" element={<AdminCreateCategory />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/global-services" element={<AdminGlobalServices />} />
         </Route>
         
 

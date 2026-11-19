@@ -79,8 +79,13 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
             Route::put('/update/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'updateBusiness']);
             Route::get('/details/{id}', [App\Http\Controllers\Admin\AdminBusinessConfigController::class, 'getBusinessById']); // ADD THIS
             
+        });
 
-
+        // Global Services
+        Route::prefix('global-services')->group(function () {
+            Route::get('/list',         [App\Http\Controllers\Admin\AdminGlobalServiceController::class, 'index']);
+            Route::post('/create',      [App\Http\Controllers\Admin\AdminGlobalServiceController::class, 'store']);
+            Route::delete('/delete/{id}', [App\Http\Controllers\Admin\AdminGlobalServiceController::class, 'destroy']);
         });
 
         Route::prefix('visits')->group(function () {
@@ -129,6 +134,9 @@ Route::middleware(['cookie.auth', 'auth:sanctum', 'throttle:300,1'])->group(func
             Route::get('/dashboard', [App\Http\Controllers\Owner\OwnerDashboardController::class, 'getDashboardStats']);
 
         });
+
+        // Global Services (suggestions)
+        Route::get('/global-services', [App\Http\Controllers\Owner\OwnerGlobalServiceController::class, 'index']);
 
         Route::prefix('services')->group(function () {
             Route::post('/create', [App\Http\Controllers\Owner\OwnerServiceController::class, 'createService']);

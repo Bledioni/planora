@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // 1. Shtohet kjo linjë
 
 class Appointments extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // 2. Shtohet SoftDeletes këtu
 
     protected $fillable = [
         'booking_id',
@@ -28,18 +29,21 @@ class Appointments extends Model
         'finish_time' => 'datetime',
     ];
 
+    // Lidhja me Punonjësin
     public function employee()
-{
-    return $this->belongsTo(\App\Models\Employees::class, 'employee_id');
-}
+    {
+        return $this->belongsTo(\App\Models\Employees::class, 'employee_id');
+    }
 
-public function service()
-{
-    return $this->belongsTo(\App\Models\Services::class, 'service_id');
-}
+    // Lidhja me Shërbimin
+    public function service()
+    {
+        return $this->belongsTo(\App\Models\Services::class, 'service_id');
+    }
 
-public function business()
-{
-    return $this->belongsTo(\App\Models\Business::class, 'business_id');
-}
+    // Lidhja me Biznesin
+    public function business()
+    {
+        return $this->belongsTo(\App\Models\Business::class, 'business_id');
+    }
 }
