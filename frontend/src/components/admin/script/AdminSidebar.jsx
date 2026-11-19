@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Building2, Store, MapPin,
-  LogOut, Menu, X, ChevronRight, ChevronDown, Tag, Settings
+  LogOut, Menu, X, ChevronRight, ChevronDown, Tag, Settings , Scissors
 } from 'lucide-react';
 import '../style/AdminSidebar.css';
 
@@ -32,6 +32,7 @@ const AdminSidebar = () => {
     { name: 'Email',      path: '/admin/send-email',                icon: LayoutDashboard },
     { name: 'Analytics',  path: '/admin/admin-analytics-dashboard', icon: LayoutDashboard },
     { name: 'Kategoritë', path: '/admin/categories',                icon: Tag },
+    { name: 'Shërbimet', path: '/admin/global-services', icon: Scissors },
     { name: 'Cilësimet',  path: '/admin/settings',                        icon: Settings },
   ];
 

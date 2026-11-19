@@ -2,28 +2,26 @@
 
 namespace App\Models;
 
-
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Database\Eloquent\SoftDeletes; // <-- 1. SHTO KËTË
 
 class Business extends Model
 {
-
-      use HasFactory;
+    use HasFactory, SoftDeletes; // <-- 2. SHTO KËTË
 
     protected $fillable = [
-    'user_id',
-    'slug',
-    'category_id',
-    'shop_name',
-    'address',
-    'location_link',
-    'description',
-];
+        'user_id',
+        'slug',
+        'category_id',
+        'shop_name',
+        'address',
+        'location_link',
+        'description',
+    ];
 
     /**
      * Scope to get only active businesses (with active owners)
@@ -36,21 +34,15 @@ class Business extends Model
     }
 
     public function subscription()
-{
-    return $this->hasOne(\App\Models\Subscription::class);
-}
+    {
+        return $this->hasOne(\App\Models\Subscription::class);
+    }
 
-    /**
-     * The Owner of the business
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * The Category of the business
-     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Categories::class, 'category_id');
@@ -61,17 +53,11 @@ class Business extends Model
         return $this->belongsTo(Categories::class, 'category_id');
     }
 
-    /**
-     * Get all employees for this business
-     */
     public function employees(): HasMany
     {
         return $this->hasMany(Employees::class, 'business_id');
     }
 
-    /**
-     * Get only ACTIVE employees for this business
-     */
     public function activeEmployees(): HasMany
     {
         return $this->employees()->whereHas('user', function($query) {
@@ -79,9 +65,6 @@ class Business extends Model
         });
     }
 
-    /**
-     * Get all Services
-     */
     public function services(): HasMany
     {
         return $this->hasMany(Services::class, 'business_id');
